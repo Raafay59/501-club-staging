@@ -67,4 +67,6 @@ group :test do
 
   # Code coverage analysis
   gem "simplecov", require: false
+  
+  gem "csv"
 end

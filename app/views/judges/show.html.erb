@@ -1,0 +1,14 @@
+<h1> Ideathon <%= @judge.ideathon %> | <%= @judge.judge_name %></h1>
+
+<% if @judge.judge_photo.attached? %>
+    <%= image_tag @judge.judge_photo, alt: "#{@judge.judge_name}'s photo" %>
+<% else %>
+    <p>Default Icon</p>
+<% end %>
+<h1><%= @judge.judge_name %></h1>
+<h2><%= @judge.judge_title %></h2>
+<p><%= @judge.judge_bio %></p>
+<%= link_to 'Edit', edit_judge_path(@judge) %> |
+<%= link_to 'Back', judges_path %>
+<%= link_to 'Delete', delete_judge_path(@judge) %>
+

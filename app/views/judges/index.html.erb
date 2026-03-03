@@ -1,0 +1,32 @@
+<h1>Judges</h1>
+
+<!--TODO dynamically show judges here
+Judge Icon should include judges name and photo if available, otherwise show default icon
+Judge Icon should link to judge show page -->
+
+<% if notice %>
+  <p><%= notice %></p>
+<% end %>
+<% if alert %>
+  <p><%= alert %></p>
+<% end %>
+
+<% @judges.each do |judge| %>
+    <div class="judge-icon">
+        <%= link_to judge_path(judge) do %>
+            <% if judge.judge_photo.attached? %>
+                <%= image_tag judge.judge_photo, alt: "#{judge.judge_name}'s photo" %>
+            <% else %>
+                <p>Default Icon</p>
+            <% end %>
+            <p><%= judge.judge_name %></p>
+        <% end %>
+    </div>
+<% end %>
+<div class="judge-icon">
+    
+</div>
+
+<!--TODO add pagination if there are more than 10 judges-->
+<%= link_to 'New Judge', new_judge_path %>
+

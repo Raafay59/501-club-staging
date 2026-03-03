@@ -1,0 +1,49 @@
+<h1>New Judge</h1>
+
+<%= form_with(model: @judge, local:true) do |form| %>
+    <div>
+        <%= form.label :judge_name %>
+        <%= form.text_field :judge_name %>
+    </div>
+
+    <div>
+        <%= form.label :judge_title %>
+        <%= form.text_field :judge_title %>
+    </div>
+
+    <div>
+        <%= form.label :judge_bio %>
+        <%= form.text_area :judge_bio %>
+    </div>
+
+    <div>
+        <%= form.label :ideathon %>
+        <%= form.select :ideathon, [2026] %>
+    </div>
+        <%= form.file_field :judge_photo %>
+    </div>
+
+    <div>
+        <%= form.submit "Create Judge" %>
+    </div>
+
+   
+<% end %>
+
+<hr>
+
+<h2> Import Judges from CSV </h2>
+
+<%= form_with url: import_judges_path, local: true, multipart: true do |form| %>
+  <div>
+    <%= form.label :file, "Select CSV file to import" %>
+    <%= form.file_field :file %>
+  </div>
+  <div>
+    <%= form.submit "Import Judges" %>
+  </div>
+<% end %>
+
+<div>
+<%= link_to "Back to Judges", judges_path %>
+</div>
