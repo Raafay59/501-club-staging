@@ -1,6 +1,6 @@
 class SponsorsPartnersController < ApplicationController
-  before_action :require_admin, only: [:destroy, :import]
-  before_action :set_sponsors_partner, only: [:show, :edit, :update, :delete, :destroy]
+  before_action :require_admin, only: [ :destroy, :import ]
+  before_action :set_sponsors_partner, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
     @sponsors_partners = SponsorsPartner.order(:year, :name)

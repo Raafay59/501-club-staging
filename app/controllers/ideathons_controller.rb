@@ -1,6 +1,6 @@
 class IdeathonsController < ApplicationController
-  before_action :require_admin, only: [:destroy, :import]
-  before_action :set_ideathon, only: [:show, :edit, :update, :delete, :destroy]
+  before_action :require_admin, only: [ :destroy, :import ]
+  before_action :set_ideathon, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
     @ideathons = Ideathon.order(year: :desc)

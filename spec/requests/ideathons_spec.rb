@@ -1,0 +1,103 @@
+require 'rails_helper'
+
+RSpec.describe "Ideathons", type: :request do
+  let!(:admin) { User.create!(email: 'admin@example.com', role: 'admin') }
+  let!(:editor) { User.create!(email: 'editor@example.com', role: 'editor') }
+
+  before { login_as(admin) }
+
+  let!(:ideathon) { Ideathon.create!(year: 2025, theme: 'Innovation') }
+
+  describe "GET /ideathons" do
+    it "returns a successful response" do
+      get ideathons_path
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "GET /ideathons/:year" do
+    it "returns a successful response" do
+      get ideathon_path(ideathon)
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "GET /ideathons/new" do
+    it "returns a successful response" do
+      get new_ideathon_path
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "POST /ideathons" do
+    context "with valid parameters" do
+      it "creates a new ideathon and redirects" do
+        expect {
+          post ideathons_path, params: { ideathon: { year: 2026, theme: 'AI' } }
+        }.to change(Ideathon, :count).by(1)
+        expect(response).to redirect_to(ideathons_path)
+      end
+    end
+
+    context "with invalid parameters" do
+      it "does not create and re-renders the form" do
+        expect {
+          post ideathons_path, params: { ideathon: { year: nil, theme: '' } }
+        }.not_to change(Ideathon, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+  end
+
+  describe "GET /ideathons/:year/edit" do
+    it "returns a successful response" do
+      get edit_ideathon_path(ideathon)
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "PATCH /ideathons/:year" do
+    context "with valid parameters" do
+      it "updates the ideathon and redirects" do
+        patch ideathon_path(ideathon), params: { ideathon: { theme: 'Updated Theme' } }
+        ideathon.reload
+        expect(ideathon.theme).to eq('Updated Theme')
+        expect(response).to redirect_to(ideathons_path)
+      end
+    end
+
+    context "with empty theme" do
+      it "still updates successfully since theme is optional" do
+        patch ideathon_path(ideathon), params: { ideathon: { theme: '' } }
+        ideathon.reload
+        expect(ideathon.theme).to eq('')
+        expect(response).to redirect_to(ideathons_path)
+      end
+    end
+  end
+
+  describe "GET /ideathons/:year/delete" do
+    it "returns a successful response" do
+      get delete_ideathon_path(ideathon)
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "DELETE /ideathons/:year" do
+    it "deletes the ideathon and redirects" do
+      expect {
+        delete ideathon_path(ideathon)
+      }.to change(Ideathon, :count).by(-1)
+      expect(response).to redirect_to(ideathons_path)
+    end
+
+    context "as a non-admin editor" do
+      before { login_as(editor) }
+
+      it "redirects non-admin users" do
+        delete ideathon_path(ideathon)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+end

@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   delete "/logout", to: "sessions#destroy", as: :logout
   get "/unauthorized", to: "sessions#unauthorized", as: :unauthorized
 
-  resources :users, only: [:index, :create, :update, :destroy]
+  resources :users, only: [ :index, :create, :update, :destroy ]
 
   resources :ideathons, param: :year do
     post :import, on: :collection

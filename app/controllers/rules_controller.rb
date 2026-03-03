@@ -1,6 +1,6 @@
 class RulesController < ApplicationController
-  before_action :require_admin, only: [:destroy, :import]
-  before_action :set_rule, only: [:show, :edit, :update, :delete, :destroy]
+  before_action :require_admin, only: [ :destroy, :import ]
+  before_action :set_rule, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
     @rules = Rule.order(:year, :id)

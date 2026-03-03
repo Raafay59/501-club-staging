@@ -1,6 +1,6 @@
 class FaqsController < ApplicationController
-  before_action :require_admin, only: [:destroy, :import]
-  before_action :set_faq, only: [:show, :edit, :update, :delete, :destroy]
+  before_action :require_admin, only: [ :destroy, :import ]
+  before_action :set_faq, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
     @faqs = Faq.order(:year, :id)
