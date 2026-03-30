@@ -17,11 +17,6 @@ class MentorsJudgesController < ApplicationController
   def create
     @mentors_judge = MentorsJudge.new(mentors_judge_params)
     if @mentors_judge.save
-      ActivityLog.record!(
-        user: current_user,
-        action: "added",
-        message: ActivityLogMessage.for_mentors_judge(@mentors_judge, :added)
-      )
       redirect_to mentors_judges_path, notice: "Mentor/Judge was successfully created."
     else
       @ideathon_years = Ideathon.pluck(:year).sort.reverse
@@ -35,11 +30,6 @@ class MentorsJudgesController < ApplicationController
 
   def update
     if @mentors_judge.update(mentors_judge_params)
-      ActivityLog.record!(
-        user: current_user,
-        action: "edited",
-        message: ActivityLogMessage.for_mentors_judge(@mentors_judge, :edited, saved_changes: @mentors_judge.saved_changes)
-      )
       redirect_to mentors_judges_path, notice: "Mentor/Judge was successfully updated."
     else
       @ideathon_years = Ideathon.pluck(:year).sort.reverse
@@ -51,11 +41,6 @@ class MentorsJudgesController < ApplicationController
   end
 
   def destroy
-    ActivityLog.record!(
-      user: current_user,
-      action: "removed",
-      message: ActivityLogMessage.for_mentors_judge(@mentors_judge, :removed)
-    )
     @mentors_judge.destroy
     redirect_to mentors_judges_path, notice: "Mentor/Judge was successfully deleted."
   end
@@ -70,13 +55,6 @@ class MentorsJudgesController < ApplicationController
         "photo_url" => :photo_url,
         "bio" => :bio,
         "is_judge" => :is_judge
-      },
-      after_create: lambda { |record|
-        ActivityLog.record!(
-          user: current_user,
-          action: "added",
-          message: ActivityLogMessage.for_mentors_judge(record, :added)
-        )
       }
     ).import
 

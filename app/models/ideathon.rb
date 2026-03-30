@@ -1,4 +1,6 @@
 class Ideathon < ApplicationRecord
+  include ActivityTrackable
+
   self.primary_key = :year
 
   has_many :sponsors_partners, foreign_key: :year, dependent: :destroy

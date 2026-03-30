@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
+  around_action :set_current_user_context
   before_action :require_login
   before_action :require_authorized
 
@@ -10,6 +11,13 @@ class ApplicationController < ActionController::Base
 
   def current_user
     @current_user ||= User.find_by(id: session[:user_id])
+  end
+
+  def set_current_user_context
+    Current.user = current_user
+    yield
+  ensure
+    Current.reset
   end
 
   def logged_in?
