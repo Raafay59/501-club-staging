@@ -20,11 +20,6 @@ class IdeathonsController < ApplicationController
   def create
     @ideathon = Ideathon.new(ideathon_params)
     if @ideathon.save
-      ActivityLog.record!(
-        user: current_user,
-        action: "added",
-        message: ActivityLogMessage.for_ideathon(@ideathon, :added)
-      )
       redirect_to ideathons_path, notice: "Ideathon was successfully created."
     else
       render :new, status: :unprocessable_entity
@@ -36,11 +31,6 @@ class IdeathonsController < ApplicationController
 
   def update
     if @ideathon.update(ideathon_update_params)
-      ActivityLog.record!(
-        user: current_user,
-        action: "edited",
-        message: ActivityLogMessage.for_ideathon(@ideathon, :edited, saved_changes: @ideathon.saved_changes)
-      )
       redirect_to ideathons_path, notice: "Ideathon was successfully updated."
     else
       render :edit, status: :unprocessable_entity
@@ -51,11 +41,6 @@ class IdeathonsController < ApplicationController
   end
 
   def destroy
-    ActivityLog.record!(
-      user: current_user,
-      action: "removed",
-      message: ActivityLogMessage.for_ideathon(@ideathon, :removed)
-    )
     @ideathon.destroy
     redirect_to ideathons_path, notice: "Ideathon was successfully deleted."
   end
@@ -64,14 +49,7 @@ class IdeathonsController < ApplicationController
     result = CsvImporter.new(
       file: params[:file],
       model: Ideathon,
-      attribute_map: { "year" => :year, "theme" => :theme },
-      after_create: lambda { |record|
-        ActivityLog.record!(
-          user: current_user,
-          action: "added",
-          message: ActivityLogMessage.for_ideathon(record, :added)
-        )
-      }
+      attribute_map: { "year" => :year, "theme" => :theme }
     ).import
 
     if result[:failed] > 0
