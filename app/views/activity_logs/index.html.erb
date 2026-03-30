@@ -2,6 +2,36 @@
 
 <p>Recent changes to ideathons, sponsors, partners, mentors, judges, FAQs, and photos (logos and profile images). Newest first.</p>
 
+<%= form_with url: activity_logs_path, method: :get, local: true do |form| %>
+  <div>
+    <%= form.label :content_type, "Content type" %>
+    <%= form.select :content_type,
+                    options_for_select(ActivityLog.content_type_options, @filters[:content_type]),
+                    { include_blank: "All content types" } %>
+  </div>
+
+  <div>
+    <%= form.label :date_range, "Date range" %>
+    <%= form.select :date_range,
+                    options_for_select(ActivityLog::DATE_RANGE_OPTIONS, @filters[:date_range]) %>
+  </div>
+
+  <div>
+    <%= form.label :start_date, "Start date" %>
+    <%= form.date_field :start_date, value: @filters[:start_date] %>
+  </div>
+
+  <div>
+    <%= form.label :end_date, "End date" %>
+    <%= form.date_field :end_date, value: @filters[:end_date] %>
+  </div>
+
+  <div>
+    <%= form.submit "Apply filters" %>
+    <%= link_to "Clear filters", activity_logs_path %>
+  </div>
+<% end %>
+
 <table border="1" cellpadding="8" cellspacing="0">
   <thead>
     <tr>
@@ -22,7 +52,7 @@
     <% end %>
     <% if @activity_logs.empty? %>
       <tr>
-        <td colspan="4">No activity recorded yet.</td>
+        <td colspan="4"><%= @filters_active ? "No changes found for this filter" : "No activity recorded yet." %></td>
       </tr>
     <% end %>
   </tbody>
