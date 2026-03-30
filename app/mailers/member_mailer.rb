@@ -22,4 +22,11 @@ class MemberMailer < ApplicationMailer
 
         mail(to: @user.email, subject: "Removed from the Ideathon Organizer Team")
     end
+    
+    def request_email
+        @user = params[:user]
+        @requester = params[:requester]
+
+        mail(to: @user.email, subject: "New request for editor access")
+    end
 end
