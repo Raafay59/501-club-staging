@@ -17,6 +17,11 @@ class FaqsController < ApplicationController
   def create
     @faq = Faq.new(faq_params)
     if @faq.save
+      ActivityLog.record!(
+        user: current_user,
+        action: "added",
+        message: ActivityLogMessage.for_faq(@faq, :added)
+      )
       redirect_to faqs_path, notice: "FAQ was successfully created."
     else
       @ideathon_years = Ideathon.pluck(:year).sort.reverse
@@ -30,6 +35,11 @@ class FaqsController < ApplicationController
 
   def update
     if @faq.update(faq_params)
+      ActivityLog.record!(
+        user: current_user,
+        action: "edited",
+        message: ActivityLogMessage.for_faq(@faq, :edited, saved_changes: @faq.saved_changes)
+      )
       redirect_to faqs_path, notice: "FAQ was successfully updated."
     else
       @ideathon_years = Ideathon.pluck(:year).sort.reverse
@@ -41,6 +51,11 @@ class FaqsController < ApplicationController
   end
 
   def destroy
+    ActivityLog.record!(
+      user: current_user,
+      action: "removed",
+      message: ActivityLogMessage.for_faq(@faq, :removed)
+    )
     @faq.destroy
     redirect_to faqs_path, notice: "FAQ was successfully deleted."
   end
@@ -53,6 +68,13 @@ class FaqsController < ApplicationController
         "year" => :year,
         "question" => :question,
         "answer" => :answer
+      },
+      after_create: lambda { |record|
+        ActivityLog.record!(
+          user: current_user,
+          action: "added",
+          message: ActivityLogMessage.for_faq(record, :added)
+        )
       }
     ).import
 

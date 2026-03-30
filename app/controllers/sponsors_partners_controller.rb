@@ -17,6 +17,11 @@ class SponsorsPartnersController < ApplicationController
   def create
     @sponsors_partner = SponsorsPartner.new(sponsors_partner_params)
     if @sponsors_partner.save
+      ActivityLog.record!(
+        user: current_user,
+        action: "added",
+        message: ActivityLogMessage.for_sponsors_partner(@sponsors_partner, :added)
+      )
       redirect_to sponsors_partners_path, notice: "Sponsor/Partner was successfully created."
     else
       @ideathon_years = Ideathon.pluck(:year).sort.reverse
@@ -30,6 +35,11 @@ class SponsorsPartnersController < ApplicationController
 
   def update
     if @sponsors_partner.update(sponsors_partner_params)
+      ActivityLog.record!(
+        user: current_user,
+        action: "edited",
+        message: ActivityLogMessage.for_sponsors_partner(@sponsors_partner, :edited, saved_changes: @sponsors_partner.saved_changes)
+      )
       redirect_to sponsors_partners_path, notice: "Sponsor/Partner was successfully updated."
     else
       @ideathon_years = Ideathon.pluck(:year).sort.reverse
@@ -41,6 +51,11 @@ class SponsorsPartnersController < ApplicationController
   end
 
   def destroy
+    ActivityLog.record!(
+      user: current_user,
+      action: "removed",
+      message: ActivityLogMessage.for_sponsors_partner(@sponsors_partner, :removed)
+    )
     @sponsors_partner.destroy
     redirect_to sponsors_partners_path, notice: "Sponsor/Partner was successfully deleted."
   end
@@ -55,6 +70,13 @@ class SponsorsPartnersController < ApplicationController
         "logo_url" => :logo_url,
         "blurb" => :blurb,
         "is_sponsor" => :is_sponsor
+      },
+      after_create: lambda { |record|
+        ActivityLog.record!(
+          user: current_user,
+          action: "added",
+          message: ActivityLogMessage.for_sponsors_partner(record, :added)
+        )
       }
     ).import
 

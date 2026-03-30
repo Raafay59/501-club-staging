@@ -1,10 +1,11 @@
 require "csv"
 
 class CsvImporter
-    def initialize(file:, model:, attribute_map:)
+    def initialize(file:, model:, attribute_map:, after_create: nil)
         @file = file
         @model = model
         @attribute_map = attribute_map
+        @after_create = after_create
     end
 
     def import
@@ -13,7 +14,8 @@ class CsvImporter
         results = { success: 0, failed: 0, errors: [] }
         CSV.foreach(@file.path, headers: true) do |row|
             begin
-                @model.create!(map_attributes(row))
+                record = @model.create!(map_attributes(row))
+                @after_create&.call(record)
                 results[:success] += 1
             rescue StandardError => e
                 results[:failed] += 1
