@@ -10,6 +10,8 @@ Rails.application.routes.draw do
 
   resources :users, only: [ :index, :create, :update, :destroy ]
 
+  resources :activity_logs, only: [ :index ]
+
   resources :ideathons, param: :year do
     post :import, on: :collection
     member do

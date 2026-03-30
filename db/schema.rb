@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_03_000002) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_29_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_03_000002) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "activity_logs", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "action", null: false
+    t.text "message", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_activity_logs_on_created_at", order: :desc
+    t.index ["user_id"], name: "index_activity_logs_on_user_id"
   end
 
   create_table "faqs", force: :cascade do |t|
@@ -101,6 +111,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_03_000002) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "activity_logs", "users"
   add_foreign_key "faqs", "ideathons", column: "year", primary_key: "year"
   add_foreign_key "mentors_judges", "ideathons", column: "year", primary_key: "year"
   add_foreign_key "rules", "ideathons", column: "year", primary_key: "year"

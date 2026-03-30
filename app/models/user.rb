@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   ROLES = %w[admin editor unauthorized].freeze
 
+  has_many :activity_logs, dependent: :destroy
+
   validates :email, presence: true, uniqueness: true
   validates :role, presence: true, inclusion: { in: ROLES }
 
