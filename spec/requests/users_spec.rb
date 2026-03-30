@@ -72,5 +72,15 @@ RSpec.describe "Users", type: :request do
       }.not_to change(User, :count)
       expect(response).to redirect_to(users_path)
     end
+
+    it "prevents deleting a user who has activity logs" do
+      ActivityLog.record!(user: editor, action: :added, message: "Sponsor 'Logged' was added")
+
+      expect {
+        delete user_path(editor)
+      }.not_to change(User, :count)
+
+      expect(response).to redirect_to(users_path)
+    end
   end
 end

@@ -42,8 +42,11 @@ class UsersController < ApplicationController
       return
     end
 
-    @user.destroy
-    redirect_to users_path, notice: "#{@user.email} has been removed."
+    if @user.destroy
+      redirect_to users_path, notice: "#{@user.email} has been removed."
+    else
+      redirect_to users_path, alert: @user.errors.full_messages.to_sentence
+    end
   end
 
   private

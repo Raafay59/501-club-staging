@@ -10,6 +10,14 @@ RSpec.describe ActivityLogMessage do
       expect(described_class.for_sponsors_partner(record, :added)).to eq("Sponsor 'Acme' was added")
     end
 
+    it "builds structured metadata for sponsors" do
+      expect(described_class.entry_for(record, :added)).to include(
+        content_type: "sponsors",
+        item_name: "Acme",
+        message: "Sponsor 'Acme' was added"
+      )
+    end
+
     it "uses Partner when not a sponsor" do
       record.is_sponsor = false
       expect(described_class.for_sponsors_partner(record, :removed)).to eq("Partner 'Acme' was removed")
@@ -31,6 +39,16 @@ RSpec.describe ActivityLogMessage do
 
     it "describes ideathon removed" do
       expect(described_class.for_ideathon(ideathon, :removed)).to eq("Ideathon 2026 was removed")
+    end
+  end
+
+  describe ".import_entry_for" do
+    it "builds summary metadata for imports" do
+      expect(described_class.import_entry_for(Faq, 2)).to include(
+        content_type: "faqs",
+        item_name: "2 FAQs",
+        message: "Imported 2 FAQs"
+      )
     end
   end
 

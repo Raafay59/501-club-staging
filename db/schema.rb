@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_29_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_30_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_29_120000) do
     t.text "message", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "content_type", null: false
+    t.text "item_name", null: false
+    t.index ["content_type"], name: "index_activity_logs_on_content_type"
     t.index ["created_at"], name: "index_activity_logs_on_created_at", order: :desc
     t.index ["user_id"], name: "index_activity_logs_on_user_id"
   end
