@@ -4,7 +4,6 @@ SimpleCov.start 'rails' do
   add_filter '/config/'
   add_filter '/vendor/'
   add_filter '/app/jobs/'
-  add_filter 'app/mailers/'
 
   minimum_coverage 90
   minimum_coverage_by_file 80
