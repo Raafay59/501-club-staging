@@ -1,7 +1,7 @@
 class ActivityLog < ApplicationRecord
   belongs_to :user
 
-  ACTIONS = %w[added edited removed].freeze
+  ACTIONS = %w[added edited removed imported].freeze
   CONTENT_TYPE_FILTERS = {
     "faqs" => {
       label: "FAQs",
