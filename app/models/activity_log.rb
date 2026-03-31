@@ -11,9 +11,9 @@ class ActivityLog < ApplicationRecord
   end
 
   def email_organizers
-    User.where(role: ["admin", "editor"]).find_each do |u|
-      CrudMailer.with( 
-        user: u, 
+    User.where(role: [ "admin", "editor" ]).find_each do |u|
+      CrudMailer.with(
+        user: u,
         change_type: action.to_s,
         actor: user
       ).record_change_email.deliver_later

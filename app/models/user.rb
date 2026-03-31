@@ -27,7 +27,7 @@ class User < ApplicationRecord
   after_create :send_request_email, if: :unauthorized?
   after_destroy :send_goodbye_email
 
-  private 
+  private
 
   def send_role_change_email
     Rails.logger.debug "ROLE CHANGED TRIGGERED"
@@ -48,5 +48,4 @@ class User < ApplicationRecord
       MemberMailer.with(user: admin, requester: self).request_email.deliver_later
     end
   end
-
 end
