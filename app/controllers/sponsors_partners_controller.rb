@@ -7,6 +7,7 @@ class SponsorsPartnersController < ApplicationController
   end
 
   def show
+    @sponsors_partner = SponsorsPartner.find(params[:id])
   end
 
   def new

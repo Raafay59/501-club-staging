@@ -24,10 +24,7 @@ class User < ApplicationRecord
 
   after_update :send_role_change_email, if: :saved_change_to_role?
   after_create :send_welcome_email, if: :authorized?
-  after_create :send_request_email, if: :unauthorized?
   after_destroy :send_goodbye_email
-
-  private
 
   def send_role_change_email
     Rails.logger.debug "ROLE CHANGED TRIGGERED"
