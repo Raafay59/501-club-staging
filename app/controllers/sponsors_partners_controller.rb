@@ -1,4 +1,4 @@
-require 'csv'
+require "csv"
 
 class SponsorsPartnersController < ApplicationController
   before_action :require_admin, only: [ :destroy, :import, :export ]
@@ -73,14 +73,14 @@ class SponsorsPartnersController < ApplicationController
     sponsors = SponsorsPartner.where(year: current_year, is_sponsor: true).order(:name)
 
     if sponsors.empty?
-      redirect_to sponsors_partners_path, alert: 'No sponsors to export'
+      redirect_to sponsors_partners_path, alert: "No sponsors to export"
       return
     end
 
     csv_data = CSV.generate(headers: true) do |csv|
-      csv << [ 'Sponsor name', 'Logo URL', 'Job title', 'Bio' ]
+      csv << [ "Sponsor name", "Logo URL", "Job title", "Bio" ]
       sponsors.each do |sponsor|
-        csv << [ sponsor.name, sponsor.logo_url, '', sponsor.blurb ]
+        csv << [ sponsor.name, sponsor.logo_url, "", sponsor.blurb ]
       end
     end
 
@@ -88,10 +88,10 @@ class SponsorsPartnersController < ApplicationController
 
     send_data csv_data,
               filename: "sponsors_#{Time.current.strftime('%Y%m%d_%H%M%S')}.csv",
-              type: 'text/csv',
-              disposition: 'attachment'
+              type: "text/csv",
+              disposition: "attachment"
   rescue StandardError
-    redirect_to sponsors_partners_path, alert: 'Export failed. Please try again.'
+    redirect_to sponsors_partners_path, alert: "Export failed. Please try again."
   end
 
   private

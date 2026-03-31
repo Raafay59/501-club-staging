@@ -1,4 +1,4 @@
-require 'csv'
+require "csv"
 
 class MentorsJudgesController < ApplicationController
   before_action :require_admin, only: [ :destroy, :import, :export ]
@@ -72,14 +72,14 @@ class MentorsJudgesController < ApplicationController
     judges = MentorsJudge.where(year: current_year, is_judge: true).order(:name)
 
     if judges.empty?
-      redirect_to mentors_judges_path, alert: 'No judges to export'
+      redirect_to mentors_judges_path, alert: "No judges to export"
       return
     end
 
     csv_data = CSV.generate(headers: true) do |csv|
-      csv << [ 'Judge name', 'Photo URL', 'Job title', 'Bio' ]
+      csv << [ "Judge name", "Photo URL", "Job title", "Bio" ]
       judges.each do |judge|
-        csv << [ judge.name, judge.photo_url, '', judge.bio ]
+        csv << [ judge.name, judge.photo_url, "", judge.bio ]
       end
     end
 
@@ -87,10 +87,10 @@ class MentorsJudgesController < ApplicationController
 
     send_data csv_data,
               filename: "judges_#{Time.current.strftime('%Y%m%d_%H%M%S')}.csv",
-              type: 'text/csv',
-              disposition: 'attachment'
+              type: "text/csv",
+              disposition: "attachment"
   rescue StandardError
-    redirect_to mentors_judges_path, alert: 'Export failed. Please try again.'
+    redirect_to mentors_judges_path, alert: "Export failed. Please try again."
   end
 
   private
