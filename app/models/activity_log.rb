@@ -1,6 +1,8 @@
 class ActivityLog < ApplicationRecord
   belongs_to :user
 
+  after_create :email_organizers
+
   ACTIONS = %w[added edited removed imported exported].freeze
   CONTENT_TYPE_FILTERS = {
     "faqs" => {
