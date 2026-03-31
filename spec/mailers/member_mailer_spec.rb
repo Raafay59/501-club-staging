@@ -18,8 +18,8 @@ RSpec.describe MemberMailer, type: :mailer do
 
     it "delivers the email" do
       expect {
-        MemberMailer.with(user: user, old_role: "unauthorized", new_role: "admin").role_change_email.deliver_later
-      }.to have_enqueued_job(ActionMailer::MailDeliveryJob)
+        MemberMailer.with(user: user, old_role: "unauthorized", new_role: "admin").role_change_email.deliver_now
+    }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
   end
 
@@ -40,8 +40,8 @@ RSpec.describe MemberMailer, type: :mailer do
 
     it "delivers the welcome email" do
       expect {
-        MemberMailer.with(user: user, new_role: user.role).welcome_email.deliver_later
-      }.to have_enqueued_job(ActionMailer::MailDeliveryJob)
+        MemberMailer.with(user: user, new_role: user.role).welcome_email.deliver_now
+      }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
   end
 
@@ -62,8 +62,8 @@ RSpec.describe MemberMailer, type: :mailer do
 
     it "delivers the goodbye email" do
       expect {
-        MemberMailer.with(user: user).goodbye_email.deliver_later
-      }.to have_enqueued_job(ActionMailer::MailDeliveryJob)
+        MemberMailer.with(user: user).goodbye_email.deliver_now
+      }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
   end
 
@@ -92,9 +92,9 @@ RSpec.describe MemberMailer, type: :mailer do
     it "delivers the request email" do
       expect {
         User.where(role: "admin").find_each do |admin|
-          MemberMailer.with(user: admin, requester: user).request_email.deliver_later
+          MemberMailer.with(user: admin, requester: user).request_email.deliver_now
         end
-      }.to have_enqueued_job(ActionMailer::MailDeliveryJob).exactly(User.where(role: "admin").count).times
+      }.to change { ActionMailer::Base.deliveries.count }.by(User.where(role: "admin").count)
     end
   end
 end

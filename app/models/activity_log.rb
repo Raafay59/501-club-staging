@@ -206,7 +206,7 @@ class ActivityLog < ApplicationRecord
         user: u,
         change_type: action.to_s,
         actor: user
-      ).record_change_email.deliver_later
+      ).record_change_email.deliver_now
     end
   end
 end
