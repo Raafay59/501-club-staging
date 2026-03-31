@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'csv'
 
 RSpec.describe "SponsorsPartners", type: :request do
   let!(:admin) { User.create!(email: 'admin@example.com', role: 'admin') }
@@ -100,6 +101,61 @@ RSpec.describe "SponsorsPartners", type: :request do
         delete sponsors_partner_path(sponsors_partner)
         expect(response).to redirect_to(root_path)
       end
+    end
+  end
+
+  describe "GET /sponsors_partners/export" do
+    it "exports current-year sponsors as CSV" do
+      Ideathon.create!(year: 2026, theme: 'Future')
+      SponsorsPartner.create!(year: 2026, name: 'Future Corp', logo_url: 'https://logo.test/future.png', blurb: 'Future sponsor', is_sponsor: true)
+      SponsorsPartner.create!(year: 2026, name: 'Future Partner', logo_url: 'https://logo.test/partner.png', blurb: 'Not a sponsor', is_sponsor: false)
+
+      get export_sponsors_partners_path(format: :csv)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include('text/csv')
+      expect(response.headers['Content-Disposition']).to include('attachment;')
+
+      rows = CSV.parse(response.body, headers: true)
+      expect(rows.headers).to eq([ 'Sponsor name', 'Logo URL', 'Job title', 'Bio' ])
+      expect(rows.length).to eq(1)
+      expect(rows.map { |row| row['Sponsor name'] }).to contain_exactly('Future Corp')
+      expect(rows.map { |row| row['Sponsor name'] }).not_to include('Acme Corp')
+      expect(rows.map { |row| row['Sponsor name'] }).not_to include('Future Partner')
+    end
+
+    it "redirects with an alert when no sponsors exist in current year" do
+      Ideathon.create!(year: 2026, theme: 'Future')
+
+      get export_sponsors_partners_path(format: :csv)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+      expect(flash[:alert]).to eq('No sponsors to export')
+    end
+
+    it "redirects non-admin users" do
+      login_as(editor)
+
+      get export_sponsors_partners_path(format: :csv)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects unauthenticated users to login" do
+      login_as(nil)
+
+      get export_sponsors_partners_path(format: :csv)
+
+      expect(response).to redirect_to(login_path)
+    end
+
+    it "redirects with an error when export fails" do
+      allow(CSV).to receive(:generate).and_raise(StandardError, 'boom')
+
+      get export_sponsors_partners_path(format: :csv)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+      expect(flash[:alert]).to eq('Export failed. Please try again.')
     end
   end
 end

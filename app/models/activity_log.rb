@@ -1,7 +1,7 @@
 class ActivityLog < ApplicationRecord
   belongs_to :user
 
-  ACTIONS = %w[added edited removed imported].freeze
+  ACTIONS = %w[added edited removed imported exported].freeze
   CONTENT_TYPE_FILTERS = {
     "faqs" => {
       label: "FAQs",
@@ -93,6 +93,15 @@ class ActivityLog < ApplicationRecord
     return if entry.blank?
 
     safe_record(user: user, action: :imported, **entry)
+  end
+
+  def self.record_export(model:, count:, user: Current.user)
+    return if user.blank? || count.to_i.zero?
+
+    entry = ActivityLogMessage.export_entry_for(model, count)
+    return if entry.blank?
+
+    safe_record(user: user, action: :exported, **entry)
   end
 
   def self.infer_metadata(message)

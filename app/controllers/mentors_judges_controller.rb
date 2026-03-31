@@ -1,5 +1,7 @@
+require "csv"
+
 class MentorsJudgesController < ApplicationController
-  before_action :require_admin, only: [ :destroy, :import ]
+  before_action :require_admin, only: [ :destroy, :import, :export ]
   before_action :set_mentors_judge, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
@@ -65,6 +67,32 @@ class MentorsJudgesController < ApplicationController
     end
   end
 
+  def export
+    current_year = latest_export_year_for(MentorsJudge)
+    judges = MentorsJudge.where(year: current_year, is_judge: true).order(:name)
+
+    if judges.empty?
+      redirect_to mentors_judges_path, alert: "No judges to export"
+      return
+    end
+
+    csv_data = CSV.generate(headers: true) do |csv|
+      csv << [ "Judge name", "Photo URL", "Job title", "Bio" ]
+      judges.each do |judge|
+        csv << [ judge.name, judge.photo_url, "", judge.bio ]
+      end
+    end
+
+    ActivityLog.record_export(model: MentorsJudge, count: judges.count)
+
+    send_data csv_data,
+              filename: "judges_#{Time.current.strftime('%Y%m%d_%H%M%S')}.csv",
+              type: "text/csv",
+              disposition: "attachment"
+  rescue StandardError
+    redirect_to mentors_judges_path, alert: "Export failed. Please try again."
+  end
+
   private
 
   def set_mentors_judge
@@ -73,5 +101,9 @@ class MentorsJudgesController < ApplicationController
 
   def mentors_judge_params
     params.require(:mentors_judge).permit(:year, :name, :photo_url, :bio, :is_judge)
+  end
+
+  def latest_export_year_for(model)
+    Ideathon.maximum(:year) || model.maximum(:year)
   end
 end

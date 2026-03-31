@@ -43,4 +43,7 @@
       <%= form.submit "Import" %>
     </div>
   <% end %>
+
+  <h2>Export Judges to CSV</h2>
+  <%= link_to "Export", export_mentors_judges_path(format: :csv) %>
 <% end %>

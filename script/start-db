@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PG_BIN="${PG_BIN:-/c/Users/${USERNAME:-$USER}/pgsql/pgsql/bin}"
+PG_DATA="${PG_DATA:-/c/Users/${USERNAME:-$USER}/pgsql/devdata_utf8}"
+PG_PORT="${PG_PORT:-5432}"
+PG_USER="${PG_USER:-postgres}"
+PG_LOG="${PG_LOG:-$PG_DATA/postgres.log}"
+
+if [[ ! -x "$PG_BIN/pg_ctl" || ! -x "$PG_BIN/initdb" || ! -x "$PG_BIN/pg_isready" ]]; then
+  echo "PostgreSQL binaries not found in PG_BIN=$PG_BIN"
+  echo "Set PG_BIN to your postgres bin directory and try again."
+  exit 1
+fi
+
+mkdir -p "$PG_DATA"
+
+if [[ ! -f "$PG_DATA/PG_VERSION" ]]; then
+  echo "Initializing new UTF8 cluster at $PG_DATA"
+  "$PG_BIN/initdb" -D "$PG_DATA" -U "$PG_USER" -A trust --encoding=UTF8 --locale=C
+fi
+
+if "$PG_BIN/pg_ctl" -D "$PG_DATA" status >/dev/null 2>&1; then
+  echo "Postgres is already running for data dir: $PG_DATA"
+else
+  echo "Starting Postgres on port $PG_PORT"
+  "$PG_BIN/pg_ctl" -D "$PG_DATA" -l "$PG_LOG" -o "-p $PG_PORT" start
+fi
+
+"$PG_BIN/pg_isready" -h localhost -p "$PG_PORT"
+echo "DB ready."

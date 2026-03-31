@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'csv'
 
 RSpec.describe "MentorsJudges", type: :request do
   let!(:admin) { User.create!(email: 'admin@example.com', role: 'admin') }
@@ -116,6 +117,60 @@ RSpec.describe "MentorsJudges", type: :request do
       file = fixture_file_upload('invalid_judges.csv', 'text/csv')
       post import_mentors_judges_path, params: { file: file }
       expect(response).to redirect_to(mentors_judges_path)
+    end
+  end
+
+  describe "GET /mentors_judges/export" do
+    it "exports current-year judges as CSV" do
+      Ideathon.create!(year: 2026, theme: 'Future')
+      MentorsJudge.create!(year: 2026, name: 'Judge Judy', photo_url: 'https://img.test/judy.jpg', bio: 'Judge bio', is_judge: true)
+      MentorsJudge.create!(year: 2026, name: 'Mentor Mike', photo_url: 'https://img.test/mike.jpg', bio: 'Mentor bio', is_judge: false)
+
+      get export_mentors_judges_path(format: :csv)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include('text/csv')
+      expect(response.headers['Content-Disposition']).to include('attachment;')
+
+      rows = CSV.parse(response.body, headers: true)
+      expect(rows.headers).to eq([ 'Judge name', 'Photo URL', 'Job title', 'Bio' ])
+      expect(rows.length).to eq(1)
+      expect(rows[0]['Judge name']).to eq('Judge Judy')
+      expect(rows[0]['Bio']).to eq('Judge bio')
+    end
+
+    it "redirects with an alert when no judges exist in current year" do
+      Ideathon.create!(year: 2026, theme: 'Future')
+
+      get export_mentors_judges_path(format: :csv)
+
+      expect(response).to redirect_to(mentors_judges_path)
+      expect(flash[:alert]).to eq('No judges to export')
+    end
+
+    it "redirects non-admin users" do
+      login_as(editor)
+
+      get export_mentors_judges_path(format: :csv)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects unauthenticated users to login" do
+      login_as(nil)
+
+      get export_mentors_judges_path(format: :csv)
+
+      expect(response).to redirect_to(login_path)
+    end
+
+    it "redirects with an error when export fails" do
+      allow(CSV).to receive(:generate).and_raise(StandardError, 'boom')
+
+      get export_mentors_judges_path(format: :csv)
+
+      expect(response).to redirect_to(mentors_judges_path)
+      expect(flash[:alert]).to eq('Export failed. Please try again.')
     end
   end
 end

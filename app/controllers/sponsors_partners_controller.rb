@@ -1,5 +1,7 @@
+require "csv"
+
 class SponsorsPartnersController < ApplicationController
-  before_action :require_admin, only: [ :destroy, :import ]
+  before_action :require_admin, only: [ :destroy, :import, :export ]
   before_action :set_sponsors_partner, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
@@ -66,6 +68,32 @@ class SponsorsPartnersController < ApplicationController
     end
   end
 
+  def export
+    current_year = latest_export_year_for(SponsorsPartner)
+    sponsors = SponsorsPartner.where(year: current_year, is_sponsor: true).order(:name)
+
+    if sponsors.empty?
+      redirect_to sponsors_partners_path, alert: "No sponsors to export"
+      return
+    end
+
+    csv_data = CSV.generate(headers: true) do |csv|
+      csv << [ "Sponsor name", "Logo URL", "Job title", "Bio" ]
+      sponsors.each do |sponsor|
+        csv << [ sponsor.name, sponsor.logo_url, "", sponsor.blurb ]
+      end
+    end
+
+    ActivityLog.record_export(model: SponsorsPartner, count: sponsors.count)
+
+    send_data csv_data,
+              filename: "sponsors_#{Time.current.strftime('%Y%m%d_%H%M%S')}.csv",
+              type: "text/csv",
+              disposition: "attachment"
+  rescue StandardError
+    redirect_to sponsors_partners_path, alert: "Export failed. Please try again."
+  end
+
   private
 
   def set_sponsors_partner
@@ -74,5 +102,9 @@ class SponsorsPartnersController < ApplicationController
 
   def sponsors_partner_params
     params.require(:sponsors_partner).permit(:year, :name, :logo_url, :blurb, :is_sponsor)
+  end
+
+  def latest_export_year_for(model)
+    Ideathon.maximum(:year) || model.maximum(:year)
   end
 end
