@@ -49,4 +49,6 @@ Rails.application.routes.draw do
   end
 
   root "ideathons#index"
+
+  mount LetterOpenerWeb::Engine, at: "/letter_opener"
 end

@@ -2,9 +2,20 @@
 
 <p><strong>Year:</strong> <%= @sponsors_partner.year %></p>
 <p><strong>Type:</strong> <%= @sponsors_partner.is_sponsor? ? "Sponsor" : "Partner" %></p>
-<% if @sponsors_partner.logo_url.present? %>
-  <p><strong>Logo URL:</strong> <%= link_to @sponsors_partner.logo_url, @sponsors_partner.logo_url, target: "_blank" %></p>
+
+<% url = @sponsors_partner.logo_url %>
+<% if url.present? %>
+  <% begin %>
+    <%uri = URI.parse(url) %>
+    <% if uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS) %>
+      <%= link_to "View Logo", uri.to_s, target: "_blank", rel: "noopener noreferrer" %>
+    <% end %>
+  <% rescue URI::InvalidURIError %>
+    <p><strong>Logo:</strong> Invalid URL</p>
+  <% end %>
+
 <% end %>
+
 <% if @sponsors_partner.blurb.present? %>
   <p><strong>Blurb:</strong> <%= @sponsors_partner.blurb %></p>
 <% end %>

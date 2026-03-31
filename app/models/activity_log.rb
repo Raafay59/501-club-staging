@@ -158,8 +158,9 @@ class ActivityLog < ApplicationRecord
     patterns = CONTENT_TYPE_FILTERS.dig(content_type.to_s, :patterns)
     return logs if patterns.blank?
 
-    conditions = Array.new(patterns.length, "message LIKE ?").join(" OR ")
-    logs.where(conditions, *patterns)
+    logs.where(
+      patterns.map { "message LIKE ?" }.join(" OR "), *patterns
+    )
   end
 
   def self.apply_date_range_filter(logs, date_range, start_date, end_date)
@@ -186,5 +187,15 @@ class ActivityLog < ApplicationRecord
     Date.iso8601(value)
   rescue ArgumentError
     nil
+  end
+
+  def email_organizers
+    User.where(role: [ "admin", "editor" ]).find_each do |u|
+      CrudMailer.with(
+        user: u,
+        change_type: action.to_s,
+        actor: user
+      ).record_change_email.deliver_later
+    end
   end
 end
