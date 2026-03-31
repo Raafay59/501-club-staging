@@ -36,6 +36,7 @@ class ActivityLog < ApplicationRecord
     [ "All time", "" ],
     [ "Last 7 days", "last_7_days" ],
     [ "Custom date range", "custom" ]
+  ].freeze
   CONTENT_TYPES = %w[
     activity
     faqs
