@@ -1,24 +1,93 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## 501 Club Staging - Local Setup
 
-Things you may want to cover:
+This is a Rails 8 app using PostgreSQL.
 
-* Ruby version: 8.0.3
+## Prerequisites
 
-* System dependencies
+- Ruby `3.4.6` (from `.ruby-version`)
+- Bundler
+- PostgreSQL available on `localhost:5432`
 
-* Configuration
+## 1. Install gems
 
-* Database creation
+```bash
+bundle install
+```
 
-* Database initialization
+## 2. Database setup
 
-* How to run the test suite
+Run the standard Rails setup:
 
-* Services (job queues, cache servers, search engines, etc.)
+```bash
+bin/rails db:prepare
+```
 
-* Deployment instructions
+If PostgreSQL is not already running as a system service, start a local cluster.
 
-* ...
+### Example: local PostgreSQL cluster (Git Bash on Windows)
+
+```bash
+# One-time initialization (use a UTF8 cluster)
+initdb -D /c/Users/<your-user>/pgsql/devdata_utf8 -U postgres -A trust --encoding=UTF8 --locale=C
+
+# Start PostgreSQL (keep this terminal open)
+postgres -D /c/Users/<your-user>/pgsql/devdata_utf8 -p 5432
+```
+
+If needed, create a local role/database matching your Windows username:
+
+```bash
+createuser -h localhost -p 5432 -U postgres -s <your-user>
+createdb -h localhost -p 5432 -U postgres <your-user>
+```
+
+## 3. Start the app
+
+```bash
+bin/dev
+```
+
+or
+
+```bash
+bin/rails server
+```
+
+## 4. Smoke test
+
+```bash
+bin/rails runner "puts 'BOOT_OK'"
+```
+
+If this prints `BOOT_OK`, Rails booted successfully with DB connectivity.
+
+## Quick DB scripts (Git Bash)
+
+Start Postgres with one command (auto-initializes a UTF8 cluster if needed):
+
+```bash
+bash script/start-db
+```
+
+Stop Postgres with one command:
+
+```bash
+bash script/stop-db
+```
+
+Optional overrides if your paths differ:
+
+```bash
+PG_BIN=/c/Users/<your-user>/pgsql/pgsql/bin PG_DATA=/c/Users/<your-user>/pgsql/devdata_utf8 bash script/start-db
+```
+
+## Helpful commands
+
+```bash
+bin/rails db:migrate
+bin/rails db:seed
+bin/rails db:reset
+bundle exec rspec
+```

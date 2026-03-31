@@ -49,6 +49,18 @@ module ActivityLogMessage
     }
   end
 
+  def export_entry_for(model, count)
+    config = IMPORT_CONFIG[model.to_s]
+    return if config.blank?
+
+    noun = count.to_i == 1 ? config[:singular] : config[:plural]
+    {
+      content_type: config[:content_type],
+      item_name: "#{count} #{noun}",
+      message: "Exported #{count} #{noun}"
+    }
+  end
+
   def for_sponsors_partner(record, action, saved_changes: nil)
     sponsors_partner_entry(record, action, saved_changes: saved_changes)[:message]
   end

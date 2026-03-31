@@ -22,6 +22,7 @@ Rails.application.routes.draw do
 
   resources :sponsors_partners do
     post :import, on: :collection
+    get :export, on: :collection
     member do
       get :delete
     end
@@ -29,6 +30,7 @@ Rails.application.routes.draw do
 
   resources :mentors_judges do
     post :import, on: :collection
+    get :export, on: :collection
     member do
       get :delete
     end
