@@ -159,7 +159,7 @@ class ActivityLog < ApplicationRecord
     return logs if patterns.blank?
 
     logs.where(
-      patterns.map {"message LIKE ?"}.join(" OR "), *patterns
+      patterns.map { "message LIKE ?" }.join(" OR "), *patterns
     )
   end
 
