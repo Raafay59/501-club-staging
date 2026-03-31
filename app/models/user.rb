@@ -21,4 +21,28 @@ class User < ApplicationRecord
   def authorized?
     admin? || editor?
   end
+
+  after_update :send_role_change_email, if: :saved_change_to_role?
+  after_create :send_welcome_email, if: :authorized?
+  after_destroy :send_goodbye_email
+
+  def send_role_change_email
+    Rails.logger.debug "ROLE CHANGED TRIGGERED"
+    old_role, new_role = saved_change_to_role
+    MemberMailer.with(user: self, old_role: old_role, new_role: new_role).role_change_email.deliver_later
+  end
+
+  def send_welcome_email
+    MemberMailer.with(user: self, new_role: role).welcome_email.deliver_later
+  end
+
+  def send_goodbye_email
+    MemberMailer.with(user: self).goodbye_email.deliver_later
+  end
+
+  def send_request_email
+    User.where(role: "admin").find_each do |admin|
+      MemberMailer.with(user: admin, requester: self).request_email.deliver_later
+    end
+  end
 end

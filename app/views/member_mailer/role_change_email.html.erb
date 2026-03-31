@@ -1,0 +1,20 @@
+<h2> Role Update </h2>
+
+<p> Hello <%= @user.name %>, </p>
+
+<p> Your role in the Ideathon Organizer Team has been changed from <%= @old_role %> to <%= @new_role %>. </p>
+
+<p> As a <%= @new_role %>, you will have access to the following features: </p>
+
+<ul>
+    <% if @new_role == "admin" %>
+        <li> Manage users and their roles </li>
+        <li> Access to all features of the application </li>
+        <li> Create and manage content </li>
+        <li> View participant information </li>
+    <% elsif @new_role == "editor" %>
+        <li> Create and manage content </li>
+        <li> View participant information </li>
+    <% end %>
+
+</ul>
