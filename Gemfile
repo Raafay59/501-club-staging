@@ -32,6 +32,8 @@ gem "solid_cable"
 gem "bootsnap", require: false
 gem 'rubocop'
 
+gem "letter_opener_web"
+
 # Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
 gem "kamal", require: false
 
@@ -60,6 +62,7 @@ group :development, :test do
 
   # RSpec testing framework
   gem "rspec-rails"
+
 end
 
 group :development do

@@ -2,6 +2,7 @@ class ActivityLog < ApplicationRecord
   belongs_to :user
 
   ACTIONS = %w[added edited removed].freeze
+
   CONTENT_TYPE_FILTERS = {
     "faqs" => {
       label: "FAQs",
@@ -32,10 +33,13 @@ class ActivityLog < ApplicationRecord
       patterns: [ "Sponsor %" ]
     }
   }.freeze
+
   DATE_RANGE_OPTIONS = [
     [ "All time", "" ],
     [ "Last 7 days", "last_7_days" ],
     [ "Custom date range", "custom" ]
+  ].freeze
+
   CONTENT_TYPES = %w[
     activity
     faqs
@@ -185,5 +189,15 @@ class ActivityLog < ApplicationRecord
     Date.iso8601(value)
   rescue ArgumentError
     nil
+  end
+
+  def email_organizers
+    User.where(role: [ "admin", "editor" ]).find_each do |u|
+      CrudMailer.with(
+        user: u,
+        change_type: action.to_s,
+        actor: user
+      ).record_change_email.deliver_later
+    end
   end
 end
