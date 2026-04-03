@@ -1,4 +1,4 @@
-admin_emails = %w[raafay@tamu.edu 501clubtestuser@gmail.com, zzh021015@tamu.edu]
+admin_emails = %w[raafay@tamu.edu zzh021015@tamu.edu]
 
 admin_emails.each do |email|
   user = User.find_or_initialize_by(email: email)
