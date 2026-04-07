@@ -118,6 +118,17 @@ RSpec.describe "MentorsJudges", type: :request do
       post import_mentors_judges_path, params: { file: file }
       expect(response).to redirect_to(mentors_judges_path)
     end
+
+    it "rejects non-csv files" do
+      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
+
+      expect {
+        post import_mentors_judges_path, params: { file: file }
+      }.not_to change(MentorsJudge, :count)
+
+      expect(response).to redirect_to(mentors_judges_path)
+      expect(flash[:alert]).to include('Invalid file type')
+    end
   end
 
   describe "GET /mentors_judges/export" do

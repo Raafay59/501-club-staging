@@ -38,7 +38,7 @@
   <%= form_with url: import_ideathons_path, local: true, multipart: true do |form| %>
     <div>
       <%= form.label :file, "Select CSV file" %>
-      <%= form.file_field :file %>
+      <%= form.file_field :file, accept: ".csv,text/csv" %>
     </div>
     <div>
       <%= form.submit "Import" %>

@@ -2,6 +2,15 @@ require 'rails_helper'
 
 RSpec.describe CsvImporter, type: :service do
   let!(:ideathon) { Ideathon.create!(year: 2025, theme: 'Tech') }
+  let(:default_attribute_map) do
+    {
+      "year" => :year,
+      "name" => :name,
+      "photo_url" => :photo_url,
+      "bio" => :bio,
+      "is_judge" => :is_judge
+    }
+  end
 
   describe 'importing mentors_judges CSV' do
     let(:file) { fixture_file_upload('mentors_judges.csv', 'text/csv') }
@@ -9,13 +18,7 @@ RSpec.describe CsvImporter, type: :service do
       CsvImporter.new(
         file: file,
         model: MentorsJudge,
-        attribute_map: {
-          "year" => :year,
-          "name" => :name,
-          "photo_url" => :photo_url,
-          "bio" => :bio,
-          "is_judge" => :is_judge
-        }
+        attribute_map: default_attribute_map
       )
     end
 
@@ -54,22 +57,47 @@ RSpec.describe CsvImporter, type: :service do
     it 'returns error when no file provided' do
       importer = CsvImporter.new(file: nil, model: MentorsJudge, attribute_map: {})
       result = importer.import
+      expect(result[:failed]).to eq(1)
       expect(result[:errors]).to include('No file provided')
     end
 
     it 'returns error for invalid file type' do
       file = fixture_file_upload('not_a_csv.txt', 'text/plain')
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: { "name" => :name })
+      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
       result = importer.import
       expect(result[:errors]).to include('Invalid file type')
+      expect(result[:failed]).to eq(1)
+      expect(result[:success]).to eq(0)
+    end
+
+    it 'returns error for csv files with incorrect headers' do
+      file = fixture_file_upload('mentors_judges.csv', 'text/csv')
+      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: { "full_name" => :name })
+      result = importer.import
+
+      expect(result[:errors]).to include('Invalid CSV headers')
+      expect(result[:failed]).to eq(1)
+      expect(result[:success]).to eq(0)
     end
   end
 
   describe '#valid_file?' do
     it 'returns true for CSV content type' do
       file = fixture_file_upload('mentors_judges.csv', 'text/csv')
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: {})
+      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
       expect(importer.valid_file?).to be true
+    end
+
+    it 'returns false for non-csv extension' do
+      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
+      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
+      expect(importer.valid_file?).to be false
+    end
+
+    it 'returns false when expected headers are missing' do
+      file = fixture_file_upload('mentors_judges.csv', 'text/csv')
+      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: { "full_name" => :name })
+      expect(importer.valid_file?).to be false
     end
   end
 end
