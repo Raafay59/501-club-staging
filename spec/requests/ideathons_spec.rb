@@ -135,4 +135,27 @@ RSpec.describe "Ideathons", type: :request do
       end
     end
   end
+
+  describe "POST /ideathons/import" do
+    it "imports from a valid CSV file" do
+      file = fixture_file_upload('ideathons_import.csv', 'text/csv')
+
+      expect {
+        post import_ideathons_path, params: { file: file }
+      }.to change(Ideathon, :count).by(2)
+
+      expect(response).to redirect_to(ideathons_path)
+    end
+
+    it "rejects non-csv files" do
+      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
+
+      expect {
+        post import_ideathons_path, params: { file: file }
+      }.not_to change(Ideathon, :count)
+
+      expect(response).to redirect_to(ideathons_path)
+      expect(flash[:alert]).to include('Invalid file type')
+    end
+  end
 end

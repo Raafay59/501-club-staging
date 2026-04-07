@@ -104,6 +104,29 @@ RSpec.describe "SponsorsPartners", type: :request do
     end
   end
 
+  describe "POST /sponsors_partners/import" do
+    it "imports from a valid CSV file" do
+      file = fixture_file_upload('sponsors_partners.csv', 'text/csv')
+
+      expect {
+        post import_sponsors_partners_path, params: { file: file }
+      }.to change(SponsorsPartner, :count).by(2)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+    end
+
+    it "rejects non-csv files" do
+      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
+
+      expect {
+        post import_sponsors_partners_path, params: { file: file }
+      }.not_to change(SponsorsPartner, :count)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+      expect(flash[:alert]).to include('Invalid file type')
+    end
+  end
+
   describe "GET /sponsors_partners/export" do
     it "exports current-year sponsors as CSV" do
       Ideathon.create!(year: 2026, theme: 'Future')
