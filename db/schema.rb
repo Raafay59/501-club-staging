@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_30_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_07_051252) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -78,6 +78,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_30_100000) do
     t.boolean "is_judge", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "job_title"
     t.index ["year"], name: "index_mentors_judges_on_year"
   end
 
@@ -97,6 +98,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_30_100000) do
     t.boolean "is_sponsor", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "job_title"
     t.index ["year"], name: "index_sponsors_partners_on_year"
   end
 

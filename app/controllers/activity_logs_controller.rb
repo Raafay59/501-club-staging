@@ -6,7 +6,9 @@ class ActivityLogsController < ApplicationController
 
     if invalid_date_range?
       flash.now[:alert] = "End date must be on or after start date."
-      @filters = @filters.except(:start_date, :end_date, :date_range)
+      @filters_active = true
+      @activity_logs = ActivityLog.none
+      return
     end
 
     @filters_active = ActivityLog.filters_active?(@filters)

@@ -71,6 +71,8 @@ class IdeathonsController < ApplicationController
     @judges = @ideathon.mentors_judges.select(&:is_judge?).sort_by(&:name)
     @faqs = @ideathon.faqs.sort_by(&:id)
     @mentors_judges_with_photos = @ideathon.mentors_judges.select { |mj| mj.photo_url.present? }.sort_by(&:name)
+  rescue ActiveRecord::RecordNotFound
+    redirect_to ideathons_path, alert: "Ideathon year #{params[:year]} was not found."
   end
 
   def ideathon_params

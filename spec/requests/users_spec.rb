@@ -50,6 +50,19 @@ RSpec.describe "Users", type: :request do
       expect(response).to redirect_to(users_path)
     end
 
+    it "keeps role changes when role-change email enqueue fails" do
+      delivery = instance_double(ActionMailer::MessageDelivery)
+      mailer = instance_double(MemberMailer, role_change_email: delivery)
+      allow(MemberMailer).to receive(:with).and_return(mailer)
+      allow(delivery).to receive(:deliver_later).and_raise(StandardError, "queue unavailable")
+
+      patch user_path(editor), params: { user: { role: 'admin' } }
+
+      editor.reload
+      expect(editor.role).to eq('admin')
+      expect(response).to redirect_to(users_path)
+    end
+
     it "prevents demoting the last admin" do
       patch user_path(admin), params: { user: { role: 'editor' } }
       admin.reload

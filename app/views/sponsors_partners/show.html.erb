@@ -2,6 +2,7 @@
 
 <p><strong>Year:</strong> <%= @sponsors_partner.year %></p>
 <p><strong>Type:</strong> <%= @sponsors_partner.is_sponsor? ? "Sponsor" : "Partner" %></p>
+<p><strong>Job title:</strong> <%= @sponsors_partner.job_title.presence || "—" %></p>
 
 <% url = @sponsors_partner.logo_url %>
 <% if url.present? %>

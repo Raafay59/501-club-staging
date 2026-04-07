@@ -123,7 +123,7 @@ RSpec.describe "MentorsJudges", type: :request do
   describe "GET /mentors_judges/export" do
     it "exports current-year judges as CSV" do
       Ideathon.create!(year: 2026, theme: 'Future')
-      MentorsJudge.create!(year: 2026, name: 'Judge Judy', photo_url: 'https://img.test/judy.jpg', bio: 'Judge bio', is_judge: true)
+      MentorsJudge.create!(year: 2026, name: 'Judge Judy', job_title: 'Senior Engineer', photo_url: 'https://img.test/judy.jpg', bio: 'Judge bio', is_judge: true)
       MentorsJudge.create!(year: 2026, name: 'Mentor Mike', photo_url: 'https://img.test/mike.jpg', bio: 'Mentor bio', is_judge: false)
 
       get export_mentors_judges_path(format: :csv)
@@ -136,6 +136,7 @@ RSpec.describe "MentorsJudges", type: :request do
       expect(rows.headers).to eq([ 'Judge name', 'Photo URL', 'Job title', 'Bio' ])
       expect(rows.length).to eq(1)
       expect(rows[0]['Judge name']).to eq('Judge Judy')
+      expect(rows[0]['Job title']).to eq('Senior Engineer')
       expect(rows[0]['Bio']).to eq('Judge bio')
     end
 

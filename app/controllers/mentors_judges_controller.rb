@@ -54,6 +54,7 @@ class MentorsJudgesController < ApplicationController
       attribute_map: {
         "year" => :year,
         "name" => :name,
+        "job_title" => :job_title,
         "photo_url" => :photo_url,
         "bio" => :bio,
         "is_judge" => :is_judge
@@ -79,7 +80,7 @@ class MentorsJudgesController < ApplicationController
     csv_data = CSV.generate(headers: true) do |csv|
       csv << [ "Judge name", "Photo URL", "Job title", "Bio" ]
       judges.each do |judge|
-        csv << [ judge.name, judge.photo_url, "", judge.bio ]
+        csv << [ judge.name, judge.photo_url, judge.job_title, judge.bio ]
       end
     end
 
@@ -100,7 +101,7 @@ class MentorsJudgesController < ApplicationController
   end
 
   def mentors_judge_params
-    params.require(:mentors_judge).permit(:year, :name, :photo_url, :bio, :is_judge)
+    params.require(:mentors_judge).permit(:year, :name, :job_title, :photo_url, :bio, :is_judge)
   end
 
   def latest_export_year_for(model)
