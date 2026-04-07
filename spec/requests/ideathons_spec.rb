@@ -29,6 +29,13 @@ RSpec.describe "Ideathons", type: :request do
       expect(response.body).to include("Ideathon 2025 — Overview")
     end
 
+    it "redirects with an alert when year is invalid" do
+      get overview_ideathon_path(9999)
+
+      expect(response).to redirect_to(ideathons_path)
+      expect(flash[:alert]).to eq("Ideathon year 9999 was not found.")
+    end
+
     context "as an editor" do
       before { login_as(editor) }
 
