@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+HOST="${HOST:-127.0.0.1}"
+PORT="${PORT:-3000}"
+URL="${APP_URL:-http://localhost:${PORT}}"
+
+open_browser() {
+  local url="$1"
+
+  if command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$url" >/dev/null 2>&1 || true
+    return
+  fi
+
+  if command -v open >/dev/null 2>&1; then
+    open "$url" >/dev/null 2>&1 || true
+    return
+  fi
+
+  if command -v cmd.exe >/dev/null 2>&1; then
+    cmd.exe /C start "" "$url" >/dev/null 2>&1 || true
+    return
+  fi
+
+  echo "Open this URL in your browser: $url"
+}
+
+wait_for_server() {
+  local url="$1"
+  local attempts=0
+
+  if ! command -v curl >/dev/null 2>&1; then
+    return 1
+  fi
+
+  while (( attempts < 60 )); do
+    if curl --silent --fail --max-time 1 "$url/up" >/dev/null 2>&1 || curl --silent --fail --max-time 1 "$url" >/dev/null 2>&1; then
+      return 0
+    fi
+
+    attempts=$((attempts + 1))
+    sleep 1
+  done
+
+  return 1
+}
+
+echo "==> Starting local PostgreSQL"
+bash script/start-db
+
+echo "==> Checking gems"
+bundle check >/dev/null || bundle install
+
+echo "==> Preparing database"
+bin/rails db:prepare
+
+echo "==> Starting Rails server on ${URL}"
+bin/rails server -b "$HOST" -p "$PORT" &
+SERVER_PID=$!
+
+cleanup() {
+  if kill -0 "$SERVER_PID" >/dev/null 2>&1; then
+    kill "$SERVER_PID" >/dev/null 2>&1 || true
+  fi
+}
+
+trap cleanup INT TERM EXIT
+
+if wait_for_server "$URL"; then
+  echo "==> Opening browser at ${URL}"
+else
+  echo "==> Could not confirm server readiness yet. Opening browser anyway: ${URL}"
+fi
+
+open_browser "$URL"
+
+wait "$SERVER_PID"
