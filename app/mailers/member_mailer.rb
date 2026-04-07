@@ -19,8 +19,10 @@ class MemberMailer < ApplicationMailer
     def goodbye_email
         @user = params[:user]
         @old_role = params[:old_role]
+        @user_name = params[:user_name].presence || @user&.name
+        recipient_email = params[:user_email].presence || @user&.email
 
-        mail(to: @user.email, subject: "Removed from the Ideathon Organizer Team")
+        mail(to: recipient_email, subject: "Removed from the Ideathon Organizer Team")
     end
 
     def request_email

@@ -24,6 +24,7 @@ class User < ApplicationRecord
 
   after_update_commit :send_role_change_email, if: :saved_change_to_role?
   after_create_commit :send_welcome_email, if: :authorized?
+  before_destroy :capture_goodbye_email_attributes
   after_destroy_commit :send_goodbye_email
 
   def send_role_change_email
@@ -40,7 +41,11 @@ class User < ApplicationRecord
   end
 
   def send_goodbye_email
-    MemberMailer.with(user: self).goodbye_email.deliver_later
+    MemberMailer.with(
+      user_email: @goodbye_email || email,
+      user_name: @goodbye_name || name,
+      old_role: @goodbye_role || role
+    ).goodbye_email.deliver_later
   rescue StandardError => error
     Rails.logger.error("Goodbye email failed for user #{id}: #{error.class}: #{error.message}")
   end
@@ -51,5 +56,13 @@ class User < ApplicationRecord
     rescue StandardError => error
       Rails.logger.error("Request email failed for admin #{admin.id}: #{error.class}: #{error.message}")
     end
+  end
+
+  private
+
+  def capture_goodbye_email_attributes
+    @goodbye_email = email
+    @goodbye_name = name
+    @goodbye_role = role
   end
 end
