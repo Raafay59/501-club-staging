@@ -23,6 +23,7 @@ class SessionsController < ApplicationController
           user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"], role: "admin")
         else
           user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"])
+        end
       else
         user = User.create(
           email: auth["info"]["email"],
