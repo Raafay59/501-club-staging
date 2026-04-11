@@ -18,12 +18,14 @@ class SessionsController < ApplicationController
       if user
         user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"])
       else
+
+        role = ALLOWED_Emails.include?(auth["info"]["email"]) ? "admin" : "unauthorized"
         user = User.create(
           email: auth["info"]["email"],
           name: auth["info"]["name"],
           uid: auth["uid"],
           provider: auth["provider"],
-          role: "unauthorized"
+          role: role
         )
       end
     end
