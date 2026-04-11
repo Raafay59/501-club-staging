@@ -26,7 +26,7 @@ class SessionsController < ApplicationController
         end
       else
 
-        role = ALLOWED_Emails.include?(auth["info"]["email"]) ? "admin" : "unauthorized"
+        role = ALLOWED_EMAILS.include?(auth["info"]["email"]) ? "admin" : "unauthorized"
         user = User.create(
           email: auth["info"]["email"],
           name: auth["info"]["name"],
