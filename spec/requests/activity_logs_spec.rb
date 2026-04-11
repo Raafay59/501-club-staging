@@ -85,6 +85,20 @@ RSpec.describe "ActivityLogs", type: :request do
 
         expect(response.body).to include("No changes found for this filter")
       end
+
+      it "shows a friendly empty state for invalid custom date ranges" do
+        ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Acme' was added")
+
+        get activity_logs_path, params: {
+          date_range: "custom",
+          start_date: "2026-04-10",
+          end_date: "2026-04-01"
+        }
+
+        expect(response.body).to include("End date must be on or after start date.")
+        expect(response.body).to include("No changes found for this filter")
+        expect(response.body).not_to include("Acme")
+      end
     end
 
     context "when logged in as an organizer (editor)" do

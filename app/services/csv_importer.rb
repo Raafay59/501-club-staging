@@ -1,6 +1,8 @@
 require "csv"
 
 class CsvImporter
+  ALLOWED_CONTENT_TYPES = [ "text/csv", "application/csv", "application/vnd.ms-excel", "text/plain" ].freeze
+
   def initialize(file:, model:, attribute_map:)
     @file = file
     @model = model
@@ -8,18 +10,22 @@ class CsvImporter
   end
 
   def import
-    return { success: 0, failed: 0, errors: [ "No file provided" ] } if @file.nil?
-    return { success: 0, failed: 0, errors: [ "Invalid file type" ] } unless valid_file?
+    error_message = file_validation_error
+    return fatal_result(error_message) if error_message.present?
 
     results = { success: 0, failed: 0, errors: [] }
-    CSV.foreach(@file.path, headers: true) do |row|
-      begin
-        @model.create!(map_attributes(row))
-        results[:success] += 1
-      rescue StandardError => e
-        results[:failed] += 1
-        results[:errors] << e.message
+    begin
+      CSV.foreach(@file.path, headers: true) do |row|
+        begin
+          @model.create!(map_attributes(row))
+          results[:success] += 1
+        rescue StandardError => e
+          results[:failed] += 1
+          results[:errors] << e.message
+        end
       end
+    rescue CSV::MalformedCSVError
+      return fatal_result("Invalid CSV format")
     end
 
     ActivityLog.record_import(model: @model, count: results[:success])
@@ -27,10 +33,44 @@ class CsvImporter
   end
 
   def valid_file?
-    @file.content_type == "text/csv" || File.extname(@file.original_filename) == ".csv"
+    file_validation_error.nil?
   end
 
   private
+
+  def fatal_result(error_message)
+    { success: 0, failed: 1, errors: [ error_message ] }
+  end
+
+  def file_validation_error
+    return "No file provided" if @file.nil?
+    return "Invalid file type" unless csv_extension?
+    return "Invalid file type" unless valid_content_type?
+    return "Invalid CSV headers" unless expected_headers_present?
+
+    nil
+  end
+
+  def csv_extension?
+    File.extname(@file.original_filename.to_s).casecmp(".csv").zero?
+  end
+
+  def valid_content_type?
+    return true if @file.content_type.blank?
+
+    ALLOWED_CONTENT_TYPES.include?(@file.content_type)
+  end
+
+  def expected_headers_present?
+    headers = CSV.open(@file.path, headers: true, return_headers: true) { |csv| csv.first&.headers }
+    normalized_headers = headers&.map { |header| header.to_s.strip }
+    return false if normalized_headers.blank?
+
+    expected_headers = @attribute_map.keys.map(&:to_s)
+    (expected_headers - normalized_headers).empty?
+  rescue CSV::MalformedCSVError
+    false
+  end
 
   def map_attributes(row)
     attributes = {}

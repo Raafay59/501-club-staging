@@ -55,6 +55,33 @@ or
 bin/rails server
 ```
 
+### One-command local start (DB + app + browser)
+
+```bash
+bash script/app-start
+```
+
+This command will:
+- start local PostgreSQL (via `script/start-db`)
+- ensure gems are installed
+- run `bin/rails db:prepare`
+- start Rails on `http://localhost:3000`
+- open your default browser automatically
+
+### Background jobs for notifications
+
+- In `development`, Active Job uses `:async`, so jobs run in-process while the Rails server is running.
+- In `production`, Active Job uses `:solid_queue`, so a worker process must be running to process `deliver_later` emails.
+
+Run a worker manually with:
+
+```bash
+bundle exec bin/jobs start
+```
+
+If you deploy with `Procfile` process types, run both `web` and `worker`.
+Alternatively, for single-process deployments, you may set `SOLID_QUEUE_IN_PUMA=1` to run the Solid Queue supervisor inside Puma.
+
 ## 4. Smoke test
 
 ```bash

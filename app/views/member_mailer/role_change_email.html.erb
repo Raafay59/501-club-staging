@@ -4,7 +4,7 @@
 
 <p> Your role in the Ideathon Organizer Team has been changed from <%= @old_role %> to <%= @new_role %>. </p>
 
-<p> As a <%= @new_role %>, you will have access to the following features: </p>
+<p> As a <%= @new_role %>, you now have access to the following: </p>
 
 <ul>
     <% if @new_role == "admin" %>
@@ -15,6 +15,9 @@
     <% elsif @new_role == "editor" %>
         <li> Create and manage content </li>
         <li> View participant information </li>
+    <% else %>
+        <li> Sign in to your account </li>
+        <li> Request organizer access from an administrator when needed </li>
     <% end %>
 
 </ul>

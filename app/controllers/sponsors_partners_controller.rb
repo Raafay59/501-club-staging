@@ -55,6 +55,7 @@ class SponsorsPartnersController < ApplicationController
       attribute_map: {
         "year" => :year,
         "name" => :name,
+        "job_title" => :job_title,
         "logo_url" => :logo_url,
         "blurb" => :blurb,
         "is_sponsor" => :is_sponsor
@@ -80,7 +81,7 @@ class SponsorsPartnersController < ApplicationController
     csv_data = CSV.generate(headers: true) do |csv|
       csv << [ "Sponsor name", "Logo URL", "Job title", "Bio" ]
       sponsors.each do |sponsor|
-        csv << [ sponsor.name, sponsor.logo_url, "", sponsor.blurb ]
+        csv << [ sponsor.name, sponsor.logo_url, sponsor.job_title, sponsor.blurb ]
       end
     end
 
@@ -101,7 +102,7 @@ class SponsorsPartnersController < ApplicationController
   end
 
   def sponsors_partner_params
-    params.require(:sponsors_partner).permit(:year, :name, :logo_url, :blurb, :is_sponsor)
+    params.require(:sponsors_partner).permit(:year, :name, :job_title, :logo_url, :blurb, :is_sponsor)
   end
 
   def latest_export_year_for(model)

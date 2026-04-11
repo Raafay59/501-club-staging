@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe "Users", type: :request do
-  let!(:admin) { User.create!(email: 'admin@example.com', role: 'admin') }
-  let!(:editor) { User.create!(email: 'editor@example.com', role: 'editor') }
+  let!(:admin) { User.create!(email: 'admin@example.com', name: 'Admin User', role: 'admin') }
+  let!(:editor) { User.create!(email: 'editor@example.com', name: 'Editor User', role: 'editor') }
 
   before { login_as(admin) }
 
@@ -50,6 +50,19 @@ RSpec.describe "Users", type: :request do
       expect(response).to redirect_to(users_path)
     end
 
+    it "keeps role changes when role-change email enqueue fails" do
+      delivery = instance_double(ActionMailer::MessageDelivery)
+      mailer = instance_double(MemberMailer, role_change_email: delivery)
+      allow(MemberMailer).to receive(:with).and_return(mailer)
+      allow(delivery).to receive(:deliver_later).and_raise(StandardError, "queue unavailable")
+
+      patch user_path(editor), params: { user: { role: 'admin' } }
+
+      editor.reload
+      expect(editor.role).to eq('admin')
+      expect(response).to redirect_to(users_path)
+    end
+
     it "prevents demoting the last admin" do
       patch user_path(admin), params: { user: { role: 'editor' } }
       admin.reload
@@ -63,6 +76,33 @@ RSpec.describe "Users", type: :request do
       expect {
         delete user_path(editor)
       }.to change(User, :count).by(-1)
+      expect(response).to redirect_to(users_path)
+    end
+
+    it "passes primitive values to goodbye email when deleting a user" do
+      delivery = instance_double(ActionMailer::MessageDelivery, deliver_later: true)
+      mailer = instance_double(MemberMailer, goodbye_email: delivery)
+
+      expect(MemberMailer).to receive(:with).with(
+        hash_including(user_email: 'editor@example.com', user_name: 'Editor User', old_role: 'editor')
+      ).and_return(mailer)
+
+      delete user_path(editor)
+
+      expect(response).to redirect_to(users_path)
+    end
+
+    it "still deletes a user when goodbye email enqueue fails" do
+      delivery = instance_double(ActionMailer::MessageDelivery)
+      mailer = instance_double(MemberMailer, goodbye_email: delivery)
+
+      allow(MemberMailer).to receive(:with).and_return(mailer)
+      allow(delivery).to receive(:deliver_later).and_raise(StandardError, 'queue unavailable')
+
+      expect {
+        delete user_path(editor)
+      }.to change(User, :count).by(-1)
+
       expect(response).to redirect_to(users_path)
     end
 

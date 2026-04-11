@@ -29,6 +29,13 @@ RSpec.describe "Ideathons", type: :request do
       expect(response.body).to include("Ideathon 2025 — Overview")
     end
 
+    it "redirects with an alert when year is invalid" do
+      get overview_ideathon_path(9999)
+
+      expect(response).to redirect_to(ideathons_path)
+      expect(flash[:alert]).to eq("Ideathon year 9999 was not found.")
+    end
+
     context "as an editor" do
       before { login_as(editor) }
 
@@ -126,6 +133,29 @@ RSpec.describe "Ideathons", type: :request do
         delete ideathon_path(ideathon)
         expect(response).to redirect_to(root_path)
       end
+    end
+  end
+
+  describe "POST /ideathons/import" do
+    it "imports from a valid CSV file" do
+      file = fixture_file_upload('ideathons_import.csv', 'text/csv')
+
+      expect {
+        post import_ideathons_path, params: { file: file }
+      }.to change(Ideathon, :count).by(2)
+
+      expect(response).to redirect_to(ideathons_path)
+    end
+
+    it "rejects non-csv files" do
+      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
+
+      expect {
+        post import_ideathons_path, params: { file: file }
+      }.not_to change(Ideathon, :count)
+
+      expect(response).to redirect_to(ideathons_path)
+      expect(flash[:alert]).to include('Invalid file type')
     end
   end
 end

@@ -65,6 +65,18 @@ RSpec.describe MemberMailer, type: :mailer do
         MemberMailer.with(user: user).goodbye_email.deliver_now
       }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
+
+    it "supports primitive params for deleted users" do
+      mail = MemberMailer.with(
+        user_email: "former@example.com",
+        user_name: "Former User",
+        old_role: "editor"
+      ).goodbye_email
+
+      expect(mail.to).to eq([ "former@example.com" ])
+      expect(mail.subject).to eq("Removed from the Ideathon Organizer Team")
+      expect(mail.body.encoded).to include("Former User")
+    end
   end
 
   describe "request_email" do

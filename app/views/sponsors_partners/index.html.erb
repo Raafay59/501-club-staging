@@ -5,6 +5,7 @@
     <tr>
       <th>Year</th>
       <th>Name</th>
+      <th>Job Title</th>
       <th>Type</th>
       <th>Actions</th>
     </tr>
@@ -14,6 +15,7 @@
       <tr>
         <td><%= sp.year %></td>
         <td><%= sp.name %></td>
+        <td><%= sp.job_title.presence || "—" %></td>
         <td><%= sp.is_sponsor? ? "Sponsor" : "Partner" %></td>
         <td>
           <%= link_to "View", sponsors_partner_path(sp) %> |
@@ -33,11 +35,11 @@
 <% if admin? %>
   <hr>
   <h2>Import Sponsors/Partners from CSV</h2>
-  <p>CSV columns: <code>year, name, logo_url, blurb, is_sponsor</code></p>
+  <p>CSV columns: <code>year, name, job_title, logo_url, blurb, is_sponsor</code></p>
   <%= form_with url: import_sponsors_partners_path, local: true, multipart: true do |form| %>
     <div>
       <%= form.label :file, "Select CSV file" %>
-      <%= form.file_field :file %>
+      <%= form.file_field :file, accept: ".csv,text/csv" %>
     </div>
     <div>
       <%= form.submit "Import" %>

@@ -5,6 +5,7 @@
     <tr>
       <th>Year</th>
       <th>Name</th>
+      <th>Job Title</th>
       <th>Role</th>
       <th>Actions</th>
     </tr>
@@ -14,6 +15,7 @@
       <tr>
         <td><%= mj.year %></td>
         <td><%= mj.name %></td>
+        <td><%= mj.job_title.presence || "—" %></td>
         <td><%= mj.is_judge? ? "Judge" : "Mentor" %></td>
         <td>
           <%= link_to "View", mentors_judge_path(mj) %> |
@@ -33,11 +35,11 @@
 <% if admin? %>
   <hr>
   <h2>Import Mentors/Judges from CSV</h2>
-  <p>CSV columns: <code>year, name, photo_url, bio, is_judge</code></p>
+  <p>CSV columns: <code>year, name, job_title, photo_url, bio, is_judge</code></p>
   <%= form_with url: import_mentors_judges_path, local: true, multipart: true do |form| %>
     <div>
       <%= form.label :file, "Select CSV file" %>
-      <%= form.file_field :file %>
+      <%= form.file_field :file, accept: ".csv,text/csv" %>
     </div>
     <div>
       <%= form.submit "Import" %>

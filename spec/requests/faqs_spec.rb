@@ -102,4 +102,27 @@ RSpec.describe "Faqs", type: :request do
       end
     end
   end
+
+  describe "POST /faqs/import" do
+    it "imports from a valid CSV file" do
+      file = fixture_file_upload('faqs.csv', 'text/csv')
+
+      expect {
+        post import_faqs_path, params: { file: file }
+      }.to change(Faq, :count).by(2)
+
+      expect(response).to redirect_to(faqs_path)
+    end
+
+    it "rejects non-csv files" do
+      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
+
+      expect {
+        post import_faqs_path, params: { file: file }
+      }.not_to change(Faq, :count)
+
+      expect(response).to redirect_to(faqs_path)
+      expect(flash[:alert]).to include('Invalid file type')
+    end
+  end
 end

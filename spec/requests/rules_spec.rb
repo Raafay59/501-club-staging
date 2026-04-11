@@ -102,4 +102,27 @@ RSpec.describe "Rules", type: :request do
       end
     end
   end
+
+  describe "POST /rules/import" do
+    it "imports from a valid CSV file" do
+      file = fixture_file_upload('rules.csv', 'text/csv')
+
+      expect {
+        post import_rules_path, params: { file: file }
+      }.to change(Rule, :count).by(2)
+
+      expect(response).to redirect_to(rules_path)
+    end
+
+    it "rejects non-csv files" do
+      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
+
+      expect {
+        post import_rules_path, params: { file: file }
+      }.not_to change(Rule, :count)
+
+      expect(response).to redirect_to(rules_path)
+      expect(flash[:alert]).to include('Invalid file type')
+    end
+  end
 end

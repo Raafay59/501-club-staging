@@ -104,10 +104,33 @@ RSpec.describe "SponsorsPartners", type: :request do
     end
   end
 
+  describe "POST /sponsors_partners/import" do
+    it "imports from a valid CSV file" do
+      file = fixture_file_upload('sponsors_partners.csv', 'text/csv')
+
+      expect {
+        post import_sponsors_partners_path, params: { file: file }
+      }.to change(SponsorsPartner, :count).by(2)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+    end
+
+    it "rejects non-csv files" do
+      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
+
+      expect {
+        post import_sponsors_partners_path, params: { file: file }
+      }.not_to change(SponsorsPartner, :count)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+      expect(flash[:alert]).to include('Invalid file type')
+    end
+  end
+
   describe "GET /sponsors_partners/export" do
     it "exports current-year sponsors as CSV" do
       Ideathon.create!(year: 2026, theme: 'Future')
-      SponsorsPartner.create!(year: 2026, name: 'Future Corp', logo_url: 'https://logo.test/future.png', blurb: 'Future sponsor', is_sponsor: true)
+      SponsorsPartner.create!(year: 2026, name: 'Future Corp', job_title: 'Head of Partnerships', logo_url: 'https://logo.test/future.png', blurb: 'Future sponsor', is_sponsor: true)
       SponsorsPartner.create!(year: 2026, name: 'Future Partner', logo_url: 'https://logo.test/partner.png', blurb: 'Not a sponsor', is_sponsor: false)
 
       get export_sponsors_partners_path(format: :csv)
@@ -120,6 +143,7 @@ RSpec.describe "SponsorsPartners", type: :request do
       expect(rows.headers).to eq([ 'Sponsor name', 'Logo URL', 'Job title', 'Bio' ])
       expect(rows.length).to eq(1)
       expect(rows.map { |row| row['Sponsor name'] }).to contain_exactly('Future Corp')
+      expect(rows[0]['Job title']).to eq('Head of Partnerships')
       expect(rows.map { |row| row['Sponsor name'] }).not_to include('Acme Corp')
       expect(rows.map { |row| row['Sponsor name'] }).not_to include('Future Partner')
     end

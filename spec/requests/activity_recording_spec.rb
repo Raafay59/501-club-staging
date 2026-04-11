@@ -84,5 +84,21 @@ RSpec.describe "ActivityRecording", type: :request do
 
       expect(response).to redirect_to(sponsors_partners_path)
     end
+
+    it "keeps saving changes when notification delivery fails" do
+      delivery = instance_double(ActionMailer::MessageDelivery)
+      mailer = instance_double(CrudMailer, record_change_email: delivery)
+      allow(CrudMailer).to receive(:with).and_return(mailer)
+      allow(delivery).to receive(:deliver_later).and_raise(StandardError, "mailer failed")
+
+      expect {
+        post sponsors_partners_path, params: {
+          sponsors_partner: { year: 2025, name: "Mailer Safe", blurb: "Still saves", is_sponsor: true }
+        }
+      }.to change(SponsorsPartner, :count).by(1)
+       .and change(ActivityLog, :count).by(1)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+    end
   end
 end

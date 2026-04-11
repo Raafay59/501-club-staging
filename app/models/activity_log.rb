@@ -1,7 +1,7 @@
 class ActivityLog < ApplicationRecord
   belongs_to :user
 
-  after_create :email_organizers
+  after_create_commit :email_organizers
 
   ACTIONS = %w[added edited removed imported exported].freeze
   CONTENT_TYPE_FILTERS = {
@@ -201,12 +201,17 @@ class ActivityLog < ApplicationRecord
   end
 
   def email_organizers
-    User.where(role: [ "admin", "editor" ]).find_each do |u|
+    User.where(role: [ "admin", "editor" ]).find_each do |recipient|
       CrudMailer.with(
-        user: u,
+        user: recipient,
         change_type: action.to_s,
-        actor: user
-      ).record_change_email.deliver_now
+        actor: user,
+        change_message: message,
+        item_name: item_name,
+        changed_at: created_at
+      ).record_change_email.deliver_later
+    rescue StandardError => error
+      Rails.logger.error("Activity log email failed for user #{recipient.id}: #{error.class}: #{error.message}")
     end
   end
 end
