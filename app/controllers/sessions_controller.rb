@@ -20,7 +20,7 @@ class SessionsController < ApplicationController
       user = User.find_by(email: auth["info"]["email"])
       if user
         if ALLOWED_EMAILS.include?(auth.info.email)
-          user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"])
+          user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"], role: "admin")
         else
           user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"])
       else
