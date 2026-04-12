@@ -1,7 +1,7 @@
 Rails.application.config.after_initialize do
   next if Rails.env.test?
 
-  admin_emails = %w[raafay@tamu.edu zzh021015@tamu.edu]
+  admin_emails = %w[raafay@tamu.edu zzh021015@tamu.edu ernest01@tamu.edu]
 
   admin_emails.each do |email|
     User.upsert({ email: email, role: "admin" }, unique_by: :email)
