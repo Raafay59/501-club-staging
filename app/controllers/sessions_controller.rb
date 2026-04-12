@@ -4,8 +4,6 @@ class SessionsController < ApplicationController
 
   def new
   end
-
-  ALLOWED_EMAILS = ["ernest01@tamu.edu"]
   
   def create
     auth = request.env["omniauth.auth"]
@@ -19,20 +17,15 @@ class SessionsController < ApplicationController
     if user.nil?
       user = User.find_by(email: auth["info"]["email"])
       if user
-        if ALLOWED_EMAILS.include?(auth.info.email)
-          user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"], role: "admin")
-        else
           user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"])
         end
       else
-
-        role = ALLOWED_EMAILS.include?(auth["info"]["email"]) ? "admin" : "unauthorized"
         user = User.create(
           email: auth["info"]["email"],
           name: auth["info"]["name"],
           uid: auth["uid"],
           provider: auth["provider"],
-          role: role
+          role: "unauthorized"
         )
       end
     end
