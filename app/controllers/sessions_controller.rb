@@ -4,10 +4,10 @@ class SessionsController < ApplicationController
 
   def new
   end
-  
+
   def create
     auth = request.env["omniauth.auth"]
-      
+
     if auth.nil?
       redirect_to login_path, alert: "Authentication failed."
       return
@@ -17,16 +17,15 @@ class SessionsController < ApplicationController
     if user.nil?
       user = User.find_by(email: auth["info"]["email"])
       if user
-        user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"], role: "admin")
-        end
+        user.update(uid: auth["uid"], provider: auth["provider"], name: auth["info"]["name"])
       else
-        
+
         user = User.create(
           email: auth["info"]["email"],
           name: auth["info"]["name"],
           uid: auth["uid"],
           provider: auth["provider"],
-          role: "admin"
+          role: "unauthorized"
         )
       end
     end
