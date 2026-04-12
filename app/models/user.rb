@@ -29,7 +29,7 @@ class User < ApplicationRecord
 
   def send_role_change_email
     old_role, new_role = saved_change_to_role
-    MemberMailer.with(user: self, old_role: old_role, new_role: new_role).role_change_email.deliver_later
+    MemberMailer.with(user: self, old_role: old_role, new_role: new_role).role_change_email.deliver_now
   rescue StandardError => error
     Rails.logger.error("Role change email failed for user #{id}: #{error.class}: #{error.message}")
   end
