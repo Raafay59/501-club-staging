@@ -1,0 +1,351 @@
+/*
+ * 501 Club — Ideathon Manager
+ * Shared layout, typography, tables, forms, and feedback styles.
+ */
+
+:root {
+  --color-bg: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-accent: #1d4ed8;
+  --color-accent-hover: #1e40af;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-success: #15803d;
+  --color-success-bg: #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --radius: 8px;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --space-page: clamp(1rem, 4vw, 2rem);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  font-weight: 650;
+  margin: 0 0 0.75rem;
+}
+
+h1 {
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.2rem;
+  margin-top: 1.5rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1.5rem 0;
+}
+
+code {
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+/* ——— App chrome ——— */
+
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding: 0.75rem var(--space-page);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-nav__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+}
+
+.app-nav__links a {
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.app-nav__links a:hover {
+  text-decoration: underline;
+}
+
+.app-nav__sep {
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.app-nav__user {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.app-nav__user .button_to {
+  display: inline;
+  margin: 0;
+}
+
+.app-nav__user .button_to button {
+  vertical-align: baseline;
+}
+
+.app-main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-page);
+}
+
+/* ——— Flash & alerts ——— */
+
+.flash {
+  padding: 0.65rem 0.85rem;
+  margin: 0 0 1rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+
+.flash--notice {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+
+.flash--alert {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+}
+
+/* ——— Forms ——— */
+
+.form-errors {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.form-errors ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.form-row--end {
+  align-items: flex-end;
+}
+
+form > div:not(.form-errors):not(.form-row) {
+  margin-bottom: 0.75rem;
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-text);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="date"],
+input[type="number"],
+input[type="url"],
+textarea,
+select {
+  font: inherit;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  min-width: 0;
+  max-width: 100%;
+}
+
+textarea {
+  min-height: 6rem;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid rgba(29, 78, 216, 0.35);
+  outline-offset: 1px;
+  border-color: var(--color-accent);
+}
+
+input[type="submit"],
+input[type="file"]::file-selector-button,
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+input[type="submit"],
+button[type="submit"],
+form.button_to > button {
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+input[type="submit"]:hover,
+button[type="submit"]:hover,
+form.button_to > button:hover {
+  background: var(--color-accent-hover);
+}
+
+input[type="file"]::file-selector-button {
+  margin-right: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+}
+
+/* ——— Data tables ——— */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.data-table th {
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  background: #f8fafc;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+/* ——— Media ——— */
+
+.thumb-logo {
+  max-width: 120px;
+  max-height: 60px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.detail-photo {
+  max-width: 200px;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.photo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.photo-card {
+  text-align: center;
+  max-width: 160px;
+}
+
+.photo-card__img {
+  max-width: 140px;
+  max-height: 140px;
+  width: 100%;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.photo-card__name {
+  font-size: 0.9rem;
+  margin-top: 0.35rem;
+}
+
+.photo-card__role {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}

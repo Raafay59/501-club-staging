@@ -2,7 +2,7 @@
 
 <%= form_with(model: @ideathon, url: ideathons_path, local: true) do |form| %>
   <% if @ideathon.errors.any? %>
-    <div style="color: red;">
+    <div class="form-errors" role="alert">
       <h3><%= pluralize(@ideathon.errors.count, "error") %> prohibited this ideathon from being saved:</h3>
       <ul>
         <% @ideathon.errors.full_messages.each do |message| %>

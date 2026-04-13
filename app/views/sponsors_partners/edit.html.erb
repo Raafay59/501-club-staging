@@ -2,7 +2,7 @@
 
 <%= form_with(model: @sponsors_partner, local: true) do |form| %>
   <% if @sponsors_partner.errors.any? %>
-    <div style="color: red;">
+    <div class="form-errors" role="alert">
       <h3><%= pluralize(@sponsors_partner.errors.count, "error") %> prohibited this record from being saved:</h3>
       <ul>
         <% @sponsors_partner.errors.full_messages.each do |message| %>
