@@ -62,4 +62,15 @@ RSpec.describe User, type: :model do
       expect(unauth).not_to be_authorized
     end
   end
+
+  describe 'destroy' do
+    it 'removes associated activity logs when the user is deleted' do
+      user = User.create!(email: 'with-logs@example.com', role: 'editor')
+      ActivityLog.record!(user: user, action: :added, message: "Sponsor 'Acme' was added")
+
+      expect {
+        user.destroy!
+      }.to change(User, :count).by(-1).and change(ActivityLog, :count).by(-1)
+    end
+  end
 end
