@@ -2,7 +2,7 @@
 
 <%= form_with(model: @faq, local: true) do |form| %>
   <% if @faq.errors.any? %>
-    <div style="color: red;">
+    <div class="form-errors" role="alert">
       <h3><%= pluralize(@faq.errors.count, "error") %> prohibited this FAQ from being saved:</h3>
       <ul>
         <% @faq.errors.full_messages.each do |message| %>

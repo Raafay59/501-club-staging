@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title><%= content_for(:title) || "501 Club - Ideathon Manager" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -20,32 +20,40 @@
 
   <body>
     <% if logged_in? && current_user.authorized? %>
-      <nav style="padding: 10px; background: #f0f0f0; margin-bottom: 20px;">
-        <%= link_to "Ideathons", ideathons_path %> |
-        <%= link_to "Sponsors & Partners", sponsors_partners_path %> |
-        <%= link_to "Mentors & Judges", mentors_judges_path %> |
-        <%= link_to "FAQs", faqs_path %> |
-        <%= link_to "Rules", rules_path %> |
-        <%= link_to "Activity Log", activity_logs_path %>
-        <% if admin? %>
-          | <%= link_to "Manage Users", users_path %>
-        <% end %>
-        <span style="float: right;">
-          Signed in as <strong><%= current_user.name %></strong> (<%= current_user.role %>)
-          <%= button_to "Sign Out", logout_path, method: :delete, style: "display: inline;" %>
-        </span>
+      <nav class="app-nav" aria-label="Main">
+        <div class="app-nav__links">
+          <%= link_to "Ideathons", ideathons_path %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
+          <%= link_to "Sponsors & Partners", sponsors_partners_path %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
+          <%= link_to "Mentors & Judges", mentors_judges_path %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
+          <%= link_to "FAQs", faqs_path %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
+          <%= link_to "Rules", rules_path %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
+          <%= link_to "Activity Log", activity_logs_path %>
+          <% if admin? %>
+            <span class="app-nav__sep" aria-hidden="true">|</span>
+            <%= link_to "Manage Users", users_path %>
+          <% end %>
+        </div>
+        <div class="app-nav__user">
+          <span>Signed in as <strong><%= current_user.name %></strong> (<%= current_user.role %>)</span>
+          <%= button_to "Sign Out", logout_path, method: :delete %>
+        </div>
       </nav>
     <% end %>
 
-    <div style="padding: 0 20px;">
+    <main class="app-main">
       <% if notice %>
-        <p style="color: green; background: #e6ffe6; padding: 8px; border: 1px solid green;"><%= notice %></p>
+        <p class="flash flash--notice" role="status"><%= notice %></p>
       <% end %>
       <% if alert %>
-        <p style="color: red; background: #ffe6e6; padding: 8px; border: 1px solid red;"><%= alert %></p>
+        <p class="flash flash--alert" role="alert"><%= alert %></p>
       <% end %>
 
       <%= yield %>
-    </div>
+    </main>
   </body>
 </html>

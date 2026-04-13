@@ -3,7 +3,7 @@
 <h2>Add User by Email</h2>
 <%= form_with(model: @new_user, url: users_path, local: true) do |form| %>
   <% if @new_user.errors.any? %>
-    <div style="color: red;">
+    <div class="form-errors" role="alert">
       <ul>
         <% @new_user.errors.full_messages.each do |message| %>
           <li><%= message %></li>
@@ -12,7 +12,7 @@
     </div>
   <% end %>
 
-  <div style="display: flex; gap: 10px; align-items: end;">
+  <div class="form-row form-row--end">
     <div>
       <%= form.label :email, "Email Address" %>
       <%= form.email_field :email, placeholder: "user@example.com" %>
@@ -31,7 +31,7 @@
 
 <h2>Existing Users</h2>
 
-<table border="1" cellpadding="8" cellspacing="0">
+<table class="data-table">
   <thead>
     <tr>
       <th>Email</th>

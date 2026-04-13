@@ -3,7 +3,7 @@
 <p>Recent changes to ideathons, sponsors, partners, mentors, judges, FAQs, and photos (logos and profile images). Newest first.</p>
 
 <% if flash[:alert] %>
-  <p style="color: red;"><%= flash[:alert] %></p>
+  <p class="flash flash--alert" role="alert"><%= flash[:alert] %></p>
 <% end %>
 
 <%= form_with url: activity_logs_path, method: :get, local: true do |form| %>
@@ -36,7 +36,7 @@
   </div>
 <% end %>
 
-<table border="1" cellpadding="8" cellspacing="0">
+<table class="data-table">
   <thead>
     <tr>
       <th>Date &amp; time</th>
