@@ -19,11 +19,12 @@ class UsersController < ApplicationController
 
   def update
     @user = User.find(params[:id])
-    # new_role = user_params[:role]
+    new_role = params[:user][:role].to_s
 
-    if @user == current_user && params[:user][:role] != "admin"
-      if User.where(role: "admin").count <= 1
-        redirect_to users_path, alert: "Cannot change your role — you are the only admin."
+    if @user.admin? && new_role != "admin"
+      other_admins = User.where(role: "admin").where.not(id: @user.id).count
+      if other_admins.zero?
+        redirect_to users_path, alert: "Cannot demote the only admin."
         return
       end
     end
