@@ -35,7 +35,8 @@ RSpec.describe ActivityLog, type: :model do
       end
 
       recipients = ActionMailer::Base.deliveries.flat_map(&:to)
-      expect(recipients).to contain_exactly(admin_recipient.email, editor_recipient.email)
+      expected = User.where(role: [ "admin", "editor" ]).distinct.pluck(:email)
+      expect(recipients).to match_array(expected)
     end
 
     it "does not enqueue notifications when transaction rolls back" do

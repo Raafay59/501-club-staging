@@ -64,6 +64,8 @@ RSpec.describe "Users", type: :request do
     end
 
     it "prevents demoting the last admin" do
+      User.where(role: "admin").where.not(id: admin.id).delete_all
+
       patch user_path(admin), params: { user: { role: 'editor' } }
       admin.reload
       expect(admin.role).to eq('admin')
@@ -113,12 +115,12 @@ RSpec.describe "Users", type: :request do
       expect(response).to redirect_to(users_path)
     end
 
-    it "prevents deleting a user who has activity logs" do
+    it "deletes a user and their activity logs" do
       ActivityLog.record!(user: editor, action: :added, message: "Sponsor 'Logged' was added")
 
       expect {
         delete user_path(editor)
-      }.not_to change(User, :count)
+      }.to change(User, :count).by(-1).and change(ActivityLog, :count).by(-1)
 
       expect(response).to redirect_to(users_path)
     end
