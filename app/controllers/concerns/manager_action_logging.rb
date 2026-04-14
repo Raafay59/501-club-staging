@@ -6,7 +6,7 @@ module ManagerActionLogging
   private
 
   def log_manager_action(action:, record: nil, metadata: {})
-    return unless respond_to?(:organizer_tools?) && organizer_tools?
+    return unless respond_to?(:organizer_tools?, true) && organizer_tools?
     return if action.blank?
 
     ManagerActionLog.create!(
