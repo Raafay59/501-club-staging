@@ -1,0 +1,224 @@
+<% content_for :title, "Edit Attendee - TAMU Ideathon 2026" %>
+
+<% content_for :head do %>
+<meta name="turbo-cache-control" content="no-cache">
+<style>
+  .registration-page,
+  .registration-page * {
+    color: rgb(127, 85, 81) !important;
+  }
+  .registration-page input::placeholder,
+  .registration-page textarea::placeholder,
+  .registration-page select::placeholder {
+    color: rgba(127, 85, 81, 0.3) !important;
+  }
+  .registration-page .register-title {
+    color: rgb(238, 136, 138) !important;
+  }
+  .registration-page .subtle-text {
+    color: rgba(127, 85, 81, 0.7) !important;
+  }
+  body {
+    background-color: rgb(255, 249, 246);
+    color: rgb(127, 85, 81);
+  }
+  .reg-card {
+    background: rgb(252, 240, 228);
+    border: 1px solid rgba(238, 136, 138, 0.15);
+  }
+  .reg-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.2s ease;
+  }
+  .reg-input:focus {
+    border-color: rgba(158, 194, 191, 0.5);
+    box-shadow: 0 0 15px rgba(158, 194, 191, 0.1);
+    outline: none;
+  }
+  .reg-input::placeholder {
+    color: rgba(127, 85, 81, 0.3) !important;
+  }
+  input.reg-input::placeholder,
+  textarea.reg-input::placeholder {
+    color: rgba(127, 85, 81, 0.3) !important;
+  }
+  .reg-radio {
+    accent-color: rgb(158, 194, 191);
+  }
+  .btn-submit {
+    background: rgba(238, 136, 138, 0.10);
+    border: 1px solid rgba(238, 136, 138, 0.4);
+    transition: all 0.3s ease;
+  }
+  .btn-submit:hover {
+    background: rgba(238, 136, 138, 0.25);
+    box-shadow: 0 0 25px rgba(238, 136, 138, 0.15);
+  }
+  .accent-text {
+    color: rgb(238, 136, 138) !important;
+  }
+  .accent-hover:hover {
+    color: rgb(158, 194, 191) !important;
+  }
+  .divider {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  select.reg-input {
+    color: rgb(127, 85, 81);
+    background: rgba(255, 255, 255, 0.08);
+  }
+  select.reg-input option {
+    color: white;
+    background-color: #1a1a2e;
+  }
+</style>
+<% end %>
+
+<%
+  current_team = @registered_attendee.team
+  saved_choice = if params[:team_choice].present?
+    params[:team_choice]
+  elsif current_team.nil? || current_team.unassigned
+    "unassigned"
+  else
+    "existing"
+  end
+  saved_existing_id = params[:existing_team_id] || (saved_choice == "existing" ? current_team&.id&.to_s : nil)
+  year_teams = Team.where(ideathon_year_id: @registered_attendee.ideathon_year_id).order(:unassigned, :team_name)
+  existing_teams = year_teams.reject { |t| t.unassigned }
+%>
+
+<div class="registration-page min-h-screen px-4 py-8 sm:px-6 lg:px-8">
+  <div class="max-w-lg mx-auto">
+    <div class="mb-6 text-center">
+      <%= link_to manager_index_path, class: "inline-flex items-center gap-2 text-white/50 accent-hover transition-colors text-sm" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to Manager
+      <% end %>
+    </div>
+
+    <div class="reg-card rounded-2xl p-6 sm:p-8">
+      <h1 class="register-title font-beachday text-3xl sm:text-4xl tracking-wide text-center mb-1" style="color: rgb(238, 136, 138);">
+        EDIT ATTENDEE
+      </h1>
+      <p class="text-white/40 text-sm text-center mb-8">
+        <%= @registered_attendee.attendee_name %>
+      </p>
+
+      <% if @registered_attendee.errors.any? %>
+        <div class="mb-6 rounded-lg px-4 py-3 text-sm text-red-400" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25);">
+          <p class="font-semibold mb-1"><%= pluralize(@registered_attendee.errors.count, "error") %> prevented saving:</p>
+          <ul class="list-disc list-inside space-y-0.5">
+            <% @registered_attendee.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= form_with model: @registered_attendee do |f| %>
+        <%= f.hidden_field :ideathon_year_id %>
+
+        <h2 class="text-white/70 text-sm font-semibold uppercase tracking-wider mb-4">Attendee Info</h2>
+
+        <div class="space-y-4">
+          <div>
+            <%= f.label :attendee_name, "Name", class: "block text-white/50 text-xs mb-1.5" %>
+            <%= f.text_field :attendee_name, required: true, class: "reg-input w-full rounded-lg px-4 py-3 text-white text-sm" %>
+          </div>
+
+          <div>
+            <%= f.label :attendee_phone, "Phone", class: "block text-white/50 text-xs mb-1.5" %>
+            <%= f.telephone_field :attendee_phone, required: true, class: "reg-input w-full rounded-lg px-4 py-3 text-white text-sm" %>
+            <p class="text-white/30 text-xs mt-1">Must be exactly 10 digits</p>
+          </div>
+
+          <div>
+            <%= f.label :attendee_email, "Email", class: "block text-white/50 text-xs mb-1.5" %>
+            <%= f.email_field :attendee_email,
+              required: true,
+              placeholder: "name@tamu.edu",
+              pattern: ".+@tamu\\.edu",
+              title: "Must be a @tamu.edu email address",
+              class: "reg-input w-full rounded-lg px-4 py-3 text-white text-sm" %>
+          </div>
+
+          <div>
+            <%= f.label :attendee_major, "Major", class: "block text-white/50 text-xs mb-1.5" %>
+            <%= f.text_field :attendee_major, required: true, class: "reg-input w-full rounded-lg px-4 py-3 text-white text-sm" %>
+          </div>
+
+          <div>
+            <%= f.label :attendee_class, "Classification", class: "block text-white/50 text-xs mb-1.5" %>
+            <%= f.select :attendee_class,
+              [["Freshman", "Freshman"], ["Sophomore", "Sophomore"], ["Junior", "Junior"], ["Senior", "Senior"], ["Other", "Other"]],
+              { prompt: "Select classification" },
+              required: true, class: "reg-input w-full rounded-lg px-4 py-3 text-sm select.reg-input" %>
+          </div>
+        </div>
+
+        <hr class="divider my-8">
+
+        <h2 class="text-white/70 text-sm font-semibold uppercase tracking-wider mb-4">Team</h2>
+
+        <div class="space-y-4">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="team_choice" value="unassigned"
+                   class="reg-radio mt-0.5"
+                   <%= saved_choice == "unassigned" ? "checked" : "" %>
+                   onchange="document.getElementById('existing_team_input').classList.add('hidden'); document.getElementById('new_team_input').classList.add('hidden')">
+            <div>
+              <span class="text-white text-sm">Unassigned</span>
+              <p class="subtle-text text-xs mt-0.5">Remove from current team</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="team_choice" value="existing"
+                   class="reg-radio mt-0.5"
+                   <%= saved_choice == "existing" ? "checked" : "" %>
+                   onchange="document.getElementById('existing_team_input').classList.toggle('hidden', !this.checked); document.getElementById('new_team_input').classList.add('hidden')">
+            <div class="flex-1">
+              <span class="text-white text-sm">Assign to a team</span>
+              <div id="existing_team_input" class="mt-2 <%= saved_choice == 'existing' ? '' : 'hidden' %>">
+                <%= select_tag "existing_team_id",
+                  options_for_select(
+                    [["-- Select a team --", ""]] + existing_teams.map { |t| ["#{t.team_name} (#{t.registered_attendees.count}/4 members)", t.id] },
+                    saved_existing_id
+                  ),
+                  class: "reg-input w-full rounded-lg px-4 py-2.5 text-white text-sm" %>
+              </div>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="team_choice" value="new"
+                   class="reg-radio mt-0.5"
+                   <%= saved_choice == "new" ? "checked" : "" %>
+                   onchange="document.getElementById('new_team_input').classList.toggle('hidden', !this.checked); document.getElementById('existing_team_input').classList.add('hidden')">
+            <div class="flex-1">
+              <span class="text-white text-sm">Create a new team</span>
+              <p class="subtle-text text-xs mt-0.5">Enter a unique name for a new team</p>
+              <div id="new_team_input" class="mt-2 <%= saved_choice == 'new' ? '' : 'hidden' %>">
+                <input type="text" name="new_team_name" id="new_team_name"
+                       value="<%= params[:new_team_name] %>"
+                       placeholder="Team name"
+                       class="reg-input w-full rounded-lg px-4 py-2.5 text-white text-sm">
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <%= f.hidden_field :team_id, value: "" %>
+
+        <div class="mt-12">
+          <%= f.submit "Save Changes",
+            class: "btn-submit w-full rounded-xl px-6 py-4 accent-text font-semibold text-base cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

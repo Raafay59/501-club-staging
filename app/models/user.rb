@@ -18,6 +18,7 @@ class User < ApplicationRecord
     role == "unauthorized"
   end
 
+  # Club dashboard + public-site manager (registration, teams, events).
   def authorized?
     admin? || editor?
   end

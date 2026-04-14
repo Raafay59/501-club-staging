@@ -1,9 +1,9 @@
-class FaqsController < ApplicationController
+class FaqsController < ClubDashboardController
   before_action :require_admin, only: [ :destroy, :import ]
   before_action :set_faq, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
-    @faqs = Faq.order(:year, :id)
+    @faqs = Faq.joins(:ideathon).order(Arel.sql("ideathon_years.year DESC, faqs.id ASC"))
   end
 
   def show

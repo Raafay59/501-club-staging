@@ -1,0 +1,67 @@
+<% content_for :title, "New Event - TAMU Ideathon 2026" %>
+<% content_for :submit_label, "Create Event" %>
+
+<% content_for :head do %>
+<meta name="turbo-cache-control" content="no-cache">
+<style>
+  .event-page,
+  .event-page * {
+    color: rgb(127, 85, 81) !important;
+  }
+  .event-page input::placeholder,
+  .event-page textarea::placeholder {
+    color: rgba(127, 85, 81, 0.3) !important;
+  }
+  .event-page input::-webkit-input-placeholder {
+    color: rgba(127, 85, 81, 0.3) !important;
+  }
+  .event-page input::-moz-placeholder {
+    color: rgba(127, 85, 81, 0.3) !important;
+  }
+  .event-page .event-title {
+    color: rgb(238, 136, 138) !important;
+  }
+  .event-page .btn-submit {
+    color: rgb(238, 136, 138) !important;
+  }
+  .event-page input[type="date"].event-input,
+  .event-page input[type="time"].event-input {
+    color: rgba(127, 85, 81, 0.7) !important;
+  }
+  input[type="date"].event-input::-webkit-outer-spin-button,
+  input[type="date"].event-input::-webkit-calendar-picker-indicator,
+  input[type="time"].event-input::-webkit-outer-spin-button {
+    color: rgba(127, 85, 81, 0.7) !important;
+  }
+  body {
+    background-color: white;
+    color: rgb(127, 85, 81);
+  }
+</style>
+<% end %>
+
+<div class="event-page min-h-screen px-4 py-8 sm:px-6 lg:px-8">
+  <div class="max-w-lg mx-auto">
+    <!-- Back link -->
+    <div class="mb-6 text-center">
+      <%= link_to manager_index_path(tab: "events"), class: "inline-flex items-center gap-2 text-black/50 hover:text-black transition-colors text-sm" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to Manager
+      <% end %>
+    </div>
+
+    <!-- Form card -->
+    <div class="event-card rounded-2xl p-6 sm:p-8">
+      <h1 class="font-beachday text-3xl sm:text-4xl tracking-wide text-center mb-1 event-title" style="color: rgb(238, 136, 138);">
+        NEW EVENT
+      </h1>
+      <p class="text-black/50 text-sm text-center mb-8">
+        Ideathon 2026
+      </p>
+
+      <%= render "form", ideathon_event: @ideathon_event %>
+    </div>
+  </div>
+</div>

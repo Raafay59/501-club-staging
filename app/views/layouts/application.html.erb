@@ -22,6 +22,10 @@
     <% if logged_in? && current_user.authorized? %>
       <nav class="app-nav" aria-label="Main">
         <div class="app-nav__links">
+          <%= link_to "Public Ideathon site", root_path %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
+          <%= link_to "Event manager (registration)", manager_index_path %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
           <%= link_to "Ideathons", ideathons_path %>
           <span class="app-nav__sep" aria-hidden="true">|</span>
           <%= link_to "Sponsors & Partners", sponsors_partners_path %>

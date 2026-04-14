@@ -23,9 +23,9 @@ RSpec.describe "Sessions", type: :request do
 
       after { OmniAuth.config.test_mode = false }
 
-      it "logs in and redirects to root" do
+      it "logs in and redirects to the club dashboard" do
         post "/auth/google_oauth2/callback", env: { "omniauth.auth" => OmniAuth.config.mock_auth[:google_oauth2] }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(ideathons_path)
       end
     end
 
@@ -47,7 +47,7 @@ RSpec.describe "Sessions", type: :request do
         post "/auth/google_oauth2/callback", env: { "omniauth.auth" => OmniAuth.config.mock_auth[:google_oauth2] }
         user.reload
         expect(user.uid).to eq('999')
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(ideathons_path)
       end
     end
 
@@ -78,9 +78,9 @@ RSpec.describe "Sessions", type: :request do
 
     before { login_as(user) }
 
-    it "logs out and redirects to login" do
+    it "logs out and redirects to the public site" do
       delete logout_path
-      expect(response).to redirect_to(login_path)
+      expect(response).to redirect_to(root_path)
     end
   end
 

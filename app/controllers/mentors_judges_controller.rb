@@ -1,11 +1,11 @@
 require "csv"
 
-class MentorsJudgesController < ApplicationController
+class MentorsJudgesController < ClubDashboardController
   before_action :require_admin, only: [ :destroy, :import, :export ]
   before_action :set_mentors_judge, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
-    @mentors_judges = MentorsJudge.order(:year, :name)
+    @mentors_judges = MentorsJudge.joins(:ideathon).order(Arel.sql("ideathon_years.year DESC, mentors_judges.name ASC"))
   end
 
   def show

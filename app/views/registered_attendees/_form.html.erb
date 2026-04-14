@@ -1,0 +1,67 @@
+<%= form_with(model: registered_attendee, class: "contents") do |form| %>
+  <% if registered_attendee.errors.any? %>
+    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
+      <h2><%= pluralize(registered_attendee.errors.count, "error") %> prohibited this registered_attendee from being saved:</h2>
+
+      <ul class="list-disc ml-6">
+        <% registered_attendee.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="my-5">
+    <%= form.label :ideathon_year_id %>
+    <%= form.collection_select :ideathon_year_id, Ideathon.order(year: :desc), :id, :year, { prompt: "Select a year" }, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": registered_attendee.errors[:ideathon_year_id].none?, "border-red-400 focus:outline-red-600": registered_attendee.errors[:ideathon_year_id].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :team_id %>
+    <% 
+      team_options = [["Unassigned", ""]]
+      
+      # Add existing teams with member count
+      if registered_attendee.ideathon_year_id.present?
+        current_year_teams = Team.where(ideathon_year_id: registered_attendee.ideathon_year_id)
+        current_year_teams.each do |team|
+          member_count = RegisteredAttendee.where(team_id: team.id).count
+          team_options << ["#{team.id} (#{member_count} members)", team.id]
+        end
+      end
+      
+      # Add option to create new team
+      team_options << ["Create New Team", "new"]
+    %>
+    <%= form.select :team_id, team_options, {}, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": registered_attendee.errors[:team_id].none?, "border-red-400 focus:outline-red-600": registered_attendee.errors[:team_id].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :attendee_name %>
+    <%= form.text_field :attendee_name, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": registered_attendee.errors[:attendee_name].none?, "border-red-400 focus:outline-red-600": registered_attendee.errors[:attendee_name].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :attendee_phone %>
+    <%= form.text_field :attendee_phone, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": registered_attendee.errors[:attendee_phone].none?, "border-red-400 focus:outline-red-600": registered_attendee.errors[:attendee_phone].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :attendee_email %>
+    <%= form.text_field :attendee_email, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": registered_attendee.errors[:attendee_email].none?, "border-red-400 focus:outline-red-600": registered_attendee.errors[:attendee_email].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :attendee_major %>
+    <%= form.text_field :attendee_major, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": registered_attendee.errors[:attendee_major].none?, "border-red-400 focus:outline-red-600": registered_attendee.errors[:attendee_major].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :attendee_class %>
+    <%= form.text_field :attendee_class, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": registered_attendee.errors[:attendee_class].none?, "border-red-400 focus:outline-red-600": registered_attendee.errors[:attendee_class].any?}] %>
+  </div>
+
+  <div class="inline">
+    <%= form.submit class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+  </div>
+<% end %>

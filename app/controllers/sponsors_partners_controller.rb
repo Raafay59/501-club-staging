@@ -1,11 +1,11 @@
 require "csv"
 
-class SponsorsPartnersController < ApplicationController
+class SponsorsPartnersController < ClubDashboardController
   before_action :require_admin, only: [ :destroy, :import, :export ]
   before_action :set_sponsors_partner, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
-    @sponsors_partners = SponsorsPartner.order(:year, :name)
+    @sponsors_partners = SponsorsPartner.joins(:ideathon).order(Arel.sql("ideathon_years.year DESC, sponsors_partners.name ASC"))
   end
 
   def show

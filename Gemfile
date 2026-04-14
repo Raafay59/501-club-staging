@@ -48,6 +48,8 @@ gem "omniauth-google-oauth2"
 gem "omniauth-rails_csrf_protection"
 gem "csv"
 
+gem "tailwindcss-rails"
+
 group :development, :test do
   gem "dotenv-rails"
 

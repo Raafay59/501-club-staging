@@ -1,4 +1,4 @@
-class ActivityLogsController < ApplicationController
+class ActivityLogsController < ClubDashboardController
   # Organizers (admin + editor) may view; unauthorized users are blocked by ApplicationController.
 
   def index

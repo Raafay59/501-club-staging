@@ -1,9 +1,9 @@
-class RulesController < ApplicationController
+class RulesController < ClubDashboardController
   before_action :require_admin, only: [ :destroy, :import ]
   before_action :set_rule, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
-    @rules = Rule.order(:year, :id)
+    @rules = Rule.joins(:ideathon).order(Arel.sql("ideathon_years.year DESC, rules.id ASC"))
   end
 
   def show
