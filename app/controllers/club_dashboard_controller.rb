@@ -17,22 +17,6 @@ class ClubDashboardController < ApplicationController
     Current.reset
   end
 
-  def current_user
-    @current_user ||= User.find_by(id: session[:user_id])
-  end
-
-  def logged_in?
-    current_user.present?
-  end
-
-  def admin?
-    logged_in? && current_user.admin?
-  end
-
-  def editor?
-    logged_in? && current_user.editor?
-  end
-
   def require_login
     unless logged_in?
       redirect_to login_path, alert: "You must be logged in."
