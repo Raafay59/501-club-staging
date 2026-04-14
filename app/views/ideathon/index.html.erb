@@ -1,0 +1,1264 @@
+
+<%# TAMU Ideathon 2026 landing page %>
+<% content_for :title, "TAMU Ideathon 2026 - Where Ideas Come to Life" %>
+
+<!-- Extra Falling Leaves -->
+<div class="absolute inset-0 w-full h-full pointer-events-none -z-10">
+  <img src="/images/sakura-bg.jpg" style="width:100vw;height:100vh;object-fit:cover;position:absolute;top:0;left:0;z-index:-1;" alt="Sakura Cherry Blossom Background" />
+  <svg class="falling-leaf" style="position:absolute;left:10vw;top:-60px;width:40px;height:40px;" viewBox="0 0 40 40">
+    <ellipse cx="20" cy="20" rx="16" ry="8" fill="#F9B5D0"/>
+  </svg>
+  <svg class="falling-leaf" style="position:absolute;left:30vw;top:-80px;width:32px;height:32px;" viewBox="0 0 32 32">
+    <ellipse cx="16" cy="16" rx="12" ry="6" fill="#A3C9A8"/>
+  </svg>
+  <svg class="falling-leaf" style="position:absolute;left:60vw;top:-70px;width:36px;height:36px;" viewBox="0 0 36 36">
+    <ellipse cx="18" cy="18" rx="14" ry="7" fill="#F9B5D0"/>
+  </svg>
+  <svg class="falling-leaf" style="position:absolute;left:80vw;top:-90px;width:28px;height:28px;" viewBox="0 0 28 28">
+    <ellipse cx="14" cy="14" rx="10" ry="5" fill="#A3C9A8"/>
+  </svg>
+</div>
+<style>
+@keyframes leafFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(100vh) rotate(360deg); opacity: 0.5; }
+}
+.falling-leaf {
+  animation: leafFall 7s linear infinite;
+}
+.falling-leaf:nth-child(2) { animation-delay: 1s; }
+.falling-leaf:nth-child(3) { animation-delay: 2.5s; }
+.falling-leaf:nth-child(4) { animation-delay: 4s; }
+.falling-leaf:nth-child(5) { animation-delay: 5.5s; }
+</style>
+
+<%# Consolidated Styles - Glassmorphism, animations, and reusable classes %>
+<% content_for :head do %>
+<style>
+  * { -webkit-font-smoothing: antialiased; }
+
+  /* Glass Effects — higher opacity so text stays readable on busy backgrounds */
+  .glass {
+    background: rgba(255, 255, 255, 0.38);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+    transform: translateZ(0);
+  }
+
+  .glass-solid {
+    background: rgba(255, 255, 255, 0.42);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.32);
+    transform: translateZ(0);
+  }
+
+  /* Card shell — layout only (fills use .ideathon-panel below) */
+  .bento-card {
+    transform: translateZ(0);
+  }
+
+  /*
+   * Solid frosted panels: explicit rgba backgrounds so we never depend on Tailwind opacity
+   * utilities (which may not compile for this template). Keeps white body text readable.
+   */
+  .ideathon-panel {
+    background-color: rgba(52, 38, 34, 0.94);
+    backdrop-filter: blur(14px) saturate(1.1);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+  }
+
+  .ideathon-panel--schedule {
+    background: linear-gradient(150deg, rgba(78, 56, 50, 0.96), rgba(42, 30, 27, 0.94));
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+
+  .ideathon-panel--hover:hover {
+    border-color: rgba(255, 255, 255, 0.62);
+  }
+
+  /* Slight shadow on light text over frosted panels improves contrast */
+  .bento-card .font-lilita-one.text-white,
+  .bento-card .font-titan-one.text-white {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.58);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .glass-card-subtle {
+    background: rgba(255, 255, 255, 0.48);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+  }
+
+  /* Shadows */
+  .shadow-dark {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4), 8px 8px 0px 0px rgba(0,0,0,0.7);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 30px rgba(238, 136, 138, 0.3);
+  }
+
+  /* Glows */
+  .glow-gold {
+    box-shadow: 0 0 15px rgba(238, 136, 138, 0.2);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 15px rgba(228,240,171,0.15);
+  }
+
+  /* Section Headers */
+  .section-heading {
+    font-family: 'Beach Day', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    color: white;
+    margin-bottom: 1rem;
+    drop-shadow: 0 0 40px rgba(255,255,255,0.8);
+  }
+
+  .section-subheading {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 1.125rem;
+    color: white;
+    max-width: 42rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Nav Links */
+  .nav-link {
+    font-family: 'Lilita One', sans-serif;
+    color: white;
+    transition: color 200ms, background-color 200ms;
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+  }
+
+  .nav-link:hover {
+    color: rgb(238, 136, 138);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Badge */
+  .event-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 9999px;
+    padding: 0.375rem 1.25rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+  }
+
+  .event-badge-text {
+    font-family: 'Lilita One', sans-serif;
+    color: white;
+    font-size: 0.8125rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Animations */
+  .animate-init { opacity: 0; }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .mobile-menu-enter { animation: mobileMenuEnter 0.3s cubic-bezier(0.16,1,0.3,1) forwards; }
+  .mobile-menu-exit  { animation: mobileMenuExit 0.25s ease-out forwards; }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes mobileMenuEnter {
+    0%   { opacity: 0; transform: translateY(-16px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes mobileMenuExit {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-16px); }
+  }
+
+  .leaf {
+    position: fixed;
+    top: -50px;
+    width: 30px;
+    height: 30px;
+    background-image: url('/images/leaf.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    animation-name: fall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .leaf:nth-child(odd) {
+    animation-duration: 6s;
+    left: 20%;
+  }
+
+  .leaf:nth-child(even) {
+    animation-duration: 10s;
+    left: 60%;
+  }
+
+  @keyframes fall {
+    0% {
+      transform: translateY(0) rotate(0deg);
+    }
+    100% {
+      transform: translateY(100vh) rotate(360deg);
+    }
+  }
+</style>
+
+<% end %>
+
+
+<%# Glassmorphism sticky navigation %>
+<nav class="fixed top-0 left-0 right-0 z-50 px-4 py-3" data-controller="ideathon-nav">
+  <div class="max-w-7xl mx-auto">
+    <div class="glass rounded-2xl px-6 py-3 flex items-center justify-between transition-all duration-300" data-ideathon-nav-target="navbar">
+      
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="relative w-10 h-10 rounded-xl overflow-hidden shadow-lg transform group-hover:scale-110 transition-all duration-300">
+          <img src="/images/logo.png" alt="TAMU Ideathon" class="w-full h-full object-cover" />
+        </div>
+        <span class="font-beachday text-xl hidden sm:block trackinsg-wide transition-colors" style="color: rgb(238, 136, 138);">
+          TAMU IDEATHON
+        </span>
+      </a>
+      
+      <!-- Nav Links (Desktop) -->
+      <div class="hidden md:flex items-center gap-1">
+        <a href="#about" class="nav-link">About</a>
+        <a href="#schedule" class="nav-link">Schedule</a>
+        <a href="#prizes" class="nav-link">Prizes</a>
+        <a href="#judges" class="nav-link">Judges</a>
+        <a href="#judging-criteria" class="nav-link">Judging Criteria</a>
+        <a href="#rules" class="nav-link">Rules</a>
+        <a href='#deliverables' class="nav-link">Deliverables</a>
+        <a href="#sponsors" class="nav-link">Sponsors</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </div>
+      
+      <!-- CTA Buttons (Desktop) -->
+      <div class="hidden sm:flex items-center gap-2">
+        <button onclick="document.getElementById('help-modal').classList.remove('hidden'); document.getElementById('help-modal').classList.add('flex');"
+                class="text-white font-titan-one text-sm w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-105"
+                style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);">
+          ?
+        </button>
+        <%= link_to new_registered_attendee_path, class: "text-white font-titan-one text-sm px-5 py-2.5 rounded-xl shadow-lg hover:shadow-game-glow transform hover:scale-105 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2", style: "background: rgb(238, 136, 138);" do %>
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          Register
+        <% end %>
+        <% if organizer_tools? %>
+          <%= link_to manager_index_path, class: "bg-white text-gray-800 font-titan-one text-sm px-5 py-2.5 rounded-xl shadow-lg hover:shadow-game-glow transform hover:scale-105 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2" do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Dashboard
+          <% end %>
+        <% else %>
+          <%= link_to login_path, class: "bg-white text-gray-800 font-titan-one text-sm px-5 py-2.5 rounded-xl shadow-lg hover:shadow-game-glow transform hover:scale-105 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Sign in
+          <% end %>
+        <% end %>
+      </div>
+      
+      <!-- Mobile Menu Button -->
+      <button class="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors" 
+              data-action="click->ideathon-nav#toggleMobile"
+              data-ideathon-nav-target="menuButton">
+        <svg class="w-6 h-6 transition-transform duration-300" data-ideathon-nav-target="menuIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div class="hidden mt-2 glass-solid rounded-2xl p-4 md:hidden" data-ideathon-nav-target="mobileMenu">
+      <div class="flex flex-col gap-1">
+        <a href="#about" class="nav-link" data-action="click->ideathon-nav#closeMobile">About</a>
+        <a href="#schedule" class="nav-link" data-action="click->ideathon-nav#closeMobile">Schedule</a>
+        <a href="#prizes" class="nav-link" data-action="click->ideathon-nav#closeMobile">Prizes</a>
+        <a href="#judges" class="nav-link" data-action="click->ideathon-nav#closeMobile">Judges</a>
+        <a href="#judging-criteria" class="nav-link" data-action="click->ideathon-nav#closeMobile">Judging Criteria</a>
+        <a href="#rules" class="nav-link" data-action="click->ideathon-nav#closeMobile">Rules</a>
+        <a href='#deliverables' class="nav-link" data-action="click->ideathon-nav#closeMobile">Deliverables</a>
+        <a href="#sponsors" class="nav-link" data-action="click->ideathon-nav#closeMobile">Sponsors</a>
+        <a href="#faq" class="nav-link" data-action="click->ideathon-nav#closeMobile">FAQ</a>
+        <div class="border-t border-white/10 my-2"></div>
+        <% if organizer_tools? %>
+          <%= link_to "Dashboard", manager_index_path, class: "bg-white text-gray-800 font-titan-one text-center px-4 py-3 rounded-xl shadow-lg block w-full", data: { action: "click->ideathon-nav#closeMobile" } %>
+        <% else %>
+          <%= link_to "Sign in", login_path, class: "bg-white text-gray-800 font-titan-one text-center px-4 py-3 rounded-xl shadow-lg block w-full", data: { turbo: "false", action: "click->ideathon-nav#closeMobile" } %>
+        <% end %>
+        <%= link_to "Register", new_registered_attendee_path, class: "text-white font-titan-one text-center px-4 py-3 rounded-xl shadow-lg block w-full", style: "background: rgb(238, 136, 138);", data: { action: "click->ideathon-nav#closeMobile" } %>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<%# Hero section - Full-bleed image with centered title overlay %>
+<section class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" data-controller="ideathon-hero">
+  
+  <!-- Background Image - fixed to extend behind nav -->
+  <div class="fixed inset-0 z-0">
+    <img src="/images/background.jpeg" 
+         alt="Sakura Background"
+         class="w-full h-full object-cover object-center"
+         loading="eager" />
+  </div>
+  
+  <!-- Content -->
+  <div class="relative z-10 text-center px-4 py-8 flex flex-col items-center justify-center w-full">
+    
+    <!-- Event Badge -->
+    <div class="event-badge animate-init animate-fade-up">
+      <span class="w-2 h-2 rounded-full animate-pulse" style="background-color: rgb(228, 240, 171);"></span>
+      <span class="event-badge-text">February 28 - March 1, 2026</span>
+    </div>
+    
+    <!-- Main Title with 2026 badge positioned -->
+    <div class="relative animate-init animate-fade-up-delay-1 mb-2">
+      <h1 class="leading-[0.85] tracking-tight">
+        <span class="block font-beachday text-7xl sm:text-8xl md:text-9xl lg:text-[10rem]
+                    drop-shadow-[0_4px_12px_rgba(255,255,255,0.8)]"
+                  style="color: rgb(238, 136, 138); text-shadow: 0 0 60px rgba(255,255,255,0.8);">
+          TAMU
+        </span>
+        <span class="relative inline-block">
+          <span class="block font-beachday text-7xl sm:text-8xl md:text-9xl lg:text-[10rem]
+                        drop-shadow-[0_6px_16px_rgba(255,255,255,0.8)]"
+                      style="color: rgb(238, 136, 138); text-shadow: 0 0 60px rgba(255,255,255,0.8);">
+            IDEATHON
+          </span>
+          <!-- Year Badge - positioned at bottom right of IDEATHON -->
+          <span class="absolute bottom-0 right-0 font-titan-one text-sm sm:text-base
+                       px-3 py-0.5 rounded-full shadow-dark transform rotate-3" style="color: rgb(127, 85, 81);"
+                style="background: linear-gradient(to right, rgb(252, 240, 228), rgb(238, 136, 138));">
+            2026
+          </span>
+        </span>
+      </h1>
+    </div>
+    
+    <!-- Tagline -->
+    <p class="font-lilita-one text-lg sm:text-xl md:text-2xl text-white mb-1 animate-init animate-fade-up-delay-2
+              drop-shadow-[0_2px_8px_rgba(255,255,255,0.8)]">
+      Where Ideas Come to Life
+    </p>
+    
+    <!-- Subtitle -->
+    <p class="font-lilita-one text-sm sm:text-base text-white max-w-xl mx-auto mb-4 animate-init animate-fade-up-delay-3
+              drop-shadow-[0_1px_4px_rgba(255,255,255,0.8)]">
+      24 hours to innovate, create, and transform your boldest ideas into reality. 
+      Join Texas A&M's premier ideathon experience.
+    </p>
+    
+    <!-- CTA Buttons -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-2 animate-init animate-fade-up-delay-4 mb-3" id="register">
+      
+      <% if organizer_tools? %>
+        <%= link_to manager_index_path, class: "group relative bg-white text-gray-800 font-titan-one text-xs px-4 py-2 rounded-lg shadow-dark hover:shadow-game-glow transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 min-w-[180px] justify-center border-2 border-white/90" do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <span style="font-weight: normal;">Dashboard</span>
+        <% end %>
+      <% else %>
+        <%= link_to login_path, class: "group relative bg-white text-gray-800 font-titan-one text-xs px-4 py-2 rounded-lg shadow-dark hover:shadow-game-glow transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 min-w-[180px] justify-center border-2 border-white/90" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span style="font-weight: normal;">Sign in</span>
+        <% end %>
+      <% end %>
+      
+      <%= link_to new_registered_attendee_path, class: "group relative text-white font-titan-one text-xs px-4 py-2 rounded-lg shadow-dark hover:shadow-game-glow transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 min-w-[180px] justify-center border-2", style: "background: rgb(238, 136, 138); border-color: rgb(238, 136, 138);" do %>
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <span>Register</span>
+      <% end %>
+      
+      <!-- Learn More -->
+      <a href="#about" 
+        class="backdrop-blur-sm font-titan-one text-xs px-4 py-2 rounded-lg
+             border-2 border-white/55 transition-all duration-300 flex items-center gap-1.5"
+        style="background-color: rgba(252, 240, 228, 0.96); color: rgb(215, 129, 112); --hover-color: rgb(252, 240, 228);" onmouseover="this.style.borderColor='rgb(252, 240, 228)'; this.style.color='rgb(252, 240, 228)'" onmouseout="this.style.borderColor=''; this.style.color='rgb(215, 129, 112)';"
+      >
+        Learn More
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </a>
+    </div>
+    
+    <!-- Stats Bar -->
+    <div class="inline-flex flex-wrap justify-center items-center gap-0 animate-init animate-fade-up-delay-4 rounded-lg border border-white/40 overflow-hidden" style="background-color: rgba(252, 240, 228, 0.96); backdrop-filter: blur(12px);">
+      <div class="text-center px-3 sm:px-4 py-1.5">
+        <div class="font-titan-one text-lg sm:text-xl leading-none drop-shadow-[0_2px_8px_rgba(255,255,255,0.8)]" style="color: rgb(158, 194, 191);">24</div>
+        <div class="font-lilita-one text-[9px] tracking-widest uppercase mt-0.5" style="color: rgb(215, 129, 112);">Hours</div>
+      </div>
+      <div class="hidden sm:block w-px h-6 bg-white/10"></div>
+      <div class="text-center px-3 sm:px-4 py-1.5">
+        <div class="font-titan-one text-lg sm:text-xl leading-none drop-shadow-[0_2px_8px_rgba(255,255,255,0.8)]" style="color: rgb(215, 129, 112);">$5K+</div>
+        <div class="font-lilita-one text-[9px] tracking-widest uppercase mt-0.5" style="color: rgb(215, 129, 112);">In Prizes</div>
+      </div>
+      <div class="hidden sm:block w-px h-6 bg-white/10"></div>
+      <div class="text-center px-3 sm:px-4 py-1.5">
+        <div class="font-titan-one text-lg sm:text-xl leading-none drop-shadow-[0_2px_8px_rgba(255,255,255,0.8)]" style="color: rgb(228, 240, 171);">200+</div>
+        <div class="font-lilita-one text-[9px] tracking-widest uppercase mt-0.5" style="color: rgb(215, 129, 112);">Participants</div>
+      </div>
+      <div class="hidden sm:block w-px h-6 bg-white/10"></div>
+      <div class="text-center px-3 sm:px-4 py-1.5">
+        <div class="font-titan-one text-lg sm:text-xl leading-none drop-shadow-[0_2px_8px_rgba(255,255,255,0.8)]" style="color: rgb(192, 220, 238);">50+</div>
+        <div class="font-lilita-one text-[9px] tracking-widest uppercase mt-0.5" style="color: rgb(215, 129, 112);">Teams</div>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+
+<%# Sections with background %>
+<div class="relative" style="background: url('/images/cherry blossom landscape bg.png'); background-attachment: fixed; background-size: cover; background-position: top center;">
+  <!-- Dark overlay to focus on content -->
+  <div class="absolute inset-0 z-0" style="background: rgba(0, 0, 0, 0.15);"></div>
+  
+  <div class="leaves relative z-5">
+    <% 10.times do %>
+      <div class="leaf"></div>
+    <% end %>
+  </div>
+  
+  <div class="relative z-10">
+
+<%# About / Bento grid section %>
+<section id="about" class="relative z-10 py-20 px-4" data-controller="ideathon-scroll">
+  <div class="max-w-7xl mx-auto">
+    
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        WHAT IS <span style="color: rgb(238, 136, 138);">IDEATHON?</span>
+      </h2>
+      <p class="section-subheading">
+        More than a hackathon - it's where creativity meets innovation
+      </p>
+    </div>
+    
+    <!-- Bento Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- Large Feature Card -->
+        <div class="bento-card ideathon-panel md:col-span-2 lg:col-span-2 rounded-3xl p-8 shadow-dark">
+        <div class="flex flex-col lg:flex-row gap-6 items-start">
+          <div class="w-16 h-16 rounded-2xl overflow-hidden shadow-lg shrink-0">
+            <img src="/images/logo.png" alt="TAMU Ideathon" class="w-full h-full object-cover" />
+          </div>
+          <div>
+            <h3 class="font-titan-one text-2xl text-white mb-3">Innovate Without Limits</h3>
+            <p class="font-lilita-one text-white text-base leading-relaxed">
+              Unlike traditional hackathons, TAMU Ideathon focuses on <span class="font-bold" style="color: rgb(238, 136, 138);">ideas first, code second</span>. 
+              Whether you're a developer, designer, business major, or dreamer - your unique perspective is what we need. 
+              Form teams, brainstorm solutions, and pitch your vision to industry judges.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 24H Accent Card -->
+      <div class="bento-card rounded-3xl p-6 
+                  border shadow-lg row-span-2 flex flex-col justify-between"
+           style="background: rgb(238, 136, 138); border-color: rgba(238, 136, 138);">
+        <div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style="background: rgba(127, 85, 81, 0.25);">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" style="color: rgb(127, 85, 81);">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-titan-one text-xl mb-2" style="color: rgb(127, 85, 81);">24 Hours</h3>
+          <p class="font-lilita-one text-white text-sm">
+            One weekend. Unlimited potential. Food, mentors, and workshops provided throughout.
+          </p>
+        </div>
+        <div class="font-beachday text-6xl text-right" style="color: white;">24H</div>
+      </div>
+      
+      <!-- Team Formation -->
+        <div class="bento-card ideathon-panel rounded-3xl p-6 shadow-dark">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style="background-color: rgba(228, 240, 171, 0.15);">
+          <svg class="w-6 h-6" fill="currentColor" style="color: rgb(228, 240, 171);" viewBox="0 0 24 24">
+            <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <h3 class="font-titan-one text-xl text-white mb-2">Team Formation</h3>
+        <p class="font-lilita-one text-white text-sm">
+          Teams of 2-4 members. Don't have one? We'll help you find your perfect match!
+        </p>
+      </div>
+      
+      <!-- Workshops -->
+        <div class="bento-card ideathon-panel rounded-3xl p-6 shadow-dark">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style="background-color: rgba(192, 220, 238, 0.15);">
+          <svg class="w-6 h-6" fill="currentColor" style="color: rgb(192, 220, 238);" viewBox="0 0 24 24">
+            <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+        </div>
+        <h3 class="font-titan-one text-xl text-white mb-2">Workshops & Mentors</h3>
+        <p class="font-lilita-one text-white text-sm">
+          Learn from industry professionals. Workshops on pitching, design thinking, and more.
+        </p>
+      </div>
+      
+      <!-- Wide CTA Card -->
+      <div class="bento-card ideathon-panel md:col-span-2 lg:col-span-3 rounded-3xl p-8 glow-gold">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg animate-float" style="background-color: rgb(158, 194, 191);">
+              <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-titan-one text-2xl text-white">Open to All TAMU Students</h3>
+              <p class="font-lilita-one text-white">Must have a valid @tamu.edu email to participate</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="font-lilita-one text-lg" style="color: rgb(252, 240, 228);">Ready to join?</span>
+            <a href="#register" class="text-white font-titan-one px-6 py-3 rounded-xl" style="background-color: rgb(238, 136, 138);"
+                                       shadow-lg hover:shadow-game-glow transform hover:scale-105 transition-all">
+              Register Now
+            </a>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+
+<%# Schedule section %>
+<section id="schedule" class="relative z-10 py-20 px-4">
+  <div class="max-w-5xl mx-auto">
+    
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        EVENT <span style="color: rgb(215, 129, 112);">SCHEDULE</span>
+      </h2>
+      <p class="section-subheading">
+        24 hours of innovation, collaboration, and fun
+      </p>
+    </div>
+    
+    <!-- Timeline -->
+    <div class="relative">
+      <!-- Vertical Line - stops before the end -->
+      <div class="absolute left-4 md:left-1/2 top-0 w-1 rounded-full" style="height: calc(100% - 60px); background: linear-gradient(to bottom, rgb(252, 240, 228), rgb(238, 136, 138), rgb(158, 194, 191));"></div>
+      
+      <% if @events.any? %>
+        <% @events.group_by { |e| e.event_date }.each_with_index do |(date, day_events), day_index| %>
+          <!-- Day Header -->
+          <div class="relative flex justify-center mb-8 mt-12">
+            <div class="font-titan-one px-6 py-2 rounded-full shadow-lg z-10" style="<%= day_index.even? ? 'background-color: rgb(252, 240, 228); color: rgb(215, 129, 112);' : 'background-color: rgb(215, 129, 112); color: white;' %>">
+              Day <%= day_index + 1 %> - <%= date.strftime("%B %d") %>
+            </div>
+          </div>
+          
+          <div class="space-y-6">
+            <% day_events.each_with_index do |event, index| %>
+              <!-- Event -->
+              <div class="relative flex items-center gap-6 md:gap-0">
+                <% if index.even? %>
+                  <!-- Left side (desktop) -->
+                  <div class="hidden md:block md:w-1/2 md:pr-8 md:text-right">
+                    <div class="bento-card ideathon-panel ideathon-panel--schedule inline-block rounded-2xl p-5">
+                      <div class="font-titan-one text-lg" style="color: rgb(238, 136, 138);"><%= event.event_time.strftime("%l:%M %p") %></div>
+                      <div class="font-lilita-one text-white text-base"><%= event.event_name %></div>
+                      <div class="font-lilita-one text-white text-sm"><%= event.event_description %></div>
+                    </div>
+                  </div>
+                <% else %>
+                  <!-- Left empty (desktop) -->
+                  <div class="hidden md:block md:w-1/2 md:pr-8"></div>
+                <% end %>
+                
+                <!-- Center icon -->
+                <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-10 h-10 z-10">
+                  <img src="/images/pinkflower.png" alt="" class="w-full h-full object-contain" />
+                </div>
+                
+                <!-- Mobile version -->
+                <div class="md:hidden ml-12 bento-card ideathon-panel ideathon-panel--schedule rounded-2xl p-5 flex-1">
+                  <div class="font-titan-one text-lg" style="color: rgb(238, 136, 138);"><%= event.event_time.strftime("%l:%M %p") %></div>
+                  <div class="font-lilita-one text-white text-base"><%= event.event_name %></div>
+                  <div class="font-lilita-one text-white text-sm"><%= event.event_description %></div>
+                </div>
+                
+                <% if index.even? %>
+                  <!-- Right empty (desktop) -->
+                  <div class="hidden md:block md:w-1/2 md:pl-8"></div>
+                <% else %>
+                  <!-- Right side (desktop) -->
+                  <div class="ml-12 md:ml-0 md:w-1/2 md:pl-8">
+                    <div class="bento-card ideathon-panel ideathon-panel--schedule inline-block rounded-2xl p-5">
+                      <div class="font-titan-one text-lg" style="color: rgb(215, 129, 112);"><%= event.event_time.strftime("%l:%M %p") %></div>
+                      <div class="font-lilita-one text-white text-base"><%= event.event_name %></div>
+                      <div class="font-lilita-one text-white text-sm"><%= event.event_description %></div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="text-center py-12">
+          <p class="font-lilita-one text-white text-lg">No events scheduled yet</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+
+<%# Prizes section %>
+<section id="prizes" class="relative z-10 py-20 px-4">
+  <div class="max-w-6xl mx-auto">
+    
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        <span style="color: rgb(238, 136, 138);">PRIZES</span> & REWARDS
+      </h2>
+      <p class="section-subheading">
+        Prize details coming soon
+      </p>
+    </div>
+    
+    <!-- Prize Cards - Podium Layout -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- 2nd Place -->
+      <div class="bento-card order-2 md:order-1 ideathon-panel rounded-3xl p-6 transform md:translate-y-8">
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center mb-4 shadow-lg">
+            <span class="font-beachday text-3xl" style="color: rgb(238, 136, 138);">2</span>
+          </div>
+          <h3 class="font-titan-one text-xl text-white mb-2">2nd Place</h3>
+          <div class="font-beachday text-4xl mb-4" style="color: rgb(238, 136, 138);">Coming Soon</div>
+          <ul class="font-lilita-one text-white text-sm space-y-2">
+            <li>Details coming soon</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Grand Prize - center, glowing -->
+      <div class="bento-card order-1 md:order-2 ideathon-panel rounded-3xl p-8 glow-gold relative overflow-hidden">
+        <!-- Crown -->
+        <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+          <svg class="w-12 h-12 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" style="color: rgb(252, 240, 228);">
+            <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/>
+          </svg>
+        </div>
+        <div class="text-center pt-4">
+          <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-xl animate-float"
+               style="background: linear-gradient(to bottom right, rgb(252, 240, 228), rgb(238, 136, 138));">
+            <span class="font-beachday text-4xl" style="color: rgb(238, 136, 138);">1</span>
+          </div>
+          <h3 class="font-titan-one text-2xl text-white mb-2">Grand Prize</h3>
+          <div class="font-beachday text-5xl mb-4" style="color: rgb(238, 136, 138);">Coming Soon</div>
+          <ul class="font-lilita-one text-white text-sm space-y-2">
+            <li>Details coming soon</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- 3rd Place -->
+      <div class="bento-card order-3 ideathon-panel rounded-3xl p-6 transform md:translate-y-8">
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-gradient-to-br from-amber-600 to-amber-800 rounded-full flex items-center justify-center mb-4 shadow-lg">
+            <span class="font-beachday text-3xl" style="color: rgb(238, 136, 138);">3</span>
+          </div>
+          <h3 class="font-titan-one text-xl text-white mb-2">3rd Place</h3>
+          <div class="font-beachday text-4xl mb-4" style="color: rgb(238, 136, 138);">Coming Soon</div>
+          <ul class="font-lilita-one text-white text-sm space-y-2">
+            <li>Details coming soon</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Category Prizes - each a different accent color -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
+      <div class="bento-card ideathon-panel rounded-2xl p-5 text-center">
+        <div class="w-10 h-10 mx-auto rounded-xl flex items-center justify-center mb-3" style="background-color: rgba(192, 220, 238, 0.15);">
+          <svg class="w-5 h-5" fill="currentColor" style="color: rgb(192, 220, 238);" viewBox="0 0 24 24">
+            <path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h4 class="font-titan-one text-white text-sm">Best Technical</h4>
+        <div class="font-lilita-one" style="color: rgb(192, 220, 238);">Coming Soon</div>
+      </div>
+      <div class="bento-card ideathon-panel rounded-2xl p-5 text-center">
+        <div class="w-10 h-10 mx-auto rounded-xl flex items-center justify-center mb-3" style="background-color: rgba(215, 129, 112, 0.15);">
+          <svg class="w-5 h-5" style="color: rgb(215, 129, 112);" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </div>
+        <h4 class="font-titan-one text-white text-sm">Best Design</h4>
+        <div class="font-lilita-one" style="color: rgb(215, 129, 112);">Coming Soon</div>
+      </div>
+      <div class="bento-card ideathon-panel rounded-2xl p-5 text-center">
+        <div class="w-10 h-10 mx-auto rounded-xl flex items-center justify-center mb-3" style="background-color: rgba(228, 240, 171, 0.15);">
+          <svg class="w-5 h-5" fill="currentColor" style="color: rgb(228, 240, 171);" viewBox="0 0 24 24">
+            <path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h4 class="font-titan-one text-white text-sm">Best Social Impact</h4>
+        <div class="font-lilita-one" style="color: rgb(228, 240, 171);">Coming Soon</div>
+      </div>
+      <div class="bento-card ideathon-panel rounded-2xl p-5 text-center">
+        <div class="w-10 h-10 mx-auto rounded-xl flex items-center justify-center mb-3" style="background-color: rgba(158, 194, 191, 0.15);">
+          <svg class="w-5 h-5" style="color: rgb(158, 194, 191);" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+          </svg>
+        </div>
+        <h4 class="font-titan-one text-white text-sm">People's Choice</h4>
+        <div class="font-lilita-one" style="color: rgb(158, 194, 191);">Coming Soon</div>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+
+<%# FAQ section %>
+<section id="faq" class="relative z-10 py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+    
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        <span style="color: rgb(238, 136, 138);">FAQ</span>
+      </h2>
+      <p class="section-subheading">Got questions? We've got answers.</p>
+    </div>
+    
+    <div class="space-y-4" data-controller="ideathon-faq">
+      <% if @faqs.any? %>
+        <% @faqs.each do |faq| %>
+      <div class="bento-card ideathon-panel rounded-2xl overflow-hidden">
+        <button class="w-full px-6 py-5 flex items-center justify-between text-left" 
+                data-action="click->ideathon-faq#toggle" data-ideathon-faq-target="button">
+          <span class="font-titan-one text-white text-lg"><%= faq.question %></span>
+          <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: rgb(238, 136, 138);">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div class="px-6 pb-5 hidden" data-ideathon-faq-target="content">
+          <div class="font-lilita-one text-white"><%= faq_answer_html(faq.answer) %></div>
+        </div>
+      </div>
+        <% end %>
+      <% else %>
+      <div class="text-center bento-card ideathon-panel rounded-2xl p-10 max-w-xl mx-auto">
+        <p class="font-lilita-one text-white text-lg">FAQ entries will be posted here soon.</p>
+      </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+
+<%# Sponsors section — data from 501 Club dashboard (active Ideathon year) %>
+<section id="sponsors" class="relative z-10 py-20 px-4 overflow-hidden">
+  <div class="max-w-6xl mx-auto">
+    
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        OUR <span style="color: rgb(238, 136, 138);">SPONSORS</span>
+      </h2>
+      <p class="section-subheading">
+        Powered by industry leaders who believe in student innovation
+      </p>
+    </div>
+
+    <% sponsors_empty = @sponsor_presenting.empty? && @sponsor_gold.empty? && @sponsor_other.empty? && @community_partners.empty? %>
+    <% if sponsors_empty %>
+      <div class="text-center bento-card ideathon-panel rounded-2xl p-10 max-w-xl mx-auto">
+        <p class="font-lilita-one text-white text-lg">Sponsor and partner details will be posted here soon.</p>
+        <% if organizer_tools? %>
+          <p class="font-lilita-one text-sm mt-3" style="color: rgba(255,255,255,0.75);">Add sponsors in the <%= link_to "501 Club dashboard", ideathons_path, class: "underline font-semibold", style: "color: rgb(238, 136, 138);" %>.</p>
+        <% end %>
+      </div>
+    <% else %>
+      <% if @sponsor_presenting.any? %>
+    <div class="mb-12">
+      <div class="text-center mb-6">
+        <span class="font-titan-one text-sm tracking-widest uppercase" style="color: rgb(238, 136, 138);">Presenting Sponsors</span>
+      </div>
+      <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+        <% @sponsor_presenting.each do |sp| %>
+        <div class="bento-card ideathon-panel rounded-2xl p-8 transition-all group" style="--sponsor-hover: rgb(238, 136, 138); --sponsor-hover-opacity: rgba(238, 136, 138, 0.3);">
+          <div class="w-48 h-16 flex items-center justify-center">
+            <% if sp.logo_url.present? %>
+              <%= image_tag sp.logo_url, alt: sp.name, class: "max-h-16 max-w-[12rem] w-auto object-contain" %>
+            <% else %>
+              <div class="font-beachday text-2xl sm:text-3xl text-white text-center transition-colors px-2"><%= sp.name %></div>
+            <% end %>
+          </div>
+          <% if sp.blurb.present? %>
+            <p class="font-lilita-one text-xs text-center mt-3 max-w-xs mx-auto" style="color: rgba(255,255,255,0.85);"><%= sp.blurb %></p>
+          <% end %>
+        </div>
+        <% end %>
+      </div>
+    </div>
+      <% end %>
+
+      <% if @sponsor_gold.any? %>
+    <div class="mb-12">
+      <div class="text-center mb-6">
+        <span class="font-titan-one text-sm tracking-widest uppercase" style="color: rgb(215, 129, 112);">Gold Sponsors</span>
+      </div>
+      <div class="flex flex-wrap justify-center items-center gap-6 md:gap-10">
+        <% @sponsor_gold.each do |sp| %>
+        <div class="bento-card ideathon-panel ideathon-panel--hover rounded-xl p-6 transition-all group">
+          <div class="w-36 h-12 flex items-center justify-center">
+            <% if sp.logo_url.present? %>
+              <%= image_tag sp.logo_url, alt: sp.name, class: "max-h-12 max-w-[9rem] w-auto object-contain" %>
+            <% else %>
+              <div class="font-titan-one text-lg group-hover:text-white transition-colors text-white text-center px-1"><%= sp.name %></div>
+            <% end %>
+          </div>
+        </div>
+        <% end %>
+      </div>
+    </div>
+      <% end %>
+
+      <% if @sponsor_other.any? %>
+    <div class="mb-12">
+      <div class="text-center mb-6">
+        <span class="font-titan-one text-sm tracking-widest uppercase" style="color: rgb(238, 136, 138);">Sponsors</span>
+      </div>
+      <div class="flex flex-wrap justify-center items-center gap-6 md:gap-10">
+        <% @sponsor_other.each do |sp| %>
+        <div class="bento-card ideathon-panel ideathon-panel--hover rounded-xl p-6 transition-all group">
+          <div class="w-36 h-12 flex items-center justify-center">
+            <% if sp.logo_url.present? %>
+              <%= image_tag sp.logo_url, alt: sp.name, class: "max-h-12 max-w-[9rem] w-auto object-contain" %>
+            <% else %>
+              <div class="font-titan-one text-lg group-hover:text-white transition-colors text-white text-center px-1"><%= sp.name %></div>
+            <% end %>
+          </div>
+          <% if sp.job_title.present? && !sp.job_title.to_s.downcase.include?("presenting") && !sp.job_title.to_s.downcase.include?("gold") %>
+            <p class="font-lilita-one text-xs text-center mt-2" style="color: rgba(255,255,255,0.75);"><%= sp.job_title %></p>
+          <% end %>
+        </div>
+        <% end %>
+      </div>
+    </div>
+      <% end %>
+    
+      <% if @community_partners.any? %>
+    <div class="mb-12">
+      <div class="text-center mb-6">
+        <span class="font-lilita-one text-white text-sm tracking-widest uppercase">Community Partners</span>
+      </div>
+      <div class="flex flex-wrap justify-center items-center gap-4 md:gap-6">
+        <% @community_partners.each do |sp| %>
+        <div class="px-5 py-3 ideathon-panel ideathon-panel--hover rounded-lg transition-all max-w-xs text-center">
+          <% if sp.logo_url.present? %>
+            <%= image_tag sp.logo_url, alt: sp.name, class: "max-h-10 max-w-[14rem] mx-auto object-contain mb-2" %>
+          <% end %>
+          <span class="font-lilita-one text-white transition-colors block"><%= sp.name %></span>
+          <% if sp.blurb.present? %>
+            <span class="font-lilita-one text-xs block mt-1" style="color: rgba(255,255,255,0.8);"><%= sp.blurb %></span>
+          <% end %>
+        </div>
+        <% end %>
+      </div>
+    </div>
+      <% end %>
+    <% end %>
+  </div>
+</section>
+
+
+<%# Judges section — data from 501 Club dashboard %>
+<section id="judges" class="relative z-10 py-20 px-4">
+  <div class="max-w-6xl mx-auto">
+    
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        MEET THE <span style="color: rgb(238, 136, 138);">JUDGES</span>
+      </h2>
+      <p class="font-lilita-one text-lg text-white">
+        Experienced professionals and industry leaders evaluating your innovations
+      </p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% if @judges.any? %>
+        <% @judges.each do |judge| %>
+        <div class="bento-card ideathon-panel rounded-2xl p-8 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+          <div class="w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-lg overflow-hidden flex-shrink-0" style="background: linear-gradient(to right, rgb(252, 240, 228), rgb(238, 136, 138));">
+            <% if judge.photo_url.present? %>
+              <%= image_tag judge.photo_url, alt: judge.name, class: "w-full h-full object-cover" %>
+            <% else %>
+              <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            <% end %>
+          </div>
+          <h3 class="font-titan-one text-white text-lg mb-1"><%= judge.name %></h3>
+          <% if judge.job_title.present? %>
+            <p class="font-lilita-one text-sm mb-2" style="color: rgb(238, 136, 138);"><%= judge.job_title %></p>
+          <% end %>
+          <% if judge.bio.present? %>
+            <p class="font-lilita-one text-white text-sm leading-relaxed"><%= judge.bio %></p>
+          <% end %>
+        </div>
+        <% end %>
+      <% else %>
+        <div class="md:col-span-2 lg:col-span-3 text-center bento-card ideathon-panel rounded-2xl p-10">
+          <p class="font-lilita-one text-white text-lg">Judge lineup will be announced soon.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<% if @mentors.any? %>
+<section id="mentors" class="relative z-10 py-20 px-4">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        MEET THE <span style="color: rgb(228, 240, 171);">MENTORS</span>
+      </h2>
+      <p class="font-lilita-one text-lg text-white">
+        Experts here to help you refine ideas and presentations
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @mentors.each do |mentor| %>
+        <div class="bento-card ideathon-panel rounded-2xl p-8 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+          <div class="w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-lg overflow-hidden flex-shrink-0" style="background: linear-gradient(to right, rgb(252, 240, 228), rgb(158, 194, 191));">
+            <% if mentor.photo_url.present? %>
+              <%= image_tag mentor.photo_url, alt: mentor.name, class: "w-full h-full object-cover" %>
+            <% else %>
+              <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            <% end %>
+          </div>
+          <h3 class="font-titan-one text-white text-lg mb-1"><%= mentor.name %></h3>
+          <% if mentor.job_title.present? %>
+            <p class="font-lilita-one text-sm mb-2" style="color: rgb(228, 240, 171);"><%= mentor.job_title %></p>
+          <% end %>
+          <% if mentor.bio.present? %>
+            <p class="font-lilita-one text-white text-sm leading-relaxed"><%= mentor.bio %></p>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+<% end %>
+
+
+<%# Judging Criteria section %>
+<section id="judging-criteria" class="relative z-10 py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        <span style="color: rgb(228, 240, 171);">JUDGING</span> CRITERIA
+      </h2>
+      <p class="font-lilita-one text-lg text-white">
+        How submissions are evaluated during the competition
+      </p>
+    </div>
+
+    <div class="space-y-3">
+      <% [
+        { title: "Innovation", description: "Originality and creativity of the idea." },
+        { title: "Feasibility", description: "Can the solution realistically be implemented?" },
+        { title: "Impact", description: "Potential to solve a meaningful problem." },
+        { title: "User-Centric Thinking", description: "Understanding of the target audience." },
+        { title: "Business Viability", description: "Scalability and sustainability." },
+        { title: "Presentation Quality", description: "Clarity, storytelling, and persuasion." }
+      ].each_with_index do |criterion, index| %>
+        <div class="bento-card ideathon-panel rounded-2xl p-6 transition-all duration-300">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-6 w-6 rounded-lg border" style="background-color: rgba(228, 240, 171, 0.15); border-color: rgba(228, 240, 171, 0.25);">
+                <span class="font-titan-one text-xs" style="color: rgb(228, 240, 171);"><%= index + 1 %></span>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-titan-one text-white text-sm mb-1"><%= criterion[:title] %></h3>
+              <p class="font-lilita-one text-white text-sm"><%= criterion[:description] %></p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+</section>
+
+
+<%# Rules section %>
+<section id="rules" class="relative z-10 py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+    
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        CONTEST <span style="color: rgb(238, 136, 138);">RULES</span>
+      </h2>
+      <p class="font-lilita-one text-lg text-white">
+        Make sure you understand all the requirements before competing
+      </p>
+    </div>
+    
+    <!-- Rules List (rule_text: first paragraph = title, blank line, then body — or single paragraph for one block) -->
+    <div class="space-y-4">
+      <div class="mb-8">
+        <h3 class="font-titan-one text-xl mb-4" style="color: rgb(238, 136, 138);">Competition Rules</h3>
+        <div class="space-y-3">
+          <% if @rules.any? %>
+            <% @rules.each_with_index do |rule, index| %>
+              <% rb = rule_title_and_body(rule) %>
+            <div class="bento-card ideathon-panel rounded-2xl p-6 transition-all duration-300">
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                  <div class="flex items-center justify-center h-6 w-6 rounded-lg border" style="background-color: rgba(238, 136, 138, 0.15); border-color: rgba(238, 136, 138, 0.25);">
+                    <span class="font-titan-one text-xs" style="color: rgb(238, 136, 138);"><%= index + 1 %></span>
+                  </div>
+                </div>
+                <div>
+                  <% if rb[:title].present? %>
+                    <h4 class="font-titan-one text-white text-sm mb-1"><%= rb[:title] %></h4>
+                    <p class="font-lilita-one text-white text-sm whitespace-pre-line"><%= rb[:body] %></p>
+                  <% else %>
+                    <p class="font-lilita-one text-white text-sm whitespace-pre-line"><%= rb[:body] %></p>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            <% end %>
+          <% else %>
+            <div class="text-center bento-card ideathon-panel rounded-2xl p-10">
+              <p class="font-lilita-one text-white text-lg">Contest rules will be posted here soon.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+    
+    <!-- Important Notice -->
+  </div>
+</section>
+
+
+<%# Deliverables section %>
+<section id="deliverables" class="relative z-10 py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="text-center mb-16">
+      <h2 class="section-heading">
+        REQUIRED <span style="color: rgb(228, 240, 171);">DELIVERABLES</span>
+      </h2>
+      <p class="font-lilita-one text-lg text-white">
+        Submit all required materials on Devpost before the deadline!
+      </p>
+    </div>
+
+    <div class="space-y-2">
+      <% [
+        "Pitch deck (PDF)",
+        "Problem statement",
+        "Prototype",
+        "Proposed solution (video)",
+        "Basic implementation plan",
+        "Market or impact potential"
+      ].each_with_index do |deliverable, index| %>
+        <div class="bento-card ideathon-panel rounded-xl p-6 transition-all duration-300">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center h-5 w-5 rounded-full border flex-shrink-0" style="background-color: rgba(228, 240, 171, 0.2); border-color: rgba(228, 240, 171, 0.3);">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" style="color: rgb(228, 240, 171);">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <p class="font-lilita-one text-white text-sm"><%= deliverable %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+</section>
+
+
+<%# Final CTA section %>
+<section class="relative z-10 py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+    
+    <div class="bento-card backdrop-blur-sm rounded-3xl p-10 text-center relative overflow-hidden glow-gold" style="background: linear-gradient(to bottom right, rgba(40, 28, 26, 0.72), rgba(238, 136, 138, 0.32), rgba(158, 194, 191, 0.22)); border: 1px solid rgba(238, 136, 138, 0.45);">
+      
+      <div class="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl" style="background-color: rgba(238, 136, 138, 0.05);"></div>
+      <div class="absolute bottom-0 left-0 w-40 h-40 rounded-full blur-3xl" style="background-color: rgba(215, 129, 112, 0.05);"></div>
+      
+      <div class="relative z-10">
+        <h2 class="font-beachday text-4xl sm:text-5xl mb-4" style="color: rgb(238, 136, 138);">
+          READY TO <span style="color: rgb(238, 136, 138);">INNOVATE</span>?
+        </h2>
+        <p class="font-lilita-one text-lg text-white mb-8 max-w-xl mx-auto">
+          Join 200+ fellow Aggies for 24 hours of creativity, collaboration, and competition. 
+          Your next big idea is waiting.
+        </p>
+        
+        <div class="text-center my-8">
+          <span class="block text-4xl font-titan-one text-white drop-shadow-lg">Register Now!</span>
+        </div>
+        
+        <p class="font-lilita-one text-white text-sm mt-6">
+          Registration closes March 31, 2026
+        </p>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+  </div> <!-- Close z-10 content wrapper -->
+</div> <!-- Close sections wrapper -->
+
+<%# Footer %>
+<footer class="relative py-16 px-4" style="background: rgb(252, 240, 228); border-top: 1px solid rgba(238, 136, 138, 0.2);">
+  <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(to right, transparent, rgba(238, 136, 138, 0.3), transparent);"></div>
+
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center mb-10">
+      <div class="font-beachday text-3xl mb-2" style="color: rgb(238, 136, 138);">TAMU IDEATHON</div>
+      <p class="font-lilita-one text-sm max-w-md mx-auto" style="color: rgba(127, 85, 81, 0.7);">
+        Where Texas A&M students turn bold ideas into reality. 24 hours of innovation, collaboration, and fun.
+      </p>
+    </div>
+
+    <!-- Contact productTAMU -->
+    <div class="text-center mb-10 pb-10" style="border-bottom: 1px solid rgba(127, 85, 81, 0.15);">
+      <p class="font-titan-one text-xs uppercase tracking-widest mb-6" style="color: rgba(127, 85, 81, 0.5);">Contact productTAMU</p>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <a href="https://discord.com/invite/ESucN2Mq6u" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-lilita-one transition-all duration-200"
+           style="background: rgba(158,194,191,0.15); border: 1px solid rgba(158,194,191,0.35); color: rgb(100, 155, 151);"
+           onmouseover="this.style.borderColor='rgba(158,194,191,0.6)'; this.style.background='rgba(158,194,191,0.25)';"
+           onmouseout="this.style.borderColor='rgba(158,194,191,0.35)'; this.style.background='rgba(158,194,191,0.15)';">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.031.053a19.9 19.9 0 005.993 3.03.077.077 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+          Discord
+        </a>
+        <a href="https://www.instagram.com/tamuproduct/" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-lilita-one transition-all duration-200"
+           style="background: rgba(238,136,138,0.12); border: 1px solid rgba(238,136,138,0.3); color: rgb(200, 100, 102);"
+           onmouseover="this.style.borderColor='rgba(238,136,138,0.6)'; this.style.background='rgba(238,136,138,0.22)';"
+           onmouseout="this.style.borderColor='rgba(238,136,138,0.3)'; this.style.background='rgba(238,136,138,0.12)';">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+          @tamuproduct
+        </a>
+        <a href="https://www.linkedin.com/company/productattamu/" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-lilita-one transition-all duration-200"
+           style="background: rgba(158,194,191,0.15); border: 1px solid rgba(158,194,191,0.35); color: rgb(100, 155, 151);"
+           onmouseover="this.style.borderColor='rgba(158,194,191,0.6)'; this.style.background='rgba(158,194,191,0.25)';"
+           onmouseout="this.style.borderColor='rgba(158,194,191,0.35)'; this.style.background='rgba(158,194,191,0.15)';">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn
+        </a>
+        <button onclick="navigator.clipboard.writeText('product.tamu@gmail.com').then(() => { const el = this; const orig = el.innerHTML; el.textContent = '✓ Copied!'; setTimeout(() => { el.innerHTML = orig; }, 2000) })"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-lilita-one transition-all duration-200 cursor-pointer"
+                style="background: rgba(127,85,81,0.08); border: 1px solid rgba(127,85,81,0.2); color: rgba(127, 85, 81, 0.7);"
+                onmouseover="this.style.borderColor='rgba(127,85,81,0.4)'; this.style.background='rgba(127,85,81,0.15)';"
+                onmouseout="this.style.borderColor='rgba(127,85,81,0.2)'; this.style.background='rgba(127,85,81,0.08)';">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+          product.tamu@gmail.com
+        </button>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl overflow-hidden shadow-lg">
+          <img src="/images/logo.png" alt="TAMU Ideathon" class="w-full h-full object-cover" />
+        </div>
+        <div>
+          <div class="font-titan-one text-sm" style="color: rgb(127, 85, 81);">TAMU IDEATHON 2026</div>
+          <div class="font-lilita-one text-xs" style="color: rgba(127, 85, 81, 0.6);">Copyright <%= Date.current.year %> All rights reserved</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="https://discord.com/invite/ESucN2Mq6u" target="_blank" rel="noopener" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all" style="background: rgba(158,194,191,0.15); color: rgb(100, 155, 151);" onmouseover="this.style.background='rgba(158,194,191,0.3)';" onmouseout="this.style.background='rgba(158,194,191,0.15)';">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.031.053a19.9 19.9 0 005.993 3.03.077.077 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+        </a>
+        <a href="https://www.instagram.com/tamuproduct/" target="_blank" rel="noopener" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all" style="background: rgba(238,136,138,0.12); color: rgb(200, 100, 102);" onmouseover="this.style.background='rgba(238,136,138,0.25)';" onmouseout="this.style.background='rgba(238,136,138,0.12)';">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+        </a>
+        <button onclick="navigator.clipboard.writeText('product.tamu@gmail.com').then(() => { this.style.color='rgb(238,136,138)'; setTimeout(() => { this.style.color='rgba(127,85,81,0.6)'; }, 2000) })" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer" style="background: rgba(127,85,81,0.08); color: rgba(127,85,81,0.6);" onmouseover="this.style.background='rgba(127,85,81,0.18)';" onmouseout="this.style.background='rgba(127,85,81,0.08)';">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</footer>
+

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_07_051252) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_13_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -56,22 +56,56 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_07_051252) do
   end
 
   create_table "faqs", force: :cascade do |t|
-    t.integer "year", null: false
     t.text "question", null: false
     t.text "answer", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["year"], name: "index_faqs_on_year"
+    t.bigint "ideathon_year_id", null: false
+    t.index ["ideathon_year_id"], name: "index_faqs_on_ideathon_year_id"
   end
 
-  create_table "ideathons", primary_key: "year", id: :integer, default: nil, force: :cascade do |t|
-    t.string "theme"
+  create_table "ideathon_events", force: :cascade do |t|
+    t.bigint "ideathon_year_id", null: false
+    t.string "event_name"
+    t.text "event_description"
+    t.date "event_date"
+    t.time "event_time"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["ideathon_year_id"], name: "index_ideathon_events_on_ideathon_year_id"
+  end
+
+  create_table "ideathon_years", force: :cascade do |t|
+    t.integer "year", null: false
+    t.string "theme"
+    t.string "name"
+    t.text "description"
+    t.string "location"
+    t.date "start_date"
+    t.date "end_date"
+    t.boolean "is_active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["year"], name: "index_ideathon_years_on_year", unique: true
+  end
+
+  create_table "manager_action_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.string "record_type"
+    t.bigint "record_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "ip_address"
+    t.string "user_agent"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["action"], name: "index_manager_action_logs_on_action"
+    t.index ["created_at"], name: "index_manager_action_logs_on_created_at"
+    t.index ["record_type", "record_id"], name: "index_manager_action_logs_on_record_type_and_record_id"
+    t.index ["user_id"], name: "index_manager_action_logs_on_user_id"
   end
 
   create_table "mentors_judges", force: :cascade do |t|
-    t.integer "year", null: false
     t.string "name", null: false
     t.string "photo_url"
     t.text "bio"
@@ -79,19 +113,33 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_07_051252) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "job_title"
-    t.index ["year"], name: "index_mentors_judges_on_year"
+    t.bigint "ideathon_year_id", null: false
+    t.index ["ideathon_year_id"], name: "index_mentors_judges_on_ideathon_year_id"
+  end
+
+  create_table "registered_attendees", force: :cascade do |t|
+    t.bigint "ideathon_year_id", null: false
+    t.bigint "team_id", null: false
+    t.string "attendee_name"
+    t.string "attendee_phone"
+    t.string "attendee_email"
+    t.string "attendee_major"
+    t.string "attendee_class"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ideathon_year_id"], name: "index_registered_attendees_on_ideathon_year_id"
+    t.index ["team_id"], name: "index_registered_attendees_on_team_id"
   end
 
   create_table "rules", force: :cascade do |t|
-    t.integer "year", null: false
     t.text "rule_text", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["year"], name: "index_rules_on_year"
+    t.bigint "ideathon_year_id", null: false
+    t.index ["ideathon_year_id"], name: "index_rules_on_ideathon_year_id"
   end
 
   create_table "sponsors_partners", force: :cascade do |t|
-    t.integer "year", null: false
     t.string "name", null: false
     t.string "logo_url"
     t.text "blurb"
@@ -99,7 +147,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_07_051252) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "job_title"
-    t.index ["year"], name: "index_sponsors_partners_on_year"
+    t.bigint "ideathon_year_id", null: false
+    t.index ["ideathon_year_id"], name: "index_sponsors_partners_on_ideathon_year_id"
+  end
+
+  create_table "teams", force: :cascade do |t|
+    t.bigint "ideathon_year_id", null: false
+    t.string "team_name"
+    t.boolean "unassigned"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ideathon_year_id"], name: "index_teams_on_ideathon_year_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -117,8 +175,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_07_051252) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activity_logs", "users"
-  add_foreign_key "faqs", "ideathons", column: "year", primary_key: "year"
-  add_foreign_key "mentors_judges", "ideathons", column: "year", primary_key: "year"
-  add_foreign_key "rules", "ideathons", column: "year", primary_key: "year"
-  add_foreign_key "sponsors_partners", "ideathons", column: "year", primary_key: "year"
+  add_foreign_key "faqs", "ideathon_years"
+  add_foreign_key "ideathon_events", "ideathon_years"
+  add_foreign_key "manager_action_logs", "users"
+  add_foreign_key "mentors_judges", "ideathon_years"
+  add_foreign_key "registered_attendees", "ideathon_years"
+  add_foreign_key "registered_attendees", "teams"
+  add_foreign_key "rules", "ideathon_years"
+  add_foreign_key "sponsors_partners", "ideathon_years"
+  add_foreign_key "teams", "ideathon_years"
 end

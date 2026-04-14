@@ -1,4 +1,4 @@
-class IdeathonsController < ApplicationController
+class IdeathonsController < ClubDashboardController
   before_action :require_admin, only: [ :destroy, :import ]
   before_action :set_ideathon, only: [ :show, :edit, :update, :delete, :destroy ]
   before_action :set_ideathon_overview, only: [ :overview ]
@@ -62,11 +62,11 @@ class IdeathonsController < ApplicationController
   private
 
   def set_ideathon
-    @ideathon = Ideathon.find(params[:year])
+    @ideathon = Ideathon.find_by!(year: params[:year].to_i)
   end
 
   def set_ideathon_overview
-    @ideathon = Ideathon.includes(:sponsors_partners, :mentors_judges, :faqs).find(params[:year])
+    @ideathon = Ideathon.includes(:sponsors_partners, :mentors_judges, :faqs).find_by!(year: params[:year].to_i)
     @sponsors_partners = @ideathon.sponsors_partners.sort_by(&:name)
     @judges = @ideathon.mentors_judges.select(&:is_judge?).sort_by(&:name)
     @faqs = @ideathon.faqs.sort_by(&:id)

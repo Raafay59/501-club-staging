@@ -1,11 +1,11 @@
 require "csv"
 
-class MentorsJudgesController < ApplicationController
+class MentorsJudgesController < ClubDashboardController
   before_action :require_admin, only: [ :destroy, :import, :export ]
   before_action :set_mentors_judge, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
-    @mentors_judges = MentorsJudge.order(:year, :name)
+    @mentors_judges = MentorsJudge.joins(:ideathon).order(Arel.sql("ideathon_years.year DESC, mentors_judges.name ASC"))
   end
 
   def show
@@ -70,7 +70,15 @@ class MentorsJudgesController < ApplicationController
 
   def export
     current_year = latest_export_year_for(MentorsJudge)
-    judges = MentorsJudge.where(year: current_year, is_judge: true).order(:name)
+    unless current_year
+      redirect_to mentors_judges_path, alert: "No judges to export"
+      return
+    end
+
+    judges = MentorsJudge
+      .joins(:ideathon)
+      .where(ideathon_years: { year: current_year }, is_judge: true)
+      .order(:name)
 
     if judges.empty?
       redirect_to mentors_judges_path, alert: "No judges to export"

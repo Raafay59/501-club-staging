@@ -1,4 +1,4 @@
-class UsersController < ApplicationController
+class UsersController < ClubDashboardController
   before_action :require_admin
 
   def index

@@ -98,7 +98,7 @@ RSpec.describe "Faqs", type: :request do
 
       it "redirects non-admin users" do
         delete faq_path(faq)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(ideathons_path)
       end
     end
   end

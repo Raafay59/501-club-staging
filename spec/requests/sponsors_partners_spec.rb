@@ -99,7 +99,7 @@ RSpec.describe "SponsorsPartners", type: :request do
 
       it "redirects non-admin users" do
         delete sponsors_partner_path(sponsors_partner)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(ideathons_path)
       end
     end
   end
@@ -162,7 +162,7 @@ RSpec.describe "SponsorsPartners", type: :request do
 
       get export_sponsors_partners_path(format: :csv)
 
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(ideathons_path)
     end
 
     it "redirects unauthenticated users to login" do

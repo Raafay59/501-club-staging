@@ -59,10 +59,10 @@ RSpec.describe Ideathon, type: :model do
     end
   end
 
-  describe 'primary key' do
-    it 'uses year as primary key' do
+  describe 'lookup by year' do
+    it 'finds by calendar year' do
       ideathon = Ideathon.create!(year: 2023, theme: 'AI')
-      expect(Ideathon.find(2023)).to eq(ideathon)
+      expect(Ideathon.find_by!(year: 2023)).to eq(ideathon)
     end
   end
 end

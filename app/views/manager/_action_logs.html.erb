@@ -1,0 +1,52 @@
+<%= turbo_frame_tag "action_logs" do %>
+  <% if action_logs.any? %>
+    <div class="rounded-2xl overflow-hidden" style="border: 1px solid rgba(127, 85, 81, 0.1);">
+      <table class="w-full text-sm">
+        <thead>
+          <tr style="background: rgba(158, 194, 191, 0.12); border-bottom: 1px solid rgba(158, 194, 191, 0.2);">
+            <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Time</th>
+            <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Organizer</th>
+            <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Action</th>
+            <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Target</th>
+            <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Item</th>
+            <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% action_logs.each_with_index do |log, idx| %>
+            <tr style="border-bottom: 1px solid rgba(127, 85, 81, 0.08); <%= idx.even? ? 'background: rgba(255,255,255,0.4);' : '' %>">
+              <td class="px-4 py-3 text-xs" style="color: rgba(127, 85, 81, 0.65);">
+                <%= log.created_at.in_time_zone.strftime("%b %d, %I:%M %p") %>
+              </td>
+              <td class="px-4 py-3">
+                <div class="text-xs font-semibold" style="color: rgb(127, 85, 81);">
+                  <%= log.user.name.presence || log.user.email %>
+                </div>
+                <div class="text-[11px]" style="color: rgba(127, 85, 81, 0.55);">
+                  <%= log.user.email %>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-xs font-semibold" style="color: rgb(127, 85, 81);">
+                <%= log.action_label %>
+              </td>
+              <td class="px-4 py-3 text-xs" style="color: rgba(127, 85, 81, 0.7);">
+                <%= log.target_label %>
+              </td>
+              <td class="px-4 py-3 text-xs" style="color: rgba(127, 85, 81, 0.7);">
+                <%= log.record_label || "—" %>
+              </td>
+              <td class="px-4 py-3 text-xs" style="color: rgba(127, 85, 81, 0.65);">
+                <%= log.details_label %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="rounded-2xl p-10 text-center" style="background: rgba(255,255,255,0.35); border: 1px solid rgba(127, 85, 81, 0.1);">
+      <p class="text-xs" style="color: rgba(127, 85, 81, 0.6);">No actions logged yet.</p>
+    </div>
+  <% end %>
+<% end %>
+

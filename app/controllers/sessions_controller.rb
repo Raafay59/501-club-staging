@@ -1,8 +1,14 @@
+# frozen_string_literal: true
+
 class SessionsController < ApplicationController
-  skip_before_action :require_login
-  skip_before_action :require_authorized
+  skip_before_action :require_organizer_tools!
 
   def new
+    if logged_in? && current_user.authorized?
+      redirect_to ideathons_path
+    elsif logged_in?
+      redirect_to unauthorized_path
+    end
   end
 
   def create
@@ -35,7 +41,7 @@ class SessionsController < ApplicationController
       if user.unauthorized?
         redirect_to unauthorized_path
       else
-        redirect_to root_path, notice: "Signed in as #{user.name}."
+        redirect_to ideathons_path, notice: "Signed in as #{user.name}."
       end
     else
       redirect_to login_path, alert: "Unable to create account."
@@ -44,7 +50,7 @@ class SessionsController < ApplicationController
 
   def destroy
     session[:user_id] = nil
-    redirect_to login_path, notice: "Signed out successfully."
+    redirect_to root_path, notice: "Signed out successfully."
   end
 
   def failure

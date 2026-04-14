@@ -1,11 +1,11 @@
 require "csv"
 
-class SponsorsPartnersController < ApplicationController
+class SponsorsPartnersController < ClubDashboardController
   before_action :require_admin, only: [ :destroy, :import, :export ]
   before_action :set_sponsors_partner, only: [ :show, :edit, :update, :delete, :destroy ]
 
   def index
-    @sponsors_partners = SponsorsPartner.order(:year, :name)
+    @sponsors_partners = SponsorsPartner.joins(:ideathon).order(Arel.sql("ideathon_years.year DESC, sponsors_partners.name ASC"))
   end
 
   def show
@@ -71,7 +71,15 @@ class SponsorsPartnersController < ApplicationController
 
   def export
     current_year = latest_export_year_for(SponsorsPartner)
-    sponsors = SponsorsPartner.where(year: current_year, is_sponsor: true).order(:name)
+    unless current_year
+      redirect_to sponsors_partners_path, alert: "No sponsors to export"
+      return
+    end
+
+    sponsors = SponsorsPartner
+      .joins(:ideathon)
+      .where(ideathon_years: { year: current_year }, is_sponsor: true)
+      .order(:name)
 
     if sponsors.empty?
       redirect_to sponsors_partners_path, alert: "No sponsors to export"
