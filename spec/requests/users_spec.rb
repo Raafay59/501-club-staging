@@ -10,6 +10,8 @@ RSpec.describe "Users", type: :request do
     it "returns a successful response for admin" do
       get users_path
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include('class="context-field-tip"')
+      expect(response.body).to include(I18n.t("context_help.users.email"))
     end
 
     context "as a non-admin" do

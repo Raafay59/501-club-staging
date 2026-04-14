@@ -27,4 +27,14 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(html).not_to include("script")
     end
   end
+
+  describe "#context_field_tip" do
+    it "wraps content in a div with data-tip from i18n" do
+      html = helper.context_field_tip("users.email") { "inner" }
+      expect(html).to include('class="context-field-tip"')
+      expect(html).to include("data-tip")
+      expect(html).to include(I18n.t("context_help.users.email"))
+      expect(html).to include("inner")
+    end
+  end
 end

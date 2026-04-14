@@ -13,4 +13,10 @@ module ApplicationHelper
   def faq_answer_html(answer)
     sanitize(answer.to_s, tags: %w[strong em b i br p u], attributes: [])
   end
+
+  # In-app context help: hover or focus within the wrapper to see the tip (see .context-field-tip in app.css).
+  def context_field_tip(tip_key, &block)
+    tip = I18n.t("context_help.#{tip_key}")
+    content_tag(:div, class: "context-field-tip", data: { tip: tip }, &block)
+  end
 end
