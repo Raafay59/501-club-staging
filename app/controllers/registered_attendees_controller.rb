@@ -14,17 +14,17 @@ class RegisteredAttendeesController < ApplicationController
      layout "ideathon", only: %i[new create success edit update]
 
 
-  # List all registered attendees (admin only)
+     # List all registered attendees (admin only)
      def index
           @registered_attendees = RegisteredAttendee.all
      end
 
 
-  # Show a single registered attendee (public for confirmation)
+     # Show a single registered attendee (public for confirmation)
      def show; end
 
 
-  # Display the registration form for a new attendee
+     # Display the registration form for a new attendee
      def new
           @registered_attendee = RegisteredAttendee.new
           @registered_attendee.ideathon_year = @active_year
@@ -32,16 +32,16 @@ class RegisteredAttendeesController < ApplicationController
      end
 
 
-  # Edit an existing attendee (admin only)
+     # Edit an existing attendee (admin only)
      def edit; end
 
 
-  # Show registration success page
+     # Show registration success page
      def success; end
 
 
-  # Create a new registered attendee from form input
-  # Handles team assignment and validation, responds to HTML/JSON
+     # Create a new registered attendee from form input
+     # Handles team assignment and validation, responds to HTML/JSON
      def create
           @registered_attendee = RegisteredAttendee.new(registered_attendee_params)
           @registered_attendee.ideathon_year = @active_year
@@ -73,8 +73,8 @@ class RegisteredAttendeesController < ApplicationController
      end
 
 
-  # Update an existing registered attendee (admin only)
-  # Handles team reassignment and validation
+     # Update an existing registered attendee (admin only)
+     # Handles team reassignment and validation
      def update
           @registered_attendee.assign_attributes(registered_attendee_params)
           apply_team_selection!(@registered_attendee)
@@ -109,7 +109,7 @@ class RegisteredAttendeesController < ApplicationController
      end
 
 
-  # Delete a registered attendee (admin only)
+     # Delete a registered attendee (admin only)
      def destroy
           @registered_attendee.destroy!
           log_manager_action(
@@ -124,7 +124,7 @@ class RegisteredAttendeesController < ApplicationController
      end
 
 
-  # AJAX endpoint: Return teams for a given year as JSON (for dynamic form updates)
+     # AJAX endpoint: Return teams for a given year as JSON (for dynamic form updates)
      def teams_for_year
           year_id = params[:year_id]
           if year_id.blank?
@@ -199,7 +199,7 @@ class RegisteredAttendeesController < ApplicationController
        #   existing_team_id: id of selected team (if any)
        #   new_team_name: name for new team (if any)
        def apply_team_selection!(attendee, enforce_limit: false)
-         # year must be selected first
+            # year must be selected first
             if attendee.ideathon_year_id.blank?
                  attendee.errors.add(:ideathon_year_id, "must be selected")
                  return
@@ -253,7 +253,7 @@ class RegisteredAttendeesController < ApplicationController
                  attendee.team_id = team.id
 
             else
-              # Default: assign to "Unassigned" team if no valid choice
+                 # Default: assign to "Unassigned" team if no valid choice
                  begin
                       unassigned = Team.find_or_create_by!(ideathon_year_id: attendee.ideathon_year_id, unassigned: true) do |t|
                            t.team_name = "Unassigned"
