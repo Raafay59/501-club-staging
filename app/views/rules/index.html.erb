@@ -33,10 +33,12 @@
   <h2>Import Rules from CSV</h2>
   <p>CSV columns: <code>year, rule_text</code></p>
   <%= form_with url: import_rules_path, local: true, multipart: true do |form| %>
-    <div>
-      <%= form.label :file, "Select CSV file" %>
-      <%= form.file_field :file, accept: ".csv,text/csv" %>
-    </div>
+    <%= context_field_tip("import.rules") do %>
+      <div>
+        <%= form.label :file, "Select CSV file" %>
+        <%= form.file_field :file, accept: ".csv,text/csv" %>
+      </div>
+    <% end %>
     <div>
       <%= form.submit "Import" %>
     </div>

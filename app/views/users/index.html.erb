@@ -13,14 +13,18 @@
   <% end %>
 
   <div class="form-row form-row--end">
-    <div>
-      <%= form.label :email, "Email Address" %>
-      <%= form.email_field :email, placeholder: "user@example.com" %>
-    </div>
-    <div>
-      <%= form.label :role %>
-      <%= form.select :role, [["Editor", "editor"], ["Admin", "admin"]] %>
-    </div>
+    <%= context_field_tip("users.email") do %>
+      <div>
+        <%= form.label :email, "Email Address" %>
+        <%= form.email_field :email, placeholder: "user@example.com" %>
+      </div>
+    <% end %>
+    <%= context_field_tip("users.role_invite") do %>
+      <div>
+        <%= form.label :role %>
+        <%= form.select :role, [["Editor", "editor"], ["Admin", "admin"]] %>
+      </div>
+    <% end %>
     <div>
       <%= form.submit "Add User" %>
     </div>
@@ -53,9 +57,11 @@
           <% end %>
         </td>
         <td>
-          <%= form_with(model: user, url: user_path(user), method: :patch, local: true) do |form| %>
-            <%= form.select :role, [["Admin", "admin"], ["Editor", "editor"], ["Unauthorized", "unauthorized"]] %>
-            <%= form.submit "Update" %>
+          <%= context_field_tip("users.role_change") do %>
+            <%= form_with(model: user, url: user_path(user), method: :patch, local: true) do |form| %>
+              <%= form.select :role, [["Admin", "admin"], ["Editor", "editor"], ["Unauthorized", "unauthorized"]] %>
+              <%= form.submit "Update" %>
+            <% end %>
           <% end %>
         </td>
         <td>

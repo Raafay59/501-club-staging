@@ -29,3 +29,15 @@
 
 en:
   hello: "Hello world"
+
+  context_help:
+    users:
+      email: "Google OAuth email for the teammate you are inviting. They appear as unauthorized until an admin approves access."
+      role_invite: "Reference only—new accounts are created as unauthorized and admins approve access from the request email."
+      role_change: "Admin can manage users and CSV imports. Editor can edit site content. Unauthorized blocks sign-in until changed."
+    import:
+      ideathons: "UTF-8 CSV with header row: year, theme. Each row is one ideathon."
+      sponsors_partners: "UTF-8 CSV with header row: year, name, job_title, logo_url, blurb, is_sponsor (true/false). Each row is one sponsor or partner."
+      mentors_judges: "UTF-8 CSV with header row: year, name, job_title, photo_url, bio, is_judge (true/false). Each row is one mentor or judge."
+      faqs: "UTF-8 CSV with header row: year, question, answer. Each row is one FAQ."
+      rules: "UTF-8 CSV with header row: year, rule_text. Each row is one rule."
