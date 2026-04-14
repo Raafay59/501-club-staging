@@ -99,7 +99,7 @@ RSpec.describe "MentorsJudges", type: :request do
 
       it "redirects non-admin users" do
         delete mentors_judge_path(mentors_judge)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(ideathons_path)
       end
     end
   end
@@ -165,7 +165,7 @@ RSpec.describe "MentorsJudges", type: :request do
 
       get export_mentors_judges_path(format: :csv)
 
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(ideathons_path)
     end
 
     it "redirects unauthenticated users to login" do

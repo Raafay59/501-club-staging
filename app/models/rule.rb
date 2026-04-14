@@ -9,6 +9,11 @@ class Rule < ApplicationRecord
   end
 
   def year=(value)
+    if value.blank?
+      self.ideathon = nil
+      return
+    end
+
     self.ideathon = Ideathon.find_by!(year: value.to_i)
   end
 end

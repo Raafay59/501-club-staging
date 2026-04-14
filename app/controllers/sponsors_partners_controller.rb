@@ -71,7 +71,15 @@ class SponsorsPartnersController < ClubDashboardController
 
   def export
     current_year = latest_export_year_for(SponsorsPartner)
-    sponsors = SponsorsPartner.where(year: current_year, is_sponsor: true).order(:name)
+    unless current_year
+      redirect_to sponsors_partners_path, alert: "No sponsors to export"
+      return
+    end
+
+    sponsors = SponsorsPartner
+      .joins(:ideathon)
+      .where(ideathon_years: { year: current_year }, is_sponsor: true)
+      .order(:name)
 
     if sponsors.empty?
       redirect_to sponsors_partners_path, alert: "No sponsors to export"

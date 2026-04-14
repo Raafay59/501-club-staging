@@ -17,7 +17,7 @@ RSpec.describe "Users", type: :request do
 
       it "redirects non-admin users" do
         get users_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(ideathons_path)
       end
     end
   end

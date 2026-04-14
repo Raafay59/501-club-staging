@@ -131,7 +131,7 @@ RSpec.describe "Ideathons", type: :request do
 
       it "redirects non-admin users" do
         delete ideathon_path(ideathon)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(ideathons_path)
       end
     end
   end

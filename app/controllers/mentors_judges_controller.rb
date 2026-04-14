@@ -70,7 +70,15 @@ class MentorsJudgesController < ClubDashboardController
 
   def export
     current_year = latest_export_year_for(MentorsJudge)
-    judges = MentorsJudge.where(year: current_year, is_judge: true).order(:name)
+    unless current_year
+      redirect_to mentors_judges_path, alert: "No judges to export"
+      return
+    end
+
+    judges = MentorsJudge
+      .joins(:ideathon)
+      .where(ideathon_years: { year: current_year }, is_judge: true)
+      .order(:name)
 
     if judges.empty?
       redirect_to mentors_judges_path, alert: "No judges to export"
