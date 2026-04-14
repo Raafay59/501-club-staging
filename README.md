@@ -1,5 +1,8 @@
 # README
 
+Technical documentation: https://docs.google.com/document/d/1xxk5U2dwN3DLhmVX_49dyWp3lmFKhvyWa4AkdA4sRR8/edit?usp=sharing
+User documentation: https://docs.google.com/document/d/1ZCRiQinY-WYUEtjqU2NyGJmNdjY22iqxtoXGiZmghqQ/edit?usp=sharing
+
 ## 501 Club Staging - Local Setup
 
 This is a Rails 8 app using PostgreSQL.
