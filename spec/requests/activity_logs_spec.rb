@@ -33,6 +33,18 @@ RSpec.describe "ActivityLogs", type: :request do
         expect(response.body).not_to include("How do I join?")
       end
 
+      it "includes imported and exported rules when filtering by rules" do
+        ActivityLog.record_import(model: Rule, count: 3, user: admin)
+        ActivityLog.record_export(model: Rule, count: 2, user: admin)
+        ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Acme' was added")
+
+        get activity_logs_path, params: { content_type: "rules" }
+
+        expect(response.body).to include("Imported 3 rules")
+        expect(response.body).to include("Exported 2 rules")
+        expect(response.body).not_to include("Acme")
+      end
+
       it "filters by last 7 days" do
         recent_log = ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Recent' was added")
         older_log = ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Older' was added")

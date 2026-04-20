@@ -31,7 +31,7 @@ class ActivityLog < ApplicationRecord
     },
     "rules" => {
       label: "Rules",
-      patterns: [ "Rule %" ]
+      patterns: [ "Rule %", "Imported % rule%", "Exported % rule%" ]
     },
     "sponsors" => {
       label: "Sponsors",

@@ -15,7 +15,7 @@ class RegisteredAttendeesController < ApplicationController
      layout "ideathon", only: %i[new create success edit update]
 
 
-     # List all registered attendees (admin only)
+     # List all registered attendees (organizer only)
      def index
           @registered_attendees = RegisteredAttendee.where(ideathon_year: active_year)
      end
