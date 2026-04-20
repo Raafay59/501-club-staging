@@ -114,7 +114,9 @@ class ManagerController < ApplicationController
   private
 
      def active_year
-          @active_year ||= ActiveIdeathonYear.call
+          return @active_year if instance_variable_defined?(:@active_year)
+
+          @active_year = ActiveIdeathonYear.call
      end
 
      def sort_param

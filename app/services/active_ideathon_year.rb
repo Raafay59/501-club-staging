@@ -14,13 +14,14 @@ class ActiveIdeathonYear
 
     def create_default_year!
       today = Time.zone.today
-      Ideathon.create!(
-        year: today.year,
-        start_date: today,
-        end_date: today + 1.day,
-        is_active: true,
-        description: "Auto-generated default year"
-      )
+      Ideathon.find_or_create_by!(year: today.year) do |ideathon|
+        ideathon.start_date = today
+        ideathon.end_date = today + 1.day
+        ideathon.is_active = true
+        ideathon.description = "Auto-generated default year"
+      end
+    rescue ActiveRecord::RecordNotUnique
+      Ideathon.find_by!(year: today.year)
     end
   end
 end

@@ -54,5 +54,21 @@ RSpec.describe ActiveIdeathonYear do
       expect(@result.is_active).to eq(true)
       expect(@result.year).to eq(Time.zone.today.year)
     end
+
+    it "returns the matching year when concurrent create hits unique constraint" do
+      today_year = Time.zone.today.year
+      existing = Ideathon.create!(
+        year: today_year,
+        theme: "Existing",
+        is_active: false,
+        start_date: Date.new(today_year, 2, 1),
+        end_date: Date.new(today_year, 2, 2)
+      )
+
+      allow(Ideathon).to receive(:find_or_create_by!).and_raise(ActiveRecord::RecordNotUnique)
+
+      result = described_class.send(:create_default_year!)
+      expect(result).to eq(existing)
+    end
   end
 end

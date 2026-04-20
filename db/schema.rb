@@ -158,10 +158,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_19_010000) do
     t.boolean "unassigned", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index "ideathon_year_id, lower((team_name)::text)", name: "index_teams_unique_name_per_year", unique: true, where: "(unassigned = false)"
+    t.index "ideathon_year_id, lower(btrim((team_name)::text))", name: "index_teams_unique_name_per_year", unique: true, where: "(unassigned = false)"
     t.index ["ideathon_year_id"], name: "index_teams_on_ideathon_year_id"
     t.index ["ideathon_year_id"], name: "index_teams_one_unassigned_per_year", unique: true, where: "(unassigned = true)"
-    t.check_constraint "unassigned = true OR char_length(btrim(team_name::text)) > 0", name: "teams_named_when_not_unassigned"
+    t.check_constraint "unassigned = true OR char_length(btrim(coalesce(team_name::text, ''::text))) > 0", name: "teams_named_when_not_unassigned"
   end
 
   create_table "users", force: :cascade do |t|

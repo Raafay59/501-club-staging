@@ -19,12 +19,12 @@ class HardenIdeathonDataIntegrity < ActiveRecord::Migration[8.0]
 
     execute <<~SQL
       CREATE UNIQUE INDEX IF NOT EXISTS index_teams_unique_name_per_year
-      ON teams (ideathon_year_id, LOWER(team_name))
+      ON teams (ideathon_year_id, LOWER(btrim(team_name)))
       WHERE unassigned = FALSE;
     SQL
 
     add_check_constraint :teams,
-      "(unassigned = TRUE) OR (char_length(btrim(team_name)) > 0)",
+      "(unassigned = TRUE) OR (char_length(btrim(coalesce(team_name, ''))) > 0)",
       name: "teams_named_when_not_unassigned" unless check_constraint_exists?(:teams, name: "teams_named_when_not_unassigned")
 
     change_column_default :ideathon_years, :is_active, from: nil, to: false

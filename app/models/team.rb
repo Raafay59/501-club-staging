@@ -6,6 +6,8 @@ class Team < ApplicationRecord
   belongs_to :ideathon_year, class_name: "Ideathon", inverse_of: :teams
   has_many :registered_attendees
 
+  before_validation :normalize_team_name
+
   # Validations
   validates :unassigned, inclusion: { in: [ true, false ] }
   validates :team_name, presence: true
@@ -19,6 +21,10 @@ class Team < ApplicationRecord
   validate :single_unassigned_team_per_year, if: :unassigned
 
   private
+
+  def normalize_team_name
+    self.team_name = team_name.strip if team_name.present?
+  end
 
   def single_unassigned_team_per_year
     return if ideathon_year_id.blank?
