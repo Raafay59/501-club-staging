@@ -322,6 +322,34 @@ RSpec.describe "Registered attendees", type: :request do
       expect(flash[:alert]).to include("active year")
     end
 
+    it "PATCH /registered_attendees/:id as JSON returns 404 when attendee is outside the active year" do
+      old_year = Ideathon.create!(
+        year: 2024,
+        theme: "Old",
+        is_active: false,
+        start_date: Date.new(2024, 2, 1),
+        end_date: Date.new(2024, 2, 2)
+      )
+      old_team = Team.create!(ideathon_year: old_year, team_name: "Old Team", unassigned: false)
+      attendee = RegisteredAttendee.create!(
+        ideathon_year: old_year,
+        team: old_team,
+        attendee_name: "Old Json",
+        attendee_phone: "9795557799",
+        attendee_email: "oldjson@tamu.edu",
+        attendee_major: "CS",
+        attendee_class: "U3"
+      )
+
+      patch registered_attendee_path(attendee, format: :json), params: {
+        registered_attendee: { attendee_name: "Should Not Update" },
+        team_choice: "existing",
+        existing_team_id: old_team.id.to_s
+      }
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "PATCH /registered_attendees/:id updates and redirects to manager" do
       attendee = RegisteredAttendee.create!(
         ideathon_year: ideathon,
