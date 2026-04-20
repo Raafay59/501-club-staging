@@ -57,6 +57,21 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(html).to include("Acme")
     end
 
+    it "renders image without hidden fallback when error fallback is disabled" do
+      html = helper.sponsor_logo_or_name(
+        sponsor_with_logo,
+        image_class: "logo-class",
+        fallback_class: "fallback-class",
+        fallback_tag: :span,
+        show_fallback_on_logo_error: false
+      )
+
+      expect(html).to include("<img")
+      expect(html).to include("logo-class")
+      expect(html).not_to include("onerror")
+      expect(html).not_to include("hidden fallback-class")
+    end
+
     it "renders visible fallback when logo is missing" do
       html = helper.sponsor_logo_or_name(
         sponsor_without_logo,

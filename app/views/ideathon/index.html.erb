@@ -912,7 +912,8 @@
             image_class: "max-h-10 max-w-[14rem] mx-auto object-contain mb-2",
             fallback_class: "font-lilita-one text-white transition-colors block mb-2",
             fallback_tag: :span,
-            show_fallback_when_logo_missing: false
+            show_fallback_when_logo_missing: false,
+            show_fallback_on_logo_error: false
           ) %>
           <span class="font-lilita-one text-white transition-colors block"><%= sp.name %></span>
           <% if sp.blurb.present? %>
