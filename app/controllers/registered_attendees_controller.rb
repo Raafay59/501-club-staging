@@ -8,6 +8,7 @@ class RegisteredAttendeesController < ApplicationController
      # Load attendee for actions that require an existing record
      before_action :set_registered_attendee, only: %i[show edit update destroy]
      before_action :set_active_year, only: %i[new create edit update]
+     before_action :require_admin_for_attendee_destruction!, only: %i[destroy]
      # Load teams for forms where team selection is needed
      before_action :load_teams, only: %i[new create edit update]
      # Use the ideathon layout for registration-related pages
@@ -76,7 +77,10 @@ class RegisteredAttendeesController < ApplicationController
                          if organizer_tools?
                               render :show, status: :created, location: @registered_attendee
                          else
-                              render :show, status: :created
+                              render json: {
+                                   success: true,
+                                   message: "Registration created successfully."
+                              }, status: :created
                          end
                     end
                else
@@ -177,6 +181,16 @@ class RegisteredAttendeesController < ApplicationController
      end
 
   private
+
+       def require_admin_for_attendee_destruction!
+            return if admin?
+
+            if request.format.json?
+                 head :forbidden
+            else
+                 redirect_to manager_index_path, alert: "Only 501 Club admins can delete attendees."
+            end
+       end
 
        # Finds the registered attendee for actions that require an existing record
        def set_registered_attendee

@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Registered attendees", type: :request do
   let!(:admin) { User.create!(email: "mgr@example.com", role: "admin") }
+  let!(:editor) { User.create!(email: "editor@example.com", role: "editor") }
 
   let!(:ideathon) do
     Ideathon.create!(
@@ -48,6 +49,11 @@ RSpec.describe "Registered attendees", type: :request do
         headers: { "Accept" => "application/json" }
 
       expect(response).to have_http_status(:created)
+      payload = JSON.parse(response.body)
+      expect(payload["success"]).to eq(true)
+      expect(payload["message"]).to eq("Registration created successfully.")
+      expect(payload).not_to have_key("id")
+      expect(payload).not_to have_key("url")
     end
 
     it "POST /registered_attendees with invalid data renders 422" do
@@ -433,6 +439,45 @@ RSpec.describe "Registered attendees", type: :request do
       )
       delete registered_attendee_path(attendee, format: :json)
       expect(response).to have_http_status(:no_content)
+    end
+
+    it "DELETE /registered_attendees/:id blocks editor users" do
+      login_as(editor)
+      attendee = RegisteredAttendee.create!(
+        ideathon_year: ideathon,
+        team: team,
+        attendee_name: "Editor Block",
+        attendee_phone: "9796667789",
+        attendee_email: "editorblock@tamu.edu",
+        attendee_major: "CS",
+        attendee_class: "U1"
+      )
+
+      expect {
+        delete registered_attendee_path(attendee)
+      }.not_to change(RegisteredAttendee, :count)
+
+      expect(response).to redirect_to(manager_index_path)
+      expect(flash[:alert]).to eq("Only 501 Club admins can delete attendees.")
+    end
+
+    it "DELETE /registered_attendees/:id as JSON blocks editor users" do
+      login_as(editor)
+      attendee = RegisteredAttendee.create!(
+        ideathon_year: ideathon,
+        team: team,
+        attendee_name: "Editor Block Json",
+        attendee_phone: "9796667790",
+        attendee_email: "editorblockjson@tamu.edu",
+        attendee_major: "CS",
+        attendee_class: "U1"
+      )
+
+      expect {
+        delete registered_attendee_path(attendee, format: :json)
+      }.not_to change(RegisteredAttendee, :count)
+
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "POST from manager logs and returns to manager" do
