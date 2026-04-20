@@ -1,4 +1,7 @@
 module ApplicationHelper
+  INLINE_HTML_TAGS = %i[a abbr b bdi bdo br button cite code data del dfn em i img input ins kbd label mark q ruby s samp select small span strong sub sup textarea time u var].freeze
+  private_constant :INLINE_HTML_TAGS
+
   # Rules store a single text field; two paragraphs (blank line) => title + description on the public page.
   def rule_title_and_body(rule)
     text = rule.rule_text.to_s.strip
@@ -46,7 +49,8 @@ module ApplicationHelper
           class: "hidden #{fallback_class}",
           data: { sponsor_logo_target: "fallback" }
         )
-        return content_tag(:span, safe_join([ image, fallback ]), data: { controller: "sponsor-logo" })
+        wrapper_tag = inline_html_tag?(fallback_tag) ? :span : :div
+        return content_tag(wrapper_tag, safe_join([ image, fallback ]), data: { controller: "sponsor-logo" })
       end
 
       return image_tag(sponsor.logo_url, **image_options)
@@ -55,5 +59,11 @@ module ApplicationHelper
     return "".html_safe unless show_fallback_when_logo_missing
 
     content_tag(fallback_tag, sponsor.name, class: fallback_class)
+  end
+
+  private
+
+  def inline_html_tag?(tag_name)
+    INLINE_HTML_TAGS.include?(tag_name.to_sym)
   end
 end

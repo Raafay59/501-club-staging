@@ -127,6 +127,19 @@ RSpec.describe "Registered attendees", type: :request do
       expect(response.body).to include("already exists")
     end
 
+    it "POST shows a friendly error when concurrent insert hits DB uniqueness" do
+      allow_any_instance_of(Team).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
+
+      post registered_attendees_path, params: {
+        registered_attendee: valid_fields.merge(attendee_email: "race@tamu.edu"),
+        team_choice: "new",
+        new_team_name: "Concurrent Team"
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("already exists")
+    end
+
     it "POST rejects joining a team that already has four members" do
       full = Team.create!(ideathon_year: ideathon, team_name: "Full", unassigned: false)
       4.times do |i|

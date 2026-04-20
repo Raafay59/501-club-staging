@@ -52,12 +52,24 @@ RSpec.describe ApplicationHelper, type: :helper do
 
       expect(html).to include("img")
       expect(html).to include("logo-class")
+      expect(html).to include('<div data-controller="sponsor-logo">')
       expect(html).to include('data-controller="sponsor-logo"')
       expect(html).to include('data-action="error-&gt;sponsor-logo#handleError"')
       expect(html).to include('data-sponsor-logo-target="image"')
       expect(html).to include('data-sponsor-logo-target="fallback"')
       expect(html).to include("hidden fallback-class")
       expect(html).to include("Acme")
+    end
+
+    it "uses span wrapper when fallback tag is inline" do
+      html = helper.sponsor_logo_or_name(
+        sponsor_with_logo,
+        image_class: "logo-class",
+        fallback_class: "fallback-class",
+        fallback_tag: :span
+      )
+
+      expect(html).to include('<span data-controller="sponsor-logo">')
     end
 
     it "renders image without hidden fallback when error fallback is disabled" do

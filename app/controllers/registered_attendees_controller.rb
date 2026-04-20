@@ -232,12 +232,17 @@ class RegisteredAttendeesController < ApplicationController
                    unassigned: false
                  )
 
-                 unless team.save
-                      team.errors.full_messages.each do |msg|
-                           # Make error messages more user-friendly for the form
-                           friendly_msg = msg.include?("already exists") ? "Team name \"#{new_team_name}\" already exists" : msg
-                           attendee.errors.add(:base, friendly_msg)
+                 begin
+                      unless team.save
+                           team.errors.full_messages.each do |msg|
+                                # Make error messages more user-friendly for the form
+                                friendly_msg = msg.include?("already exists") ? "Team name \"#{new_team_name}\" already exists" : msg
+                                attendee.errors.add(:base, friendly_msg)
+                           end
+                           return
                       end
+                 rescue ActiveRecord::RecordNotUnique
+                      attendee.errors.add(:base, "Team name \"#{new_team_name}\" already exists")
                       return
                  end
 
