@@ -177,7 +177,6 @@ class RegisteredAttendeesController < ApplicationController
             @registered_attendee = RegisteredAttendee.where(ideathon_year: active_year).find(params[:id])
        rescue ActiveRecord::RecordNotFound
             redirect_to manager_index_path, alert: "Attendee not found for the active year."
-            return
        end
 
        # Returns the currently active Ideathon year

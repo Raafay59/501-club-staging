@@ -13,7 +13,7 @@ RSpec.describe CsvImporter, type: :service do
   end
 
   def uploaded_csv(filename:, body:, content_type: 'text/csv')
-    tempfile = Tempfile.new([File.basename(filename, '.csv'), '.csv'])
+    tempfile = Tempfile.new([ File.basename(filename, '.csv'), '.csv' ])
     tempfile.write(body)
     tempfile.rewind
     ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: filename, type: content_type)
@@ -110,7 +110,7 @@ RSpec.describe CsvImporter, type: :service do
 
       result = importer.import
 
-      expect(result).to eq(success: 0, failed: 1, errors: ['Invalid CSV format'])
+      expect(result).to eq(success: 0, failed: 1, errors: [ 'Invalid CSV format' ])
     end
   end
 
