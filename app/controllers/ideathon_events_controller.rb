@@ -21,17 +21,24 @@ class IdeathonEventsController < ApplicationController
      # Create a new event for the active year
      def create
           @ideathon_event = IdeathonEvent.new(event_params)
-          @ideathon_event.ideathon_year = Ideathon.find_by(is_active: true)
+          @ideathon_event.ideathon_year = active_year
+
+          if @ideathon_event.ideathon_year.blank?
+               @ideathon_event.errors.add(:ideathon_year, "is required")
+               render :new, status: :unprocessable_entity
+               return
+          end
+
           if @ideathon_event.save
                log_manager_action(
-                 action: "event.created",
-                 record: @ideathon_event,
-                 metadata: {
-                   record_name: @ideathon_event.event_name,
-                   event_name: @ideathon_event.event_name,
-                   event_date: @ideathon_event.event_date,
-                   event_time: @ideathon_event.event_time
-                 }
+                    action: "event.created",
+                    record: @ideathon_event,
+                    metadata: {
+                         record_name: @ideathon_event.event_name,
+                         event_name: @ideathon_event.event_name,
+                         event_date: @ideathon_event.event_date,
+                         event_time: @ideathon_event.event_time
+                    }
                )
                redirect_to manager_index_path(tab: "events"), notice: "Event created."
           else
@@ -45,12 +52,12 @@ class IdeathonEventsController < ApplicationController
           if @ideathon_event.update(event_params)
                changes = @ideathon_event.saved_changes.slice("event_name", "event_description", "event_date", "event_time")
                log_manager_action(
-                 action: "event.updated",
-                 record: @ideathon_event,
-                 metadata: {
-                   record_name: @ideathon_event.event_name,
-                   changes: changes
-                 }
+                    action: "event.updated",
+                    record: @ideathon_event,
+                    metadata: {
+                         record_name: @ideathon_event.event_name,
+                         changes: changes
+                    }
                )
                redirect_to manager_index_path(tab: "events"), notice: "Event updated."
           else
@@ -63,21 +70,21 @@ class IdeathonEventsController < ApplicationController
      def destroy
           @ideathon_event.destroy
           log_manager_action(
-            action: "event.deleted",
-            record: @ideathon_event,
-            metadata: {
-              record_name: @ideathon_event.event_name,
-              event_name: @ideathon_event.event_name,
-              event_date: @ideathon_event.event_date,
-              event_time: @ideathon_event.event_time
-            }
+               action: "event.deleted",
+               record: @ideathon_event,
+               metadata: {
+                    record_name: @ideathon_event.event_name,
+                    event_name: @ideathon_event.event_name,
+                    event_date: @ideathon_event.event_date,
+                    event_time: @ideathon_event.event_time
+               }
           )
           respond_to do |format|
                format.turbo_stream do
                     action_logs = ManagerActionLog.includes(:user).recent_first.limit(200)
                     render turbo_stream: [
-                      turbo_stream.remove("ideathon_event_#{@ideathon_event.id}"),
-                      turbo_stream.replace("action_logs", partial: "manager/action_logs", locals: { action_logs: action_logs })
+                         turbo_stream.remove("ideathon_event_#{@ideathon_event.id}"),
+                         turbo_stream.replace("action_logs", partial: "manager/action_logs", locals: { action_logs: action_logs })
                     ]
                end
                format.html { redirect_to manager_index_path(tab: "events"), notice: "Event deleted." }
@@ -86,13 +93,17 @@ class IdeathonEventsController < ApplicationController
 
   private
 
-       # Finds the event for actions that require an existing record
-       def set_ideathon_event
-            @ideathon_event = IdeathonEvent.find(params[:id])
-       end
+     def active_year
+          ActiveIdeathonYear.call
+     end
 
-       # Strong parameters: only allow trusted fields from the form
-       def event_params
-            params.require(:ideathon_event).permit(:event_name, :event_description, :event_date, :event_time)
-       end
+     # Finds the event for actions that require an existing record
+     def set_ideathon_event
+          @ideathon_event = IdeathonEvent.find(params[:id])
+     end
+
+     # Strong parameters: only allow trusted fields from the form
+     def event_params
+          params.require(:ideathon_event).permit(:event_name, :event_description, :event_date, :event_time)
+     end
 end

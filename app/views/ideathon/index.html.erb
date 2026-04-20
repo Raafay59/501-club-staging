@@ -836,11 +836,12 @@
         <% @sponsor_presenting.each do |sp| %>
         <div class="bento-card ideathon-panel rounded-2xl p-8 transition-all group" style="--sponsor-hover: rgb(238, 136, 138); --sponsor-hover-opacity: rgba(238, 136, 138, 0.3);">
           <div class="w-48 h-16 flex items-center justify-center">
-            <% if sp.logo_url.present? %>
-              <%= image_tag sp.logo_url, alt: sp.name, class: "max-h-16 max-w-[12rem] w-auto object-contain" %>
-            <% else %>
-              <div class="font-beachday text-2xl sm:text-3xl text-white text-center transition-colors px-2"><%= sp.name %></div>
-            <% end %>
+            <%= sponsor_logo_or_name(
+              sp,
+              image_class: "max-h-16 max-w-[12rem] w-auto object-contain",
+              fallback_class: "font-beachday text-2xl sm:text-3xl text-white text-center transition-colors px-2",
+              fallback_tag: :div
+            ) %>
           </div>
           <% if sp.blurb.present? %>
             <p class="font-lilita-one text-xs text-center mt-3 max-w-xs mx-auto" style="color: rgba(255,255,255,0.85);"><%= sp.blurb %></p>
@@ -860,11 +861,12 @@
         <% @sponsor_gold.each do |sp| %>
         <div class="bento-card ideathon-panel ideathon-panel--hover rounded-xl p-6 transition-all group">
           <div class="w-36 h-12 flex items-center justify-center">
-            <% if sp.logo_url.present? %>
-              <%= image_tag sp.logo_url, alt: sp.name, class: "max-h-12 max-w-[9rem] w-auto object-contain" %>
-            <% else %>
-              <div class="font-titan-one text-lg group-hover:text-white transition-colors text-white text-center px-1"><%= sp.name %></div>
-            <% end %>
+            <%= sponsor_logo_or_name(
+              sp,
+              image_class: "max-h-12 max-w-[9rem] w-auto object-contain",
+              fallback_class: "font-titan-one text-lg group-hover:text-white transition-colors text-white text-center px-1",
+              fallback_tag: :div
+            ) %>
           </div>
         </div>
         <% end %>
@@ -881,11 +883,12 @@
         <% @sponsor_other.each do |sp| %>
         <div class="bento-card ideathon-panel ideathon-panel--hover rounded-xl p-6 transition-all group">
           <div class="w-36 h-12 flex items-center justify-center">
-            <% if sp.logo_url.present? %>
-              <%= image_tag sp.logo_url, alt: sp.name, class: "max-h-12 max-w-[9rem] w-auto object-contain" %>
-            <% else %>
-              <div class="font-titan-one text-lg group-hover:text-white transition-colors text-white text-center px-1"><%= sp.name %></div>
-            <% end %>
+            <%= sponsor_logo_or_name(
+              sp,
+              image_class: "max-h-12 max-w-[9rem] w-auto object-contain",
+              fallback_class: "font-titan-one text-lg group-hover:text-white transition-colors text-white text-center px-1",
+              fallback_tag: :div
+            ) %>
           </div>
           <% if sp.job_title.present? && !sp.job_title.to_s.downcase.include?("presenting") && !sp.job_title.to_s.downcase.include?("gold") %>
             <p class="font-lilita-one text-xs text-center mt-2" style="color: rgba(255,255,255,0.75);"><%= sp.job_title %></p>
@@ -904,9 +907,13 @@
       <div class="flex flex-wrap justify-center items-center gap-4 md:gap-6">
         <% @community_partners.each do |sp| %>
         <div class="px-5 py-3 ideathon-panel ideathon-panel--hover rounded-lg transition-all max-w-xs text-center">
-          <% if sp.logo_url.present? %>
-            <%= image_tag sp.logo_url, alt: sp.name, class: "max-h-10 max-w-[14rem] mx-auto object-contain mb-2" %>
-          <% end %>
+          <%= sponsor_logo_or_name(
+            sp,
+            image_class: "max-h-10 max-w-[14rem] mx-auto object-contain mb-2",
+            fallback_class: "font-lilita-one text-white transition-colors block mb-2",
+            fallback_tag: :span,
+            show_fallback_when_logo_missing: false
+          ) %>
           <span class="font-lilita-one text-white transition-colors block"><%= sp.name %></span>
           <% if sp.blurb.present? %>
             <span class="font-lilita-one text-xs block mt-1" style="color: rgba(255,255,255,0.8);"><%= sp.blurb %></span>

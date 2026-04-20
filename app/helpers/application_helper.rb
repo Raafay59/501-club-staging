@@ -19,4 +19,22 @@ module ApplicationHelper
     tip = I18n.t("context_help.#{tip_key}")
     content_tag(:div, class: "context-field-tip", data: { tip: tip }, &block)
   end
+
+  def sponsor_logo_or_name(sponsor, image_class:, fallback_class:, fallback_tag: :div, show_fallback_when_logo_missing: true)
+    if sponsor.logo_url.present?
+      image = image_tag(
+        sponsor.logo_url,
+        alt: sponsor.name,
+        class: image_class,
+        loading: "lazy",
+        onerror: "this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');"
+      )
+      fallback = content_tag(fallback_tag, sponsor.name, class: "hidden #{fallback_class}")
+      return safe_join([ image, fallback ])
+    end
+
+    return "".html_safe unless show_fallback_when_logo_missing
+
+    content_tag(fallback_tag, sponsor.name, class: fallback_class)
+  end
 end

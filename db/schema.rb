@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_13_120001) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_19_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -83,9 +83,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_13_120001) do
     t.string "location"
     t.date "start_date"
     t.date "end_date"
-    t.boolean "is_active"
+    t.boolean "is_active", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["is_active"], name: "index_ideathon_years_single_active", unique: true, where: "(is_active = true)"
     t.index ["year"], name: "index_ideathon_years_on_year", unique: true
   end
 
@@ -154,10 +155,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_13_120001) do
   create_table "teams", force: :cascade do |t|
     t.bigint "ideathon_year_id", null: false
     t.string "team_name"
-    t.boolean "unassigned"
+    t.boolean "unassigned", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index "ideathon_year_id, lower((team_name)::text)", name: "index_teams_unique_name_per_year", unique: true, where: "(unassigned = false)"
     t.index ["ideathon_year_id"], name: "index_teams_on_ideathon_year_id"
+    t.index ["ideathon_year_id"], name: "index_teams_one_unassigned_per_year", unique: true, where: "(unassigned = true)"
+    t.check_constraint "unassigned = true OR char_length(btrim(team_name::text)) > 0", name: "teams_named_when_not_unassigned"
   end
 
   create_table "users", force: :cascade do |t|

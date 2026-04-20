@@ -37,4 +37,49 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(html).to include("inner")
     end
   end
+
+  describe "#sponsor_logo_or_name" do
+    let(:sponsor_with_logo) { double("SponsorsPartner", name: "Acme", logo_url: "https://example.com/logo.png") }
+    let(:sponsor_without_logo) { double("SponsorsPartner", name: "Acme", logo_url: nil) }
+
+    it "renders image with hidden fallback when logo exists" do
+      html = helper.sponsor_logo_or_name(
+        sponsor_with_logo,
+        image_class: "logo-class",
+        fallback_class: "fallback-class",
+        fallback_tag: :div
+      )
+
+      expect(html).to include("img")
+      expect(html).to include("logo-class")
+      expect(html).to include("onerror")
+      expect(html).to include("hidden fallback-class")
+      expect(html).to include("Acme")
+    end
+
+    it "renders visible fallback when logo is missing" do
+      html = helper.sponsor_logo_or_name(
+        sponsor_without_logo,
+        image_class: "logo-class",
+        fallback_class: "fallback-class",
+        fallback_tag: :div
+      )
+
+      expect(html).not_to include("<img")
+      expect(html).to include("fallback-class")
+      expect(html).to include("Acme")
+    end
+
+    it "renders nothing when missing logo and fallback disabled" do
+      html = helper.sponsor_logo_or_name(
+        sponsor_without_logo,
+        image_class: "logo-class",
+        fallback_class: "fallback-class",
+        fallback_tag: :span,
+        show_fallback_when_logo_missing: false
+      )
+
+      expect(html).to eq("")
+    end
+  end
 end

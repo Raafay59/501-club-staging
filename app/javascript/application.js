@@ -9,6 +9,13 @@ Turbo.config.forms.confirm = (message) => {
     const okBtn   = document.getElementById("turbo-confirm-ok")
     const cancelBtn = document.getElementById("turbo-confirm-cancel")
 
+    // Some dashboard layouts do not render the custom modal.
+    // Fallback to native confirm so destructive actions still work.
+    if (!modal || !msg || !okBtn || !cancelBtn) {
+      resolve(window.confirm(message))
+      return
+    }
+
     msg.textContent = message
     modal.classList.remove("hidden")
     modal.classList.add("flex")

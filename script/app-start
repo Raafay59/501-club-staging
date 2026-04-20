@@ -7,6 +7,7 @@ cd "$ROOT_DIR"
 HOST="${HOST:-127.0.0.1}"
 PORT="${PORT:-3000}"
 URL="${APP_URL:-http://localhost:${PORT}}"
+TAILWIND_WATCH="${TAILWIND_WATCH:-1}"
 
 open_browser() {
   local url="$1"
@@ -62,9 +63,20 @@ echo "==> Starting Rails server on ${URL}"
 bin/rails server -b "$HOST" -p "$PORT" &
 SERVER_PID=$!
 
+TAILWIND_PID=""
+if [[ "$TAILWIND_WATCH" == "1" ]]; then
+  echo "==> Starting Tailwind watcher"
+  bin/rails tailwindcss:watch &
+  TAILWIND_PID=$!
+fi
+
 cleanup() {
   if kill -0 "$SERVER_PID" >/dev/null 2>&1; then
     kill "$SERVER_PID" >/dev/null 2>&1 || true
+  fi
+
+  if [[ -n "$TAILWIND_PID" ]] && kill -0 "$TAILWIND_PID" >/dev/null 2>&1; then
+    kill "$TAILWIND_PID" >/dev/null 2>&1 || true
   fi
 }
 

@@ -154,16 +154,7 @@ class RegisteredAttendeesController < ApplicationController
 
        # Returns the currently active Ideathon year
        def active_year
-            Ideathon.find_by(is_active: true) ||
-              Ideathon.order(start_date: :desc, created_at: :desc).first ||
-              Ideathon.create!(
-                year: Time.zone.today.year,
-                name: Time.zone.today.year.to_s,
-                start_date: Time.zone.today,
-                end_date: Time.zone.today + 1.day,
-                is_active: true,
-                description: "Auto-generated default year"
-              )
+            ActiveIdeathonYear.call(create_if_missing: true)
        end
 
        def set_active_year

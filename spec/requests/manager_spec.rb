@@ -12,6 +12,16 @@ RSpec.describe "Manager dashboard", type: :request do
     )
   end
   let!(:team) { Team.create!(ideathon_year: ideathon, team_name: "Squad", unassigned: false) }
+  let!(:other_ideathon) do
+    Ideathon.create!(
+      year: 2024,
+      theme: "Old",
+      is_active: false,
+      start_date: Date.new(2024, 2, 1),
+      end_date: Date.new(2024, 2, 2)
+    )
+  end
+  let!(:other_team) { Team.create!(ideathon_year: other_ideathon, team_name: "Old Squad", unassigned: false) }
 
   before { login_as(admin) }
 
@@ -33,6 +43,32 @@ RSpec.describe "Manager dashboard", type: :request do
       )
       get manager_index_path, params: { sort: "name", query: "Alex" }
       expect(response).to have_http_status(:ok)
+    end
+
+    it "shows only attendees in the active year" do
+      RegisteredAttendee.create!(
+        ideathon_year: ideathon,
+        team: team,
+        attendee_name: "Current Year",
+        attendee_phone: "9790001111",
+        attendee_email: "current@tamu.edu",
+        attendee_major: "CS",
+        attendee_class: "U2"
+      )
+      RegisteredAttendee.create!(
+        ideathon_year: other_ideathon,
+        team: other_team,
+        attendee_name: "Old Year",
+        attendee_phone: "9790002222",
+        attendee_email: "old@tamu.edu",
+        attendee_major: "CS",
+        attendee_class: "U2"
+      )
+
+      get manager_index_path
+
+      expect(response.body).to include("Current Year")
+      expect(response.body).not_to include("Old Year")
     end
   end
 
@@ -93,6 +129,23 @@ RSpec.describe "Manager dashboard", type: :request do
       get export_teams_manager_index_path
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to include("text/csv")
+    end
+
+    it "exports only attendees in the active year" do
+      RegisteredAttendee.create!(
+        ideathon_year: other_ideathon,
+        team: other_team,
+        attendee_name: "Archived",
+        attendee_phone: "9797778899",
+        attendee_email: "archived@tamu.edu",
+        attendee_major: "ISTM",
+        attendee_class: "U3"
+      )
+
+      get export_participants_manager_index_path
+
+      expect(response.body).to include("Dan")
+      expect(response.body).not_to include("Archived")
     end
   end
 

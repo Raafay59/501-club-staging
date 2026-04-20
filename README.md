@@ -69,7 +69,11 @@ This command will:
 - ensure gems are installed
 - run `bin/rails db:prepare`
 - start Rails on `http://localhost:3000`
+- start Tailwind watcher (`bin/rails tailwindcss:watch`) for live CSS updates
 - open your default browser automatically
+
+Note: The public Ideathon site and organizer/admin dashboard are served by the same Rails app.
+Starting this script boots both surfaces together.
 
 ### Background jobs for notifications
 

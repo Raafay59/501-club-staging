@@ -34,8 +34,10 @@ Rails.application.configure do
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 
+  # Opt in locally when you explicitly want to preview outgoing emails.
+  local_mail_delivery_enabled = ENV["ENABLE_LOCAL_EMAIL_DELIVERY"] == "true"
   config.action_mailer.delivery_method = :letter_opener_web
-  config.action_mailer.perform_deliveries = true
+  config.action_mailer.perform_deliveries = local_mail_delivery_enabled
 
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
