@@ -16,7 +16,6 @@ class ActiveIdeathonYear
       today = Time.zone.today
       Ideathon.create!(
         year: today.year,
-        name: today.year.to_s,
         start_date: today,
         end_date: today + 1.day,
         is_active: true,
