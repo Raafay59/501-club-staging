@@ -37,10 +37,12 @@
   <h2>Import Sponsors/Partners from CSV</h2>
   <p>CSV columns: <code>year, name, job_title, logo_url, blurb, is_sponsor</code></p>
   <%= form_with url: import_sponsors_partners_path, local: true, multipart: true do |form| %>
-    <div>
-      <%= form.label :file, "Select CSV file" %>
-      <%= form.file_field :file, accept: ".csv,text/csv" %>
-    </div>
+    <%= context_field_tip("import.sponsors_partners") do %>
+      <div>
+        <%= form.label :file, "Select CSV file" %>
+        <%= form.file_field :file, accept: ".csv,text/csv" %>
+      </div>
+    <% end %>
     <div>
       <%= form.submit "Import" %>
     </div>
