@@ -52,7 +52,10 @@ RSpec.describe ApplicationHelper, type: :helper do
 
       expect(html).to include("img")
       expect(html).to include("logo-class")
-      expect(html).to include("onerror")
+      expect(html).to include('data-controller="sponsor-logo"')
+      expect(html).to include('data-action="error-&gt;sponsor-logo#handleError"')
+      expect(html).to include('data-sponsor-logo-target="image"')
+      expect(html).to include('data-sponsor-logo-target="fallback"')
       expect(html).to include("hidden fallback-class")
       expect(html).to include("Acme")
     end
@@ -68,7 +71,8 @@ RSpec.describe ApplicationHelper, type: :helper do
 
       expect(html).to include("<img")
       expect(html).to include("logo-class")
-      expect(html).not_to include("onerror")
+      expect(html).not_to include("data-controller=\"sponsor-logo\"")
+      expect(html).not_to include("sponsor-logo#handleError")
       expect(html).not_to include("hidden fallback-class")
     end
 

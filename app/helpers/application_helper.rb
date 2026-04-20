@@ -36,10 +36,17 @@ module ApplicationHelper
       }
 
       if show_fallback_on_logo_error
-        image_options[:onerror] = "this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');"
-        image = image_tag(sponsor.logo_url, **image_options)
-        fallback = content_tag(fallback_tag, sponsor.name, class: "hidden #{fallback_class}")
-        return safe_join([ image, fallback ])
+        image = image_tag(
+          sponsor.logo_url,
+          **image_options.merge(data: { sponsor_logo_target: "image", action: "error->sponsor-logo#handleError" })
+        )
+        fallback = content_tag(
+          fallback_tag,
+          sponsor.name,
+          class: "hidden #{fallback_class}",
+          data: { sponsor_logo_target: "fallback" }
+        )
+        return content_tag(:span, safe_join([ image, fallback ]), data: { controller: "sponsor-logo" })
       end
 
       return image_tag(sponsor.logo_url, **image_options)

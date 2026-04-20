@@ -64,12 +64,18 @@ bin/rails server
 bash script/app-start
 ```
 
+To skip the Tailwind watcher when you do not want the extra process:
+
+```bash
+TAILWIND_WATCH=0 bash script/app-start
+```
+
 This command will:
 - start local PostgreSQL (via `script/start-db`)
 - ensure gems are installed
 - run `bin/rails db:prepare`
 - start Rails on `http://localhost:3000`
-- start Tailwind watcher (`bin/rails tailwindcss:watch`) for live CSS updates
+- start Tailwind watcher (`bin/rails tailwindcss:watch`) for live CSS updates, unless `TAILWIND_WATCH=0` is set
 - open your default browser automatically
 
 Note: The public Ideathon site and organizer/admin dashboard are served by the same Rails app.
@@ -88,6 +94,14 @@ bundle exec bin/jobs start
 
 If you deploy with `Procfile` process types, run both `web` and `worker`.
 Alternatively, for single-process deployments, you may set `SOLID_QUEUE_IN_PUMA=1` to run the Solid Queue supervisor inside Puma.
+
+### Local email preview in development
+
+Development mail delivery previews are opt-in. To enable them:
+
+```bash
+ENABLE_LOCAL_EMAIL_DELIVERY=true bin/rails server
+```
 
 ## 4. Smoke test
 

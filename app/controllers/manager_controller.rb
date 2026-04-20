@@ -12,7 +12,7 @@ class ManagerController < ApplicationController
      def index
           @sort = sort_param
           @active_year = active_year
-          @registered_attendees = base_scope(@active_year)
+          @registered_attendees = base_scope(@active_year).includes(:team)
           @teams_count = teams_count_for(@active_year)
           @events = events_for(@active_year)
           @action_logs = ManagerActionLog.includes(:user).recent_first.limit(200)
