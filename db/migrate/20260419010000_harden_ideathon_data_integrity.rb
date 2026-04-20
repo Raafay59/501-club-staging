@@ -44,6 +44,9 @@ class HardenIdeathonDataIntegrity < ActiveRecord::Migration[8.0]
     remove_index :teams, name: "index_teams_one_unassigned_per_year" if index_exists?(:teams, :ideathon_year_id, name: "index_teams_one_unassigned_per_year")
     remove_index :ideathon_years, name: "index_ideathon_years_single_active" if index_exists?(:ideathon_years, :is_active, name: "index_ideathon_years_single_active")
 
+    change_column_null :ideathon_years, :is_active, true
+    change_column_null :teams, :unassigned, true
+
     change_column_default :ideathon_years, :is_active, from: false, to: nil
     change_column_default :teams, :unassigned, from: false, to: nil
   end
