@@ -36,7 +36,9 @@
           <span class="app-nav__sep" aria-hidden="true">|</span>
           <%= link_to "Rules", rules_path %>
           <span class="app-nav__sep" aria-hidden="true">|</span>
-          <%= link_to "Activity Log", activity_logs_path %>
+          <%= link_to "Activity Log", activity_logs_path %>|</span>
+          <%= link_to "User Guide", "/UserDocumentation.pdf", target: "_blank" %>|</span>
+          <%= link_to "Technical Documentation", "/TechnicalDocumentation.pdf", target: "_blank" %>
           <% if admin? %>
             <span class="app-nav__sep" aria-hidden="true">|</span>
             <%= link_to "Manage Users", users_path %>
