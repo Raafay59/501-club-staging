@@ -946,9 +946,17 @@
       <% if @judges.any? %>
         <% @judges.each do |judge| %>
         <div class="bento-card ideathon-panel rounded-2xl p-8 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
-          <div class="w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-lg overflow-hidden flex-shrink-0" style="background: linear-gradient(to right, rgb(252, 240, 228), rgb(238, 136, 138));">
+          <div class="w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-lg overflow-hidden flex-shrink-0" style="background: linear-gradient(to right, rgb(252, 240, 228), rgb(238, 136, 138));" data-controller="person-photo">
             <% if judge.photo_url.present? %>
-              <%= image_tag judge.photo_url, alt: judge.name, class: "w-full h-full object-cover" %>
+              <%= image_tag(
+                    judge.photo_url,
+                    alt: judge.name,
+                    class: "w-full h-full object-cover",
+                    data: { person_photo_target: "image", action: "error->person-photo#handleError" }
+                  ) %>
+              <svg class="w-8 h-8 text-white hidden" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-person-photo-target="fallback">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
             <% else %>
               <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -987,9 +995,17 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <% @mentors.each do |mentor| %>
         <div class="bento-card ideathon-panel rounded-2xl p-8 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
-          <div class="w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-lg overflow-hidden flex-shrink-0" style="background: linear-gradient(to right, rgb(252, 240, 228), rgb(158, 194, 191));">
+          <div class="w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-lg overflow-hidden flex-shrink-0" style="background: linear-gradient(to right, rgb(252, 240, 228), rgb(158, 194, 191));" data-controller="person-photo">
             <% if mentor.photo_url.present? %>
-              <%= image_tag mentor.photo_url, alt: mentor.name, class: "w-full h-full object-cover" %>
+              <%= image_tag(
+                    mentor.photo_url,
+                    alt: mentor.name,
+                    class: "w-full h-full object-cover",
+                    data: { person_photo_target: "image", action: "error->person-photo#handleError" }
+                  ) %>
+              <svg class="w-8 h-8 text-white hidden" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-person-photo-target="fallback">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
             <% else %>
               <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>

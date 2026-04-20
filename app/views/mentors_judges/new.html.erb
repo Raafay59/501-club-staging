@@ -12,6 +12,12 @@
     </div>
   <% end %>
 
+  <% include_photo = if params.dig(:mentors_judge, :include_photo).present?
+    params.dig(:mentors_judge, :include_photo) == "1"
+  else
+    @mentors_judge.photo_url.present? || @mentors_judge.new_record?
+  end %>
+
   <div>
     <%= form.label :year %>
     <%= form.select :year, @ideathon_years, prompt: "Select Ideathon Year" %>
@@ -28,7 +34,14 @@
   </div>
 
   <div>
-    <%= form.label :photo_url %>
+    <%= label_tag :mentors_judge_include_photo, "Include profile photo?" %>
+    <%= hidden_field_tag "mentors_judge[include_photo]", "0" %>
+    <%= check_box_tag "mentors_judge[include_photo]", "1", include_photo, id: "mentors_judge_include_photo" %>
+    <p>Uncheck to publish this mentor/judge without a photo.</p>
+  </div>
+
+  <div>
+    <%= form.label :photo_url, "Photo URL (optional)" %>
     <%= form.text_field :photo_url %>
   </div>
 

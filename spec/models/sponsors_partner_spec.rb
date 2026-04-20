@@ -35,6 +35,12 @@ RSpec.describe SponsorsPartner, type: :model do
       expect(sp.is_sponsor).to be true
     end
 
+    it 'allows blank logo URLs' do
+      sp = SponsorsPartner.new(year: 2025, name: 'No Logo', logo_url: '')
+
+      expect(sp).to be_valid
+    end
+
     it 'rejects logo URLs with unsupported schemes' do
       sp = SponsorsPartner.new(year: 2025, name: 'BadScheme', logo_url: 'ftp://logo.png')
 

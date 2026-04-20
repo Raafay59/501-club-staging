@@ -267,6 +267,7 @@ Model: [app/models/sponsors_partner.rb](../app/models/sponsors_partner.rb)
 What it provides:
 
 - Create, view, edit, and delete sponsor/partner entries.
+- Choose whether each sponsor/partner should include a logo URL or use no-logo fallback mode.
 - Import sponsor/partner records from CSV.
 - Export sponsor records to CSV.
 - Filter by `is_sponsor` and use `job_title` as a display/tiering hint.
@@ -276,6 +277,7 @@ Public-site connection:
 - These records populate the sponsors area on the public homepage.
 - The homepage groups them into presenting, gold, and other sponsor tiers based on `job_title` text.
 - Community partners are also shown when sponsor records are explicitly marked as non-sponsors.
+- When a sponsor/partner has no logo URL, the public site falls back to text branding instead of a broken image.
 
 ### 6.3 Mentors & Judges
 
@@ -286,6 +288,7 @@ Model: [app/models/mentors_judge.rb](../app/models/mentors_judge.rb)
 What it provides:
 
 - Create, view, edit, and delete mentor/judge entries.
+- Choose whether each mentor/judge should include a photo URL or be published without a photo.
 - Import mentor/judge records from CSV.
 - Export judge records to CSV.
 - Select year and role through the same model form.
@@ -295,6 +298,7 @@ Public-site connection:
 - Judges render in the public judges section.
 - Mentors render in the public mentors section.
 - Photo-bearing mentors/judges also populate the homepage photo area.
+- Missing or broken photo URLs fall back to the default avatar icon on the public cards.
 
 ### 6.4 FAQs
 
@@ -391,6 +395,7 @@ That means:
 - updating an ideathon year affects what year the homepage treats as current,
 - editing sponsors changes the sponsor blocks on the public site,
 - editing judges/mentors changes the public people sections,
+- omitting a logo/photo keeps the person or sponsor visible through fallback UI,
 - editing FAQs and rules changes the homepage content immediately,
 - and managing events changes the schedule shown to visitors.
 

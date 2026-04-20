@@ -19,6 +19,7 @@ class SponsorsPartnersController < ClubDashboardController
 
   def create
     @sponsors_partner = SponsorsPartner.new(sponsors_partner_params)
+    normalize_logo_url_choice!(@sponsors_partner)
     if @sponsors_partner.save
       redirect_to sponsors_partners_path, notice: "Sponsor/Partner was successfully created."
     else
@@ -32,7 +33,10 @@ class SponsorsPartnersController < ClubDashboardController
   end
 
   def update
-    if @sponsors_partner.update(sponsors_partner_params)
+    @sponsors_partner.assign_attributes(sponsors_partner_params)
+    normalize_logo_url_choice!(@sponsors_partner)
+
+    if @sponsors_partner.save
       redirect_to sponsors_partners_path, notice: "Sponsor/Partner was successfully updated."
     else
       @ideathon_years = Ideathon.pluck(:year).sort.reverse
@@ -111,6 +115,18 @@ class SponsorsPartnersController < ClubDashboardController
 
   def sponsors_partner_params
     params.require(:sponsors_partner).permit(:year, :name, :job_title, :logo_url, :blurb, :is_sponsor)
+  end
+
+  def include_logo?
+    params.dig(:sponsors_partner, :include_logo) != "0"
+  end
+
+  def normalize_logo_url_choice!(record)
+    if include_logo?
+      record.logo_url = record.logo_url.to_s.strip.presence
+    else
+      record.logo_url = nil
+    end
   end
 
   def latest_export_year_for(model)

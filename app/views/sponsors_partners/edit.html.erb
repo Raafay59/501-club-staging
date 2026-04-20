@@ -12,6 +12,12 @@
     </div>
   <% end %>
 
+  <% include_logo = if params.dig(:sponsors_partner, :include_logo).present?
+    params.dig(:sponsors_partner, :include_logo) == "1"
+  else
+    @sponsors_partner.logo_url.present?
+  end %>
+
   <div>
     <%= form.label :year %>
     <%= form.select :year, @ideathon_years, prompt: "Select Ideathon Year" %>
@@ -28,7 +34,14 @@
   </div>
 
   <div>
-    <%= form.label :logo_url %>
+    <%= label_tag :sponsors_partner_include_logo, "Include logo image?" %>
+    <%= hidden_field_tag "sponsors_partner[include_logo]", "0" %>
+    <%= check_box_tag "sponsors_partner[include_logo]", "1", include_logo, id: "sponsors_partner_include_logo" %>
+    <p>Uncheck to remove any existing logo and use text fallback on the public site.</p>
+  </div>
+
+  <div>
+    <%= form.label :logo_url, "Logo URL (optional)" %>
     <%= form.text_field :logo_url %>
   </div>
 

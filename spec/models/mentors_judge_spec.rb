@@ -34,5 +34,25 @@ RSpec.describe MentorsJudge, type: :model do
       expect(mj.bio).to eq('Expert')
       expect(mj.is_judge).to be true
     end
+
+    it 'allows blank photo URLs' do
+      mj = MentorsJudge.new(year: 2025, name: 'No Photo', photo_url: '')
+
+      expect(mj).to be_valid
+    end
+
+    it 'rejects photo URLs with unsupported schemes' do
+      mj = MentorsJudge.new(year: 2025, name: 'Bad Photo Scheme', photo_url: 'ftp://img.test/p.jpg')
+
+      expect(mj).not_to be_valid
+      expect(mj.errors[:photo_url]).to include('must be a valid HTTP or HTTPS URL')
+    end
+
+    it 'rejects malformed photo URLs' do
+      mj = MentorsJudge.new(year: 2025, name: 'Malformed Photo', photo_url: 'http:// bad photo')
+
+      expect(mj).not_to be_valid
+      expect(mj.errors[:photo_url]).to include('must be a valid URL')
+    end
   end
 end
