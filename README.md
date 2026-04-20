@@ -81,6 +81,8 @@ This command will:
 Note: The public Ideathon site and organizer/admin dashboard are served by the same Rails app.
 Starting this script boots both surfaces together.
 
+For a full system map of the admin dashboard, public-site integration, codebase layout, and database structure, see [docs/admin_dashboard_system_guide.md](docs/admin_dashboard_system_guide.md).
+
 ### Background jobs for notifications
 
 - In `development`, Active Job uses `:async`, so jobs run in-process while the Rails server is running.
