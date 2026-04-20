@@ -6,6 +6,22 @@ RSpec.describe "Sessions", type: :request do
       get login_path
       expect(response).to have_http_status(:ok)
     end
+
+    it "redirects authorized users to ideathons" do
+      login_as(User.create!(email: 'authorized@example.com', role: 'editor'))
+
+      get login_path
+
+      expect(response).to redirect_to(ideathons_path)
+    end
+
+    it "redirects unauthorized users to the pending page" do
+      login_as(User.create!(email: 'pending@example.com', role: 'unauthorized'))
+
+      get login_path
+
+      expect(response).to redirect_to(unauthorized_path)
+    end
   end
 
   describe "POST /auth/google_oauth2/callback" do
@@ -69,6 +85,19 @@ RSpec.describe "Sessions", type: :request do
         }.to change(User, :count).by(1)
         expect(User.last.role).to eq('unauthorized')
         expect(response).to redirect_to(unauthorized_path)
+      end
+
+      it "redirects to login when account creation fails" do
+        OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+          provider: 'google_oauth2',
+          uid: '556',
+          info: { email: nil, name: 'Broken User' }
+        )
+
+        post "/auth/google_oauth2/callback", env: { "omniauth.auth" => OmniAuth.config.mock_auth[:google_oauth2] }
+
+        expect(response).to redirect_to(login_path)
+        expect(flash[:alert]).to eq('Unable to create account.')
       end
     end
   end

@@ -160,6 +160,15 @@ RSpec.describe "MentorsJudges", type: :request do
       expect(flash[:alert]).to eq('No judges to export')
     end
 
+    it "redirects with an alert when no export year can be resolved" do
+      allow_any_instance_of(MentorsJudgesController).to receive(:latest_export_year_for).and_return(nil)
+
+      get export_mentors_judges_path(format: :csv)
+
+      expect(response).to redirect_to(mentors_judges_path)
+      expect(flash[:alert]).to eq('No judges to export')
+    end
+
     it "redirects non-admin users" do
       login_as(editor)
 

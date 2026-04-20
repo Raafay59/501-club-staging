@@ -12,6 +12,13 @@ RSpec.describe CsvImporter, type: :service do
     }
   end
 
+  def uploaded_csv(filename:, body:, content_type: 'text/csv')
+    tempfile = Tempfile.new([File.basename(filename, '.csv'), '.csv'])
+    tempfile.write(body)
+    tempfile.rewind
+    ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: filename, type: content_type)
+  end
+
   describe 'importing mentors_judges CSV' do
     let(:file) { fixture_file_upload('mentors_judges.csv', 'text/csv') }
     let(:importer) do
@@ -79,6 +86,32 @@ RSpec.describe CsvImporter, type: :service do
       expect(result[:failed]).to eq(1)
       expect(result[:success]).to eq(0)
     end
+
+    it 'tracks failed rows when a row cannot be persisted' do
+      file = uploaded_csv(
+        filename: 'mentors_bad_row.csv',
+        body: "year,name,photo_url,bio,is_judge\n9999,Broken Row,https://img.test/a.jpg,Bio,true\n"
+      )
+      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
+
+      result = importer.import
+
+      expect(result[:success]).to eq(0)
+      expect(result[:failed]).to eq(1)
+      expect(result[:errors].first).to include('Couldn\'t find Ideathon')
+    end
+
+    it 'returns invalid CSV format for malformed bodies discovered during iteration' do
+      file = uploaded_csv(
+        filename: 'mentors_malformed.csv',
+        body: "year,name,photo_url,bio,is_judge\n2025,Good,https://img.test/a.jpg,Bio,true\n\"unterminated"
+      )
+      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
+
+      result = importer.import
+
+      expect(result).to eq(success: 0, failed: 1, errors: ['Invalid CSV format'])
+    end
   end
 
   describe '#valid_file?' do
@@ -97,6 +130,13 @@ RSpec.describe CsvImporter, type: :service do
     it 'returns false when expected headers are missing' do
       file = fixture_file_upload('mentors_judges.csv', 'text/csv')
       importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: { "full_name" => :name })
+      expect(importer.valid_file?).to be false
+    end
+
+    it 'returns false for malformed CSV headers' do
+      file = uploaded_csv(filename: 'broken_headers.csv', body: '"unterminated header')
+      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
+
       expect(importer.valid_file?).to be false
     end
   end

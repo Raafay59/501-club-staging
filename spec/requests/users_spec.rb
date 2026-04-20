@@ -73,6 +73,14 @@ RSpec.describe "Users", type: :request do
       expect(admin.role).to eq('admin')
       expect(response).to redirect_to(users_path)
     end
+
+    it "shows an alert when role update fails validation" do
+      patch user_path(editor), params: { user: { role: 'invalid-role' } }
+
+      expect(response).to redirect_to(users_path)
+      expect(flash[:alert]).to eq('Failed to update role.')
+      expect(editor.reload.role).to eq('editor')
+    end
   end
 
   describe "DELETE /users/:id" do
@@ -125,6 +133,18 @@ RSpec.describe "Users", type: :request do
       }.to change(User, :count).by(-1).and change(ActivityLog, :count).by(-1)
 
       expect(response).to redirect_to(users_path)
+    end
+
+    it "shows an alert when destroy fails" do
+      allow_any_instance_of(User).to receive(:destroy) do |user|
+        user.errors.add(:base, 'Cannot delete user')
+        false
+      end
+
+      delete user_path(editor)
+
+      expect(response).to redirect_to(users_path)
+      expect(flash[:alert]).to eq('Cannot delete user')
     end
   end
 end

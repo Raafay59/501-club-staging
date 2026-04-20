@@ -53,6 +53,19 @@ RSpec.describe "ActivityRecording", type: :request do
       expect(log.message).to eq("FAQ 'What is this?' was removed")
       expect(log.user).to eq(admin)
     end
+
+    it "records rule creation automatically" do
+      expect {
+        post rules_path, params: {
+          rule: { year: 2025, rule_text: "No plagiarism" }
+        }
+      }.to change(ActivityLog, :count).by(1)
+
+      log = ActivityLog.last
+      expect(log.action).to eq("added")
+      expect(log.message).to include("No plagiarism")
+      expect(log.user).to eq(admin)
+    end
   end
 
   describe "bulk import logging" do

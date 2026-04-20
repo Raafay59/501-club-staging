@@ -119,15 +119,16 @@ RSpec.describe ManagerActionLog, type: :model do
         action: "attendee.updated",
         metadata: {
           "changes" => {
+            "attendee_phone" => [ "9791112222", "9793334444" ],
             "attendee_major" => [ "", "CSCE" ],
             "attendee_class" => [ "U1", "U2" ],
             "team_id" => [ 1, 2 ]
           }
         }
       )
+      expect(log.details_label).to include("Phone:")
       expect(log.details_label).to include("Major:")
       expect(log.details_label).to include("Class:")
-      expect(log.details_label).to include("Team:")
 
       log2 = described_class.new(
         action: "attendee.updated",

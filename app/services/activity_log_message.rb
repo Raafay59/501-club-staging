@@ -17,6 +17,11 @@ module ActivityLogMessage
       singular: "mentor/judge",
       plural: "mentors/judges"
     },
+    "Rule" => {
+      content_type: "rules",
+      singular: "rule",
+      plural: "rules"
+    },
     "SponsorsPartner" => {
       content_type: "sponsors_partners",
       singular: "sponsor/partner",
@@ -32,6 +37,8 @@ module ActivityLogMessage
       mentors_judge_entry(record, action, saved_changes: saved_changes)
     when Faq
       faq_entry(record, action)
+    when Rule
+      rule_entry(record, action)
     when Ideathon
       ideathon_entry(record, action)
     end
@@ -75,6 +82,10 @@ module ActivityLogMessage
 
   def for_ideathon(record, action, saved_changes: nil)
     ideathon_entry(record, action)[:message]
+  end
+
+  def for_rule(record, action, saved_changes: nil)
+    rule_entry(record, action)[:message]
   end
 
   def sponsors_partner_entry(record, action, saved_changes: nil)
@@ -166,6 +177,25 @@ module ActivityLogMessage
     {
       content_type: "ideathons",
       item_name: year,
+      message: message
+    }
+  end
+
+  def rule_entry(record, action)
+    text = record.rule_text.to_s
+    preview = truncate_q(text)
+    message = case action.to_s
+    when "added"
+      "Rule '#{preview}' was added"
+    when "removed"
+      "Rule '#{preview}' was removed"
+    when "edited"
+      "Rule '#{preview}' was edited"
+    end
+
+    {
+      content_type: "rules",
+      item_name: text,
       message: message
     }
   end

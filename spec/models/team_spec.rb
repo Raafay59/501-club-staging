@@ -25,5 +25,14 @@ RSpec.describe Team, type: :model do
       expect(dup).not_to be_valid
       expect(dup.errors[:team_name]).to include("already exists for this year")
     end
+
+    it "allows only one unassigned team per year" do
+      Team.create!(ideathon_year: ideathon, team_name: "Unassigned", unassigned: true)
+
+      another = Team.new(ideathon_year: ideathon, team_name: "Unassigned 2", unassigned: true)
+
+      expect(another).not_to be_valid
+      expect(another.errors[:ideathon_year_id]).to include("already has an unassigned team")
+    end
   end
 end

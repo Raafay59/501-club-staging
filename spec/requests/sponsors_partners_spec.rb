@@ -157,6 +157,15 @@ RSpec.describe "SponsorsPartners", type: :request do
       expect(flash[:alert]).to eq('No sponsors to export')
     end
 
+    it "redirects with an alert when no export year can be resolved" do
+      allow_any_instance_of(SponsorsPartnersController).to receive(:latest_export_year_for).and_return(nil)
+
+      get export_sponsors_partners_path(format: :csv)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+      expect(flash[:alert]).to eq('No sponsors to export')
+    end
+
     it "redirects non-admin users" do
       login_as(editor)
 

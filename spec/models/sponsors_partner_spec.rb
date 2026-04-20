@@ -34,5 +34,19 @@ RSpec.describe SponsorsPartner, type: :model do
       expect(sp.blurb).to eq('Great company')
       expect(sp.is_sponsor).to be true
     end
+
+    it 'rejects logo URLs with unsupported schemes' do
+      sp = SponsorsPartner.new(year: 2025, name: 'BadScheme', logo_url: 'ftp://logo.png')
+
+      expect(sp).not_to be_valid
+      expect(sp.errors[:logo_url]).to include('must be a valid HTTP or HTTPS URL')
+    end
+
+    it 'rejects malformed logo URLs' do
+      sp = SponsorsPartner.new(year: 2025, name: 'Malformed', logo_url: 'http:// bad url')
+
+      expect(sp).not_to be_valid
+      expect(sp.errors[:logo_url]).to include('must be a valid URL')
+    end
   end
 end

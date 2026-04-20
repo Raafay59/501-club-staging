@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Ideathon events", type: :request do
   let!(:admin) { User.create!(email: "admin@example.com", role: "admin") }
+  let!(:editor) { User.create!(email: "editor@example.com", role: "editor") }
   let!(:ideathon) do
     Ideathon.create!(
       year: 2025,
@@ -63,6 +64,40 @@ RSpec.describe "Ideathon events", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it "renders new when there is no active year to attach the event to" do
+      Ideathon.delete_all
+
+      post ideathon_events_path, params: {
+        ideathon_event: {
+          event_name: "Orphan Event",
+          event_description: "No year",
+          event_date: Date.new(2025, 2, 1),
+          event_time: "13:00"
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("is required")
+    end
+
+    it "blocks editors from creating events" do
+      login_as(editor)
+
+      expect {
+        post ideathon_events_path, params: {
+          ideathon_event: {
+            event_name: "Nope",
+            event_description: "x",
+            event_date: Date.new(2025, 2, 1),
+            event_time: "10:00"
+          }
+        }
+      }.not_to change(IdeathonEvent, :count)
+
+      expect(response).to redirect_to(manager_index_path(tab: "events"))
+      expect(flash[:alert]).to include("Only 501 Club admins")
+    end
   end
 
   describe "PATCH /ideathon_events/:id" do
@@ -90,6 +125,31 @@ RSpec.describe "Ideathon events", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it "does not update event from non-active year" do
+      old_year = Ideathon.create!(
+        year: 2024,
+        theme: "Old",
+        is_active: false,
+        start_date: Date.new(2024, 2, 1),
+        end_date: Date.new(2024, 2, 2)
+      )
+      old_event = IdeathonEvent.create!(
+        ideathon_year: old_year,
+        event_name: "Old Workshop",
+        event_description: "Old",
+        event_date: Date.new(2024, 2, 1),
+        event_time: "10:00"
+      )
+
+      patch ideathon_event_path(old_event), params: {
+        ideathon_event: { event_name: "Should Not Update" }
+      }
+
+      expect(response).to redirect_to(manager_index_path(tab: "events"))
+      expect(flash[:alert]).to include("active year")
+      expect(old_event.reload.event_name).to eq("Old Workshop")
+    end
   end
 
   describe "DELETE /ideathon_events/:id" do
@@ -116,6 +176,30 @@ RSpec.describe "Ideathon events", type: :request do
       delete ideathon_event_path(event), headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq(Mime[:turbo_stream])
+    end
+
+    it "does not delete event from non-active year" do
+      old_year = Ideathon.create!(
+        year: 2024,
+        theme: "Old",
+        is_active: false,
+        start_date: Date.new(2024, 2, 1),
+        end_date: Date.new(2024, 2, 2)
+      )
+      old_event = IdeathonEvent.create!(
+        ideathon_year: old_year,
+        event_name: "Old Closing",
+        event_description: "Awards",
+        event_date: Date.new(2024, 2, 2),
+        event_time: "18:00"
+      )
+
+      expect {
+        delete ideathon_event_path(old_event)
+      }.not_to change(IdeathonEvent, :count)
+
+      expect(response).to redirect_to(manager_index_path(tab: "events"))
+      expect(flash[:alert]).to include("active year")
     end
   end
 

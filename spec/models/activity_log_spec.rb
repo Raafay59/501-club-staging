@@ -73,4 +73,10 @@ RSpec.describe ActivityLog, type: :model do
       expect(log.errors[:base]).to include("Activity logs are immutable")
     end
   end
+
+  describe "date parsing" do
+    it "returns nil for invalid filter dates" do
+      expect(described_class.send(:parse_filter_date, "invalid-date")).to be_nil
+    end
+  end
 end

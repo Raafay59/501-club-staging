@@ -4,7 +4,7 @@
 # Follows Rails RESTful conventions and includes custom logic for team selection.
 class RegisteredAttendeesController < ApplicationController
      # Allow public access to registration and info pages
-     skip_before_action :require_organizer_tools!, only: %i[new create show success teams_for_year]
+     skip_before_action :require_organizer_tools!, only: %i[new create success teams_for_year]
      # Load attendee for actions that require an existing record
      before_action :set_registered_attendee, only: %i[show edit update destroy]
      before_action :set_active_year, only: %i[new create edit update]
@@ -16,11 +16,11 @@ class RegisteredAttendeesController < ApplicationController
 
      # List all registered attendees (admin only)
      def index
-          @registered_attendees = RegisteredAttendee.all
+          @registered_attendees = RegisteredAttendee.where(ideathon_year: active_year)
      end
 
 
-     # Show a single registered attendee (public for confirmation)
+     # Show a single registered attendee (organizer only)
      def show; end
 
 
@@ -46,15 +46,24 @@ class RegisteredAttendeesController < ApplicationController
           @registered_attendee = RegisteredAttendee.new(registered_attendee_params)
           @registered_attendee.ideathon_year = @active_year
 
-          # Assign team based on form selection, enforcing team size limit
-          apply_team_selection!(@registered_attendee, enforce_limit: true)
+          saved = false
+          RegisteredAttendee.transaction do
+               # Assign team based on form selection, enforcing team size limit
+               apply_team_selection!(@registered_attendee, enforce_limit: true)
+               if @registered_attendee.errors.any?
+                    raise ActiveRecord::Rollback
+               end
+
+               saved = @registered_attendee.save
+               raise ActiveRecord::Rollback unless saved
+          end
 
           respond_to do |format|
                if @registered_attendee.errors.any?
                     load_teams
                     format.html { render :new, status: :unprocessable_entity }
                     format.json { render json: @registered_attendee.errors, status: :unprocessable_entity }
-               elsif @registered_attendee.save
+               elsif saved
                     if organizer_tools? && params[:return_to] == "manager"
                          log_manager_action(
                            action: "attendee.created",
@@ -126,19 +135,35 @@ class RegisteredAttendeesController < ApplicationController
 
      # AJAX endpoint: Return teams for a given year as JSON (for dynamic form updates)
      def teams_for_year
+          active = ActiveIdeathonYear.call
+          unless active
+               render json: []
+               return
+          end
+
           year_id = params[:year_id]
           if year_id.blank?
                render json: []
                return
           end
 
-          teams = Team.where(ideathon_year_id: year_id).order(:unassigned, :team_name)
+          if year_id.to_i != active.id
+               render json: []
+               return
+          end
+
+          teams = Team
+            .where(ideathon_year_id: active.id)
+            .left_joins(:registered_attendees)
+            .group("teams.id", "teams.team_name", "teams.unassigned")
+            .order(:unassigned, :team_name)
+            .select("teams.id", "teams.team_name", "teams.unassigned", "COUNT(registered_attendees.id) AS member_count")
+
           team_list = teams.map do |team|
-               member_count = team.registered_attendees.count
                {
                  id: team.id,
                  name: team.team_name,
-                 member_count: member_count,
+                 member_count: team.attributes["member_count"].to_i,
                  unassigned: team.unassigned
                }
           end
@@ -149,7 +174,10 @@ class RegisteredAttendeesController < ApplicationController
 
        # Finds the registered attendee for actions that require an existing record
        def set_registered_attendee
-            @registered_attendee = RegisteredAttendee.find(params[:id])
+            @registered_attendee = RegisteredAttendee.where(ideathon_year: active_year).find(params[:id])
+       rescue ActiveRecord::RecordNotFound
+            redirect_to manager_index_path, alert: "Attendee not found for the active year."
+            return
        end
 
        # Returns the currently active Ideathon year
@@ -213,9 +241,14 @@ class RegisteredAttendeesController < ApplicationController
                       return
                  end
 
-                 if enforce_limit && team.registered_attendees.count >= 4
-                      attendee.errors.add(:base, "That team is already full (max 4 members).")
-                      return
+                 if enforce_limit
+                      team.with_lock do
+                           member_count = team.registered_attendees.lock.select(:id).to_a.size
+                           if member_count >= 4
+                                attendee.errors.add(:base, "That team is already full (max 4 members).")
+                                return
+                           end
+                      end
                  end
 
                  attendee.team_id = team.id
