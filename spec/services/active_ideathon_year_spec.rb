@@ -70,5 +70,20 @@ RSpec.describe ActiveIdeathonYear do
       result = described_class.send(:create_default_year!)
       expect(result).to eq(existing)
     end
+
+    it "falls back to existing active year when uniqueness conflict is on active flag" do
+      active = Ideathon.create!(
+        year: Time.zone.today.year - 1,
+        theme: "Already Active",
+        is_active: true,
+        start_date: Date.new(Time.zone.today.year - 1, 2, 1),
+        end_date: Date.new(Time.zone.today.year - 1, 2, 2)
+      )
+
+      allow(Ideathon).to receive(:find_or_create_by!).and_raise(ActiveRecord::RecordNotUnique)
+
+      result = described_class.send(:create_default_year!)
+      expect(result).to eq(active)
+    end
   end
 end

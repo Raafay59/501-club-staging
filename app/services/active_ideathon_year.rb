@@ -21,7 +21,9 @@ class ActiveIdeathonYear
         ideathon.description = "Auto-generated default year"
       end
     rescue ActiveRecord::RecordNotUnique
-      Ideathon.find_by!(year: today.year)
+      Ideathon.find_by(is_active: true) ||
+        Ideathon.order(year: :desc, created_at: :desc).first ||
+        Ideathon.find_by!(year: today.year)
     end
   end
 end
