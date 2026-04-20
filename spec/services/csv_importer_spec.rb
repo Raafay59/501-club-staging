@@ -12,10 +12,16 @@ RSpec.describe CsvImporter, type: :service do
     }
   end
 
+  after do
+    Array(@uploaded_csv_tempfiles).each(&:close!)
+  end
+
   def uploaded_csv(filename:, body:, content_type: 'text/csv')
     tempfile = Tempfile.new([ File.basename(filename, '.csv'), '.csv' ])
     tempfile.write(body)
     tempfile.rewind
+    @uploaded_csv_tempfiles ||= []
+    @uploaded_csv_tempfiles << tempfile
     ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: filename, type: content_type)
   end
 

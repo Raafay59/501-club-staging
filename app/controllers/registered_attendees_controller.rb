@@ -72,7 +72,13 @@ class RegisteredAttendeesController < ApplicationController
                          )
                     end
                     format.html { redirect_to params[:return_to] == "manager" ? manager_index_path : success_registered_attendees_path, status: :see_other }
-                    format.json { render :show, status: :created, location: @registered_attendee }
+                    format.json do
+                         if organizer_tools?
+                              render :show, status: :created, location: @registered_attendee
+                         else
+                              render :show, status: :created
+                         end
+                    end
                else
                     load_teams
                     format.html { render :new, status: :unprocessable_entity }
@@ -242,7 +248,7 @@ class RegisteredAttendeesController < ApplicationController
 
                  if enforce_limit
                       team.with_lock do
-                           member_count = team.registered_attendees.lock.select(:id).to_a.size
+                           member_count = team.registered_attendees.count
                            if member_count >= 4
                                 attendee.errors.add(:base, "That team is already full (max 4 members).")
                                 return

@@ -446,5 +446,19 @@ RSpec.describe "Registered attendees", type: :request do
       }.to change(RegisteredAttendee, :count).by(1)
       expect(response).to redirect_to(manager_index_path)
     end
+
+    it "POST /registered_attendees as JSON includes location for organizer" do
+      expect {
+        post registered_attendees_path(format: :json), params: {
+          registered_attendee: valid_fields.merge(attendee_email: "organizerjson@tamu.edu"),
+          team_choice: "existing",
+          existing_team_id: team.id.to_s,
+          return_to: "manager"
+        }
+      }.to change(RegisteredAttendee, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      expect(response.headers["Location"]).to match(%r{/registered_attendees/\d+\z})
+    end
   end
 end
