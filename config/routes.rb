@@ -2,6 +2,8 @@ Rails.application.routes.draw do
      root 'ideathon#index'
 
      devise_for :admins, controllers: { sessions: "admins/sessions", omniauth_callbacks: "admins/omniauth_callbacks" }
+     # Session routes are defined here because Admin is :omniauthable only (no :database_authenticatable),
+     # so devise_for does not register new_admin_session / destroy_admin_session by default.
      devise_scope :admin do
           get "admins/sign_in", to: "admins/sessions#new", as: :new_admin_session
           delete "admins/sign_out", to: "admins/sessions#destroy", as: :destroy_admin_session

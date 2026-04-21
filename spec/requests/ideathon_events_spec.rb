@@ -64,18 +64,19 @@ RSpec.describe "IdeathonEvents", type: :request do
                expect(ManagerActionLog.last.action).to eq("event.created")
           end
 
-          it "accepts blank event_name and still redirects (current behavior)" do
-               post ideathon_events_path, params: {
-                 ideathon_event: {
-                   event_name: "",
-                   event_description: "Desc",
-                   event_date: Date.current,
-                   event_time: "09:00"
-                 }
-               }
+          it "re-renders new when required fields are blank" do
+               expect do
+                    post ideathon_events_path, params: {
+                      ideathon_event: {
+                        event_name: "",
+                        event_description: "Desc",
+                        event_date: Date.current,
+                        event_time: "09:00"
+                      }
+                    }
+               end.not_to change(IdeathonEvent, :count)
 
-               expect(response).to redirect_to(manager_index_path(tab: "events"))
-               expect(ManagerActionLog.last.action).to eq("event.created")
+               expect(response).to have_http_status(:unprocessable_entity)
           end
      end
 
@@ -108,18 +109,19 @@ RSpec.describe "IdeathonEvents", type: :request do
                expect(ManagerActionLog.last.action).to eq("event.updated")
           end
 
-          it "accepts blank event_name on update and redirects (current behavior)" do
-               patch ideathon_event_path(event), params: {
-                 ideathon_event: {
-                   event_name: "",
-                   event_description: "No title",
-                   event_date: Date.current,
-                   event_time: "09:00"
-                 }
-               }
+          it "re-renders edit when required fields are cleared" do
+               expect do
+                    patch ideathon_event_path(event), params: {
+                      ideathon_event: {
+                        event_name: "",
+                        event_description: "No title",
+                        event_date: Date.current,
+                        event_time: "09:00"
+                      }
+                    }
+               end.not_to change { event.reload.event_name }
 
-               expect(response).to redirect_to(manager_index_path(tab: "events"))
-               expect(ManagerActionLog.last.action).to eq("event.updated")
+               expect(response).to have_http_status(:unprocessable_entity)
           end
      end
 

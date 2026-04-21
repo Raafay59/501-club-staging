@@ -7,10 +7,11 @@ class UsersController < ClubDashboardController
      end
 
      def create
-          requested_role = admin_params[:role]
+          requested_role = raw_admin_role
           normalized = normalized_role(requested_role, allow_unauthorized: false)
-          @new_user = Admin.new(email: admin_params[:email], role: normalized)
-          @new_user.full_name = admin_params[:email].to_s.split("@").first
+          email = permitted_admin_email
+          @new_user = Admin.new(email: email, role: normalized)
+          @new_user.full_name = email.to_s.split("@").first
           @new_user.uid = "invited:#{SecureRandom.uuid}"
           if @new_user.save
                redirect_to users_path, notice: "#{@new_user.email} added as #{@new_user.role}."
@@ -22,7 +23,7 @@ class UsersController < ClubDashboardController
 
      def update
           @user = Admin.find(params[:id])
-          requested_role = admin_params[:role]
+          requested_role = raw_admin_role
           new_role = normalized_role(requested_role, allow_unauthorized: true)
           if new_role.blank?
                redirect_to users_path, alert: "Invalid role selected."
@@ -60,8 +61,13 @@ class UsersController < ClubDashboardController
 
   private
 
-       def admin_params
-            params.require(:admin).permit(:email, :role)
+       # Role is not permitted for mass assignment; it is validated via normalized_role.
+       def permitted_admin_email
+            params.require(:admin).permit(:email)[:email]
+       end
+
+       def raw_admin_role
+            params.require(:admin)[:role]
        end
 
        def normalized_role(role_value, allow_unauthorized:)
