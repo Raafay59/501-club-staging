@@ -4,7 +4,7 @@
 class RegisteredAttendee < ApplicationRecord
      # Associations
      belongs_to :ideathon_year
-     belongs_to :team, optional: true
+     belongs_to :team
 
      # Validations
      validates :ideathon_year_id, :attendee_name, :attendee_phone, :attendee_email, :attendee_major, :attendee_class, presence: true
@@ -13,11 +13,11 @@ class RegisteredAttendee < ApplicationRecord
 
      # Default ordering by attendee name.
      #
-     # NOTE: This default_scope is inherited by every query that does not call
-     # `reorder(...)` first. `sorted_by_team` already calls `reorder(nil)` to
-     # avoid conflicts; any future scope that expects a different order MUST do
-     # the same. Use `RegisteredAttendee.without_default_order` (alias for
-     # `unscoped.all`) when you need strictly raw records (e.g. counts by id).
+     # NOTE: This default_scope adds ORDER BY to every query unless the relation
+     # clears it first. `sorted_by_team` begins with `reorder(nil)` so it can
+     # apply its own order; other scopes that need a different order should do
+     # the same. `without_default_order` only removes that default ordering (it
+     # is not `unscoped`—all other relation state still applies).
      default_scope { order(attendee_name: :asc) }
 
      scope :without_default_order, -> { reorder(nil) }

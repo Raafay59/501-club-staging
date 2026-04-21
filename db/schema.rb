@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_21_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_21_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -145,9 +145,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_000000) do
     t.datetime "created_at", null: false
     t.bigint "ideathon_year_id", null: false
     t.string "team_name"
-    t.boolean "unassigned"
+    t.boolean "unassigned", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["ideathon_year_id"], name: "index_teams_on_ideathon_year_id"
+    t.index ["ideathon_year_id"], name: "index_teams_one_unassigned_per_ideathon_year", unique: true, where: "(unassigned = true)"
   end
 
   add_foreign_key "activity_logs", "admins"

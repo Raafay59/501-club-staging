@@ -31,10 +31,11 @@ RSpec.describe Team, type: :model do
                expect(duplicate).not_to be_valid
           end
 
-          it "does not enforce uniqueness on unassigned teams" do
+          it "rejects a second unassigned pool team for the same year" do
                Team.create!(ideathon_year: ideathon_year, team_name: "Unassigned", unassigned: true)
-               second = Team.new(ideathon_year: ideathon_year, team_name: "Unassigned", unassigned: true)
-               expect(second).to be_valid
+               second = Team.new(ideathon_year: ideathon_year, team_name: "Pool B", unassigned: true)
+               expect(second).not_to be_valid
+               expect(second.errors[:base]).to include("Only one unassigned pool team is allowed per ideathon year.")
           end
      end
 end

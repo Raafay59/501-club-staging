@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe RegisteredAttendee, type: :model do
      describe "associations" do
           it { is_expected.to belong_to(:ideathon_year) }
-          it { is_expected.to belong_to(:team).optional }
+          it { is_expected.to belong_to(:team) }
      end
 
      describe "validations" do

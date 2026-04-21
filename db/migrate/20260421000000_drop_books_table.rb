@@ -1,3 +1,4 @@
+# Drops unused `books` table created by CreateBooks (no app code depends on it).
 class DropBooksTable < ActiveRecord::Migration[8.1]
      def up
           drop_table :books, if_exists: true
