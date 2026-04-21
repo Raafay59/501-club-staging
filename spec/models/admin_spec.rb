@@ -9,9 +9,21 @@ RSpec.describe Admin, type: :model do
                expect(Admin.allowed_email?("")).to eq(false)
           end
 
-          it "returns false when ALLOWED_ADMIN_EMAILS is not set" do
+          it "returns false when allowlist is blank and no admin record exists for the email" do
                allow(ENV).to receive(:fetch).with("ALLOWED_ADMIN_EMAILS", "").and_return("")
-               expect(Admin.allowed_email?("any@tamu.edu")).to eq(false)
+               expect(Admin.allowed_email?("nobody@tamu.edu")).to eq(false)
+          end
+
+          it "returns true when allowlist is blank but an admin or editor row exists (dashboard invite)" do
+               allow(ENV).to receive(:fetch).with("ALLOWED_ADMIN_EMAILS", "").and_return("")
+               Admin.create!(email: "invited@tamu.edu", full_name: "Invited", uid: "invited:test", role: "editor")
+               expect(Admin.allowed_email?("invited@tamu.edu")).to eq(true)
+          end
+
+          it "returns false when allowlist is blank and only an unauthorized admin exists" do
+               allow(ENV).to receive(:fetch).with("ALLOWED_ADMIN_EMAILS", "").and_return("")
+               Admin.create!(email: "blocked@tamu.edu", full_name: "Blocked", uid: "u-block", role: "unauthorized")
+               expect(Admin.allowed_email?("blocked@tamu.edu")).to eq(false)
           end
 
           it "returns true when email is in the allowlist (comma-separated)" do

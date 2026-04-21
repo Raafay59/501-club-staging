@@ -11,8 +11,9 @@ class Admin < ApplicationRecord
      enum :role, { admin: "admin", editor: "editor", unauthorized: "unauthorized" }, prefix: :role
      validates :email, presence: true, format: { with: /\A[^@\s]+@tamu\.edu\z/i, message: "must end with @tamu.edu" }
 
-     # Only emails in the allowlist can sign in as admin.
-     # Returns true if the email is in the allowed admin list (from ENV)
+     # Returns whether Google OAuth may proceed for this email.
+     # Priority: explicit ALLOWED_ADMIN_EMAILS env list; else legacy `users` table;
+     # else an existing Admin row (admin/editor) so dashboard-invited accounts work without env.
      def self.allowed_email?(email)
           normalized_email = email.to_s.strip.downcase
           return false if normalized_email.blank?
@@ -39,6 +40,8 @@ class Admin < ApplicationRecord
                )
                return true if Admin.connection.select_value(sql).present?
           end
+
+          return true if Admin.where("lower(trim(email)) = ?", normalized_email).where(role: %w[admin editor]).exists?
 
           false
      end
