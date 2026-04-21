@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  ideathon_year: one
+  team_name: MyString
+  unassigned: false
+
+two:
+  ideathon_year: two
+  team_name: MyString
+  unassigned: false

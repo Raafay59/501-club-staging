@@ -1,109 +1,127 @@
 class ManagerActionLog < ApplicationRecord
-  belongs_to :user
+     belongs_to :admin, optional: true
 
-  validates :action, presence: true
+     before_validation :populate_actor_snapshot, if: -> { actor_name.blank? || actor_email.blank? }
 
-  scope :recent_first, -> { order(created_at: :desc) }
+     validates :action, presence: true
 
-  def action_label
-    a = action.to_s
-    return "Exported" if a.start_with?("export.")
-    return "Created" if a.end_with?(".created")
-    return "Updated" if a.end_with?(".updated")
-    return "Deleted" if a.end_with?(".deleted")
-    a.tr(".", " ").tr("_", " ").split.map(&:capitalize).join(" ")
-  end
+     scope :recent_first, -> { order(created_at: :desc) }
 
-  def target_label
-    a = action.to_s
-    return "Export" if a.start_with?("export.")
-    return "Attendee" if a.start_with?("attendee.")
-    return "Event" if a.start_with?("event.")
-    record_type.to_s.presence || "—"
-  end
+     def action_label
+          a = action.to_s
+          return "Exported" if a.start_with?("export.")
+          return "Created" if a.end_with?(".created")
+          return "Updated" if a.end_with?(".updated")
+          return "Deleted" if a.end_with?(".deleted")
+          a.tr(".", " ").tr("_", " ").split.map(&:capitalize).join(" ")
+     end
 
-  def record_label
-    if action.to_s.start_with?("export.")
-      return "Participants CSV" if action.to_s.include?("participants")
-      return "Teams CSV" if action.to_s.include?("teams")
-      return "CSV"
-    end
+     def target_label
+          a = action.to_s
+          return "Export" if a.start_with?("export.")
+          return "Attendee" if a.start_with?("attendee.")
+          return "Event" if a.start_with?("event.")
+          record_type.to_s.presence || "—"
+     end
 
-    metadata_name = metadata.is_a?(Hash) ? metadata["record_name"].presence : nil
-    return metadata_name if metadata_name.present?
+     def record_label
+          if action.to_s.start_with?("export.")
+               return "Participants CSV" if action.to_s.include?("participants")
+               return "Teams CSV" if action.to_s.include?("teams")
+               return "CSV"
+          end
 
-    fallback = if metadata.is_a?(Hash)
-      metadata["attendee_name"].presence || metadata["event_name"].presence
-    end
-    return fallback if fallback.present?
+          metadata_name = metadata.is_a?(Hash) ? metadata["record_name"].presence : nil
+          return metadata_name if metadata_name.present?
 
-    return nil if record_type.blank? || record_id.blank?
-    "#{record_type}##{record_id}"
-  end
+          fallback = if metadata.is_a?(Hash)
+               metadata["attendee_name"].presence || metadata["event_name"].presence
+          end
+          return fallback if fallback.present?
 
-  def details_label
-    return "#{metadata["count"]} rows" if metadata.is_a?(Hash) && metadata["count"].present?
+          return nil if record_type.blank? || record_id.blank?
+          "#{record_type}##{record_id}"
+     end
 
-    if action.to_s.end_with?(".updated")
-      summary = summarize_changes_with_diffs
-      return summary if summary.present?
-    end
+     def details_label
+          return "#{metadata["count"]} rows" if metadata.is_a?(Hash) && metadata["count"].present?
 
-    "—"
-  end
+          if action.to_s.end_with?(".updated")
+               summary = summarize_changes_with_diffs
+               return summary if summary.present?
+          end
+
+          "—"
+     end
+
+     def actor_display_name
+          actor_name.presence || admin&.full_name.presence || actor_email.presence || admin&.email.presence || "Deleted User"
+     end
+
+     def actor_display_email
+          actor_email.presence || admin&.email
+     end
 
   private
 
-  def summarize_changes_with_diffs
-    return nil unless metadata.is_a?(Hash)
-    changes = metadata["changes"]
-    return nil unless changes.is_a?(Hash) && changes.any?
+       def populate_actor_snapshot
+            return if admin.blank?
 
-    allowed = %w[event_name event_description event_date event_time attendee_name attendee_email attendee_phone attendee_major attendee_class team_id]
-    chunks = []
+            self.actor_name = admin.full_name.presence || admin.email if actor_name.blank?
+            self.actor_email = admin.email if actor_email.blank?
+       end
 
-    changes.slice(*allowed).each do |attr, pair|
-      next unless pair.is_a?(Array) && pair.length == 2
-      old_val, new_val = pair
-      next if old_val == new_val
+       def summarize_changes_with_diffs
+            return nil unless metadata.is_a?(Hash)
+            changes = metadata["changes"]
+            return nil unless changes.is_a?(Hash) && changes.any?
 
-      label = human_attr(attr)
-      old_str = normalize_value(old_val)
-      new_str = normalize_value(new_val)
-      next if new_str.blank?
+            allowed = %w[event_name event_description event_date event_time attendee_name attendee_email attendee_phone attendee_major attendee_class team_id]
+            chunks = []
 
-      chunks << "#{label}: #{truncate_value(old_str)} → #{truncate_value(new_str)}"
-    end
+            changes.slice(*allowed).each do |attr, pair|
+                 next unless pair.is_a?(Array) && pair.length == 2
+                 old_val, new_val = pair
+                 next if old_val == new_val
 
-    chunks.first(3).join(" · ").presence
-  end
+                 label = human_attr(attr)
+                 old_str = normalize_value(old_val)
+                 new_str = normalize_value(new_val)
+                 next if new_str.blank?
 
-  def human_attr(attr)
-    case attr.to_s
-    when "attendee_name" then "Name"
-    when "attendee_email" then "Email"
-    when "attendee_phone" then "Phone"
-    when "attendee_major" then "Major"
-    when "attendee_class" then "Class"
-    when "team_id" then "Team"
-    when "event_name" then "Title"
-    when "event_description" then "Description"
-    when "event_date" then "Date"
-    when "event_time" then "Time"
-    else attr.to_s.tr("_", " ").split.map(&:capitalize).join(" ")
-    end
-  end
+                 # For updates we want "Old → New" so renames make sense.
+                 chunks << "#{label}: #{truncate_value(old_str)} → #{truncate_value(new_str)}"
+            end
 
-  def normalize_value(value)
-    return "" if value.nil?
-    s = value.is_a?(String) ? value.strip : value.to_s
-    s
-  end
+            chunks.first(3).join(" · ").presence
+       end
 
-  def truncate_value(value)
-    s = value.to_s
-    return "—" if s.blank?
-    return s if s.length <= 80
-    "#{s.first(77)}..."
-  end
+       def human_attr(attr)
+            case attr.to_s
+            when "attendee_name" then "Name"
+            when "attendee_email" then "Email"
+            when "attendee_phone" then "Phone"
+            when "attendee_major" then "Major"
+            when "attendee_class" then "Class"
+            when "team_id" then "Team"
+            when "event_name" then "Title"
+            when "event_description" then "Description"
+            when "event_date" then "Date"
+            when "event_time" then "Time"
+            else attr.to_s.tr("_", " ").split.map(&:capitalize).join(" ")
+            end
+       end
+
+       def normalize_value(value)
+            return "" if value.nil?
+            s = value.is_a?(String) ? value.strip : value.to_s
+            s
+       end
+
+       def truncate_value(value)
+            s = value.to_s
+            return "—" if s.blank?
+            return s if s.length <= 80
+            "#{s.first(77)}..."
+       end
 end

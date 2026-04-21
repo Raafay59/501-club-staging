@@ -144,6 +144,12 @@
                   data: { turbo: false, turbo_prefetch: false } %>
       <%= link_to "Heroku Documentation", view_pdf_manager_index_path, target: "_blank",
                   class: "text-xs px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 text-white transition-colors" %>
+      <%= link_to ideathons_path, class: "group relative bg-black text-white font-titan-one text-xs px-4 py-2 rounded-lg transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 border-2 border-black/90" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span style="font-weight: normal;">Admin Dashboard</span>
+      <% end %>
       <button onclick="document.getElementById('dev-contacts-modal').classList.remove('hidden'); document.getElementById('dev-contacts-modal').classList.add('flex');"
               class="text-xs px-3 py-1.5 rounded-full transition-colors cursor-pointer font-semibold"
               style="background: rgba(158, 194, 191, 0.1); border: 1px solid rgba(158, 194, 191, 0.3); color: rgb(100, 155, 151);">
@@ -154,7 +160,7 @@
               style="background: rgba(238, 136, 138, 0.1); border: 1px solid rgba(238, 136, 138, 0.25); color: rgb(238, 136, 138);">
         ? Help
       </button>
-      <%= button_to "Sign Out", logout_path, method: :delete, class: "text-white/30 hover:text-white/60 text-xs transition-colors bg-transparent border-0 p-0 cursor-pointer" %>
+      <%= button_to "Sign Out", destroy_admin_session_path, method: :delete, class: "text-white/30 hover:text-white/60 text-xs transition-colors bg-transparent border-0 p-0 cursor-pointer" %>
     </div>
   </div>
 

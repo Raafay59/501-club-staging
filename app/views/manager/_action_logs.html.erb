@@ -5,7 +5,7 @@
         <thead>
           <tr style="background: rgba(158, 194, 191, 0.12); border-bottom: 1px solid rgba(158, 194, 191, 0.2);">
             <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Time</th>
-            <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Organizer</th>
+            <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Admin</th>
             <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Action</th>
             <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Target</th>
             <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style="color: rgb(100, 155, 151);">Item</th>
@@ -20,11 +20,13 @@
               </td>
               <td class="px-4 py-3">
                 <div class="text-xs font-semibold" style="color: rgb(127, 85, 81);">
-                  <%= log.user.name.presence || log.user.email %>
+                  <%= log.actor_display_name %>
                 </div>
-                <div class="text-[11px]" style="color: rgba(127, 85, 81, 0.55);">
-                  <%= log.user.email %>
-                </div>
+                <% if log.actor_display_email.present? %>
+                  <div class="text-[11px]" style="color: rgba(127, 85, 81, 0.55);">
+                    <%= log.actor_display_email %>
+                  </div>
+                <% end %>
               </td>
               <td class="px-4 py-3 text-xs font-semibold" style="color: rgb(127, 85, 81);">
                 <%= log.action_label %>

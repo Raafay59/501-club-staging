@@ -2,7 +2,7 @@
 
 <p><strong>Year:</strong> <%= @mentors_judge.year %></p>
 <p><strong>Role:</strong> <%= @mentors_judge.is_judge? ? "Judge" : "Mentor" %></p>
-<p><strong>Job title:</strong> <%= @mentors_judge.job_title.presence || "—" %></p>
+<p><strong>Job title:</strong> <%= @mentors_judge.job_title.presence || "-" %></p>
 <% if @mentors_judge.photo_url.present? %>
   <p><strong>Photo:</strong> <%= image_tag @mentors_judge.photo_url, alt: @mentors_judge.name, class: "detail-photo" %></p>
 <% end %>

@@ -3,7 +3,7 @@
 # Handles validation, search, and team association logic.
 class RegisteredAttendee < ApplicationRecord
      # Associations
-     belongs_to :ideathon_year, class_name: "Ideathon", inverse_of: :registered_attendees
+     belongs_to :ideathon_year
      belongs_to :team, optional: true
 
      # Validations
@@ -11,8 +11,16 @@ class RegisteredAttendee < ApplicationRecord
      validate :phone_must_have_ten_digits
      validate :email_must_be_tamu
 
-     # Default ordering by attendee name
+     # Default ordering by attendee name.
+     #
+     # NOTE: This default_scope is inherited by every query that does not call
+     # `reorder(...)` first. `sorted_by_team` already calls `reorder(nil)` to
+     # avoid conflicts; any future scope that expects a different order MUST do
+     # the same. Use `RegisteredAttendee.without_default_order` (alias for
+     # `unscoped.all`) when you need strictly raw records (e.g. counts by id).
      default_scope { order(attendee_name: :asc) }
+
+     scope :without_default_order, -> { reorder(nil) }
 
      # Scopes for searching and sorting
      scope :search_by_name, ->(query) {
@@ -36,11 +44,14 @@ class RegisteredAttendee < ApplicationRecord
 
      private
 
-          # Validates that the email is a TAMU address
+          # Validates that the email is a well-formed TAMU address.
+          # Rejects bare `@tamu.edu`, multiple `@`, whitespace, etc.
+          TAMU_EMAIL_REGEX = /\A[^@\s]+@tamu\.edu\z/i
           def email_must_be_tamu
-               if attendee_email.present? && !attendee_email.end_with?("@tamu.edu")
-                    errors.add(:attendee_email, "must be a @tamu.edu address")
-               end
+               return if attendee_email.blank?
+               return if attendee_email.match?(TAMU_EMAIL_REGEX)
+
+               errors.add(:attendee_email, "must be a valid @tamu.edu address")
           end
 
           # Validates that the phone number contains exactly 10 digits

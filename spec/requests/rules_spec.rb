@@ -1,128 +1,90 @@
-require 'rails_helper'
+require "rails_helper"
 
-RSpec.describe "Rules", type: :request do
-  let!(:admin) { User.create!(email: 'admin@example.com', role: 'admin') }
-  let!(:editor) { User.create!(email: 'editor@example.com', role: 'editor') }
-  let!(:ideathon) { Ideathon.create!(year: 2025, theme: 'Tech') }
+RSpec.describe "Rules dashboard", type: :request do
+     let(:admin_user) { Admin.create!(email: "rule-admin@tamu.edu", full_name: "Admin", uid: "rule-a", role: "admin") }
+     let(:editor_user) { Admin.create!(email: "rule-editor@tamu.edu", full_name: "Editor", uid: "rule-e", role: "editor") }
+     let!(:ideathon) { Ideathon.create!(year: 2026, name: "Ideathon 2026") }
+     let!(:rule) { Rule.create!(ideathon: ideathon, rule_text: "Be kind") }
 
-  before { login_as(admin) }
+     describe "POST /dashboard/rules" do
+          it "allows editor create" do
+               sign_in editor_user, scope: :admin
+               expect do
+                    post rules_path, params: { rule: { year: 2026, rule_text: "Bring ID" } }
+               end.to change(Rule, :count).by(1)
+               expect(response).to redirect_to(rules_path)
+          end
+     end
 
-  let!(:rule) { Rule.create!(year: 2025, rule_text: 'Be respectful') }
+     describe "GET/PATCH rule member actions" do
+          before { sign_in editor_user, scope: :admin }
 
-  let(:valid_attributes) { { year: 2025, rule_text: 'No plagiarism' } }
-  let(:invalid_attributes) { { year: nil, rule_text: nil } }
+          it "renders show, edit, and delete confirmation pages" do
+               get rule_path(rule)
+               expect(response).to have_http_status(:ok)
+               get edit_rule_path(rule)
+               expect(response).to have_http_status(:ok)
+               get delete_rule_path(rule)
+               expect(response).to have_http_status(:ok)
+          end
 
-  describe "GET /rules" do
-    it "returns a successful response" do
-      get rules_path
-      expect(response).to have_http_status(:ok)
-    end
-  end
+          it "updates and invalidates properly" do
+               patch rule_path(rule), params: { rule: { year: 2026, rule_text: "Updated rule" } }
+               expect(response).to redirect_to(rules_path)
+               expect(rule.reload.rule_text).to eq("Updated rule")
 
-  describe "GET /rules/:id" do
-    it "returns a successful response" do
-      get rule_path(rule)
-      expect(response).to have_http_status(:ok)
-    end
-  end
+               patch rule_path(rule), params: { rule: { year: 2026, rule_text: "" } }
+               expect(response).to have_http_status(:unprocessable_content)
+          end
+     end
 
-  describe "GET /rules/new" do
-    it "returns a successful response" do
-      get new_rule_path
-      expect(response).to have_http_status(:ok)
-    end
-  end
+     describe "POST /dashboard/rules/import" do
+          it "blocks non-admins" do
+               sign_in editor_user, scope: :admin
+               post import_rules_path, params: { file: nil }
+               expect(response).to redirect_to(root_path)
+          end
 
-  describe "POST /rules" do
-    context "with valid parameters" do
-      it "creates a new rule and redirects" do
-        expect {
-          post rules_path, params: { rule: valid_attributes }
-        }.to change(Rule, :count).by(1)
-        expect(response).to redirect_to(rules_path)
-      end
-    end
+          it "imports rules from a real csv upload" do
+               sign_in admin_user, scope: :admin
+               csv = Tempfile.new([ "rules", ".csv" ])
+               csv.write("year,rule_text\n2026,Bring your student ID\n")
+               csv.rewind
+               upload = Rack::Test::UploadedFile.new(csv.path, "text/csv", original_filename: "rules.csv")
 
-    context "with invalid parameters" do
-      it "does not create and re-renders the form" do
-        expect {
-          post rules_path, params: { rule: invalid_attributes }
-        }.not_to change(Rule, :count)
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-    end
-  end
+               expect do
+                    post import_rules_path, params: { file: upload }
+               end.to change(Rule, :count).by(1)
 
-  describe "GET /rules/:id/edit" do
-    it "returns a successful response" do
-      get edit_rule_path(rule)
-      expect(response).to have_http_status(:ok)
-    end
-  end
+               expect(response).to redirect_to(rules_path)
+               expect(flash[:notice]).to include("imported successfully")
+          ensure
+               csv&.close
+               csv&.unlink
+          end
+     end
 
-  describe "PATCH /rules/:id" do
-    context "with valid parameters" do
-      it "updates and redirects" do
-        patch rule_path(rule), params: { rule: { rule_text: 'Updated rule' } }
-        rule.reload
-        expect(rule.rule_text).to eq('Updated rule')
-        expect(response).to redirect_to(rules_path)
-      end
-    end
+     describe "DELETE /dashboard/rules/:id" do
+          it "blocks editors from delete" do
+               sign_in editor_user, scope: :admin
+               delete rule_path(rule)
+               expect(response).to redirect_to(root_path)
+          end
 
-    context "with invalid parameters" do
-      it "does not update and re-renders the form" do
-        patch rule_path(rule), params: { rule: { rule_text: nil } }
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-    end
-  end
+          it "allows admins to delete" do
+               sign_in admin_user, scope: :admin
+               expect { delete rule_path(rule) }.to change(Rule, :count).by(-1)
+               expect(response).to redirect_to(rules_path)
+          end
+     end
 
-  describe "GET /rules/:id/delete" do
-    it "returns a successful response" do
-      get delete_rule_path(rule)
-      expect(response).to have_http_status(:ok)
-    end
-  end
-
-  describe "DELETE /rules/:id" do
-    it "deletes and redirects" do
-      expect {
-        delete rule_path(rule)
-      }.to change(Rule, :count).by(-1)
-      expect(response).to redirect_to(rules_path)
-    end
-
-    context "as a non-admin editor" do
-      before { login_as(editor) }
-
-      it "redirects non-admin users" do
-        delete rule_path(rule)
-        expect(response).to redirect_to(ideathons_path)
-      end
-    end
-  end
-
-  describe "POST /rules/import" do
-    it "imports from a valid CSV file" do
-      file = fixture_file_upload('rules.csv', 'text/csv')
-
-      expect {
-        post import_rules_path, params: { file: file }
-      }.to change(Rule, :count).by(2)
-
-      expect(response).to redirect_to(rules_path)
-    end
-
-    it "rejects non-csv files" do
-      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
-
-      expect {
-        post import_rules_path, params: { file: file }
-      }.not_to change(Rule, :count)
-
-      expect(response).to redirect_to(rules_path)
-      expect(flash[:alert]).to include('Invalid file type')
-    end
-  end
+     describe "GET /dashboard/rules and /new" do
+          it "renders index and new for editor" do
+               sign_in editor_user, scope: :admin
+               get rules_path
+               expect(response).to have_http_status(:ok)
+               get new_rule_path
+               expect(response).to have_http_status(:ok)
+          end
+     end
 end

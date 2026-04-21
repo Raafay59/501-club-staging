@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  ideathon_year: one
+  team: one
+  attendee_name: Test User
+  attendee_phone: "1234567890"
+  attendee_email: test@tamu.edu
+  attendee_major: Computer Science
+  attendee_class: Freshman
+
+two:
+  ideathon_year: two
+  team: two
+  attendee_name: Test User Two
+  attendee_phone: "0987654321"
+  attendee_email: test2@tamu.edu
+  attendee_major: Computer Science
+  attendee_class: Sophomore

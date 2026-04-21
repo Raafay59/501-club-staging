@@ -1,62 +1,68 @@
-# frozen_string_literal: true
-
+##
+# Base controller for the application.
+# Handles authentication, session security, and public page logic.
 class ApplicationController < ActionController::Base
-  allow_browser versions: :modern
+     include ManagerActionLogging
+     # Require admin authentication for all pages except public ones
+     before_action :authenticate_admin!, unless: :public_page?
+     before_action :require_organizer_tools!, unless: :skip_organizer_tools_auth?
+     before_action :set_current_admin
 
-  include ManagerActionLogging
+     helper_method :current_user, :logged_in?, :admin?, :editor?, :organizer_tools?
 
-  # Public-site manager tools (registration, events, CSV) require a 501 Club User with role admin or editor.
-  before_action :require_organizer_tools!, unless: :skip_organizer_tools_auth?
-
-  helper_method :current_user, :logged_in?, :admin?, :editor?, :organizer_tools?
+     # Handle invalid authenticity token (CSRF error) by resetting session and redirecting
+     rescue_from ActionController::InvalidAuthenticityToken do
+          reset_session
+          redirect_to new_admin_session_path, alert: "Your session expired or cookies were cleared. Please sign in again."
+     end
 
   private
+       def skip_organizer_tools_auth?
+            devise_controller? || public_page?
+       end
 
-  def skip_organizer_tools_auth?
-    is_a?(ClubDashboardController) ||
-      is_a?(SessionsController) ||
-      public_site_request?
-  end
+       def current_user
+            current_admin
+       end
 
-  def public_site_request?
-    return true if controller_name == "ideathon" && action_name == "index"
-    return true if controller_name == "registered_attendees" &&
-      %w[new create success teams_for_year].include?(action_name)
+       def logged_in?
+            admin_signed_in?
+       end
 
-    false
-  end
+       def admin?
+            logged_in? && current_admin.role_admin?
+       end
 
-  def current_user
-    @current_user ||= User.find_by(id: session[:user_id])
-  end
+       def editor?
+            logged_in? && current_admin.role_editor?
+       end
 
-  def logged_in?
-    current_user.present?
-  end
+       def organizer_tools?
+            logged_in? && current_admin.authorized?
+       end
 
-  def admin?
-    logged_in? && current_user.admin?
-  end
+       def require_organizer_tools!
+            return if organizer_tools?
 
-  def editor?
-    logged_in? && current_user.editor?
-  end
+            if admin_signed_in?
+                 redirect_to root_path, alert: "Your account is not authorized for organizer tools."
+            else
+                 redirect_to new_admin_session_path, alert: "Please sign in to access organizer tools."
+            end
+       end
 
-  # Logged-in 501 Club organizer (admin or editor): can use dashboard and public manager tools.
-  def organizer_tools?
-    current_user&.authorized?
-  end
+       def set_current_admin
+            Current.admin = current_admin
+            Current.user = current_admin
+       end
 
-  def require_organizer_tools!
-    unless logged_in?
-      redirect_to login_path,
-        alert: "Sign in with a 501 Club organizer account (admin or editor) to continue."
-      return
-    end
-
-    return if current_user.authorized?
-
-    redirect_to unauthorized_path,
-      alert: "Your account doesn’t have access to registration manager tools. Ask a 501 Club admin to grant editor or admin role."
-  end
+       # Determines if the current page is public (no admin required)
+       # Public pages: ideathon#index, registered_attendees#new/create/success/teams_for_year
+       def public_page?
+            return true if controller_name == "ideathon" && action_name == "index"
+            if controller_name == "registered_attendees"
+                 return true if %w[new create success teams_for_year].include?(action_name)
+            end
+            false
+       end
 end

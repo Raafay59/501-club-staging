@@ -1,90 +1,56 @@
 require "rails_helper"
 
 RSpec.describe ActivityLogMessage do
-  let!(:ideathon) { Ideathon.create!(year: 2025, theme: "Tech") }
+     let!(:ideathon) { Ideathon.create!(year: 2026, name: "Ideathon 2026") }
 
-  describe ".for_sponsors_partner" do
-    let(:record) { SponsorsPartner.new(year: 2025, name: "Acme", is_sponsor: true) }
+     describe ".entry_for" do
+          it "builds sponsor message for added action" do
+               sponsor = SponsorsPartner.new(ideathon: ideathon, name: "ACME", is_sponsor: true)
+               entry = described_class.entry_for(sponsor, :added)
 
-    it "describes added" do
-      expect(described_class.for_sponsors_partner(record, :added)).to eq("Sponsor 'Acme' was added")
-    end
+               expect(entry[:content_type]).to eq("sponsors")
+               expect(entry[:message]).to include("Sponsor 'ACME' was added")
+          end
 
-    it "builds structured metadata for sponsors" do
-      expect(described_class.entry_for(record, :added)).to include(
-        content_type: "sponsors",
-        item_name: "Acme",
-        message: "Sponsor 'Acme' was added"
-      )
-    end
+          it "builds photo update message for logo-only edits" do
+               sponsor = SponsorsPartner.new(ideathon: ideathon, name: "ACME", is_sponsor: true)
+               entry = described_class.entry_for(sponsor, :edited, saved_changes: { "logo_url" => [ nil, "https://a.com/logo.png" ] })
 
-    it "uses Partner when not a sponsor" do
-      record.is_sponsor = false
-      expect(described_class.for_sponsors_partner(record, :removed)).to eq("Partner 'Acme' was removed")
-    end
+               expect(entry[:content_type]).to eq("photos")
+               expect(entry[:message]).to include("Logo for sponsor 'ACME' was updated")
+          end
 
-    it "describes logo-only edit as photo-related" do
-      saved = { "logo_url" => [ "a", "b" ] }
-      expect(described_class.for_sponsors_partner(record, :edited, saved_changes: saved))
-        .to eq("Logo for sponsor 'Acme' was updated")
-    end
-  end
+          it "builds mentor message for removed action" do
+               mentor = MentorsJudge.new(ideathon: ideathon, name: "Jane Mentor", is_judge: false)
+               entry = described_class.entry_for(mentor, :removed)
 
-  describe ".for_ideathon" do
-    let(:ideathon) { Ideathon.new(year: 2026, theme: "Future") }
+               expect(entry[:content_type]).to eq("mentors")
+               expect(entry[:message]).to include("Mentor 'Jane Mentor' was removed")
+          end
 
-    it "describes ideathon added" do
-      expect(described_class.for_ideathon(ideathon, :added)).to eq("Ideathon 2026 was added")
-    end
+          it "builds faq and rule entries" do
+               faq = Faq.new(ideathon: ideathon, question: "Where is check-in?", answer: "MSC")
+               rule = Rule.new(ideathon: ideathon, rule_text: "No cheating")
 
-    it "describes ideathon removed" do
-      expect(described_class.for_ideathon(ideathon, :removed)).to eq("Ideathon 2026 was removed")
-    end
-  end
+               expect(described_class.entry_for(faq, :edited)[:content_type]).to eq("faqs")
+               expect(described_class.entry_for(rule, :added)[:content_type]).to eq("rules")
+          end
+     end
 
-  describe ".import_entry_for" do
-    it "builds summary metadata for imports" do
-      expect(described_class.import_entry_for(Faq, 2)).to include(
-        content_type: "faqs",
-        item_name: "2 FAQs",
-        message: "Imported 2 FAQs"
-      )
-    end
-  end
+     describe ".import_entry_for and .export_entry_for" do
+          it "formats singular and plural nouns correctly" do
+               import_entry = described_class.import_entry_for("Rule", 1)
+               export_entry = described_class.export_entry_for("Rule", 2)
 
-  describe ".for_faq" do
-    it "describes FAQ edits" do
-      faq = Faq.new(year: 2025, question: "How long is the event?", answer: "Two days")
+               expect(import_entry[:message]).to eq("Imported 1 rule")
+               expect(export_entry[:message]).to eq("Exported 2 rules")
+          end
+     end
 
-      expect(described_class.for_faq(faq, :edited)).to eq("FAQ 'How long is the event?' was edited")
-    end
-  end
-
-  describe ".for_rule" do
-    it "describes rule edits" do
-      rule = Rule.new(year: 2025, rule_text: "No plagiarism")
-
-      expect(described_class.for_rule(rule, :edited)).to eq("Rule 'No plagiarism' was edited")
-    end
-
-    it "falls back for unexpected action values" do
-      rule = Rule.new(year: 2025, rule_text: "No plagiarism")
-
-      expect(described_class.for_rule(rule, :imported)).to eq("Rule 'No plagiarism' was imported")
-    end
-  end
-
-  describe ".for_mentors_judge" do
-    let(:judge) { MentorsJudge.new(year: 2025, name: "Jane", is_judge: true) }
-
-    it "describes judge added" do
-      expect(described_class.for_mentors_judge(judge, :added)).to eq("Judge 'Jane' was added")
-    end
-
-    it "describes photo-only edit" do
-      saved = { "photo_url" => [ nil, "http://x" ] }
-      expect(described_class.for_mentors_judge(judge, :edited, saved_changes: saved))
-        .to eq("Photo for judge 'Jane' was updated")
-    end
-  end
+     describe ".meaningful_keys" do
+          it "drops updated_at from change keys" do
+               keys = described_class.meaningful_keys({ "name" => [ "A", "B" ], "updated_at" => [ Time.current, Time.current ] })
+               expect(keys).to eq([ "name" ])
+          end
+     end
 end

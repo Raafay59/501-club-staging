@@ -1,6 +1,6 @@
 <h1>Ideathons</h1>
 
-<p><%= link_to "Activity Log", activity_logs_path %> — view changes to ideathons, sponsors, judges, FAQs, and photos.</p>
+<p><%= link_to "Activity Log", activity_logs_path %> - view changes to ideathons, sponsors, judges, FAQs, and photos.</p>
 
 <table class="data-table">
   <thead>
@@ -16,11 +16,15 @@
         <td><%= ideathon.year %></td>
         <td><%= ideathon.theme %></td>
         <td>
-          <%= link_to "Overview", overview_ideathon_path(ideathon) %> |
-          <%= link_to "View", ideathon_path(ideathon) %> |
-          <%= link_to "Edit", edit_ideathon_path(ideathon) %>
-          <% if admin? %>
-            | <%= link_to "Delete", delete_ideathon_path(ideathon) %>
+          <% if ideathon.year.present? %>
+            <%= link_to "Overview", overview_ideathon_path(year: ideathon.year) %> |
+            <%= link_to "View", ideathon_path(year: ideathon.year) %> |
+            <%= link_to "Edit", edit_ideathon_path(year: ideathon.year) %>
+            <% if admin? %>
+              | <%= link_to "Delete", delete_ideathon_path(year: ideathon.year) %>
+            <% end %>
+          <% else %>
+            <span>Missing year</span>
           <% end %>
         </td>
       </tr>

@@ -1,34 +1,24 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Faq, type: :model do
-  let!(:ideathon) { Ideathon.create!(year: 2025, theme: 'Tech') }
+     let!(:ideathon) { Ideathon.create!(year: 2026, name: "Ideathon 2026") }
 
-  describe 'validations' do
-    it 'is valid with question, answer, and year' do
-      faq = Faq.new(year: 2025, question: 'What?', answer: 'This.')
-      expect(faq).to be_valid
-    end
+     it "validates required fields" do
+          faq = described_class.new
+          expect(faq).not_to be_valid
+          expect(faq.errors[:question]).to be_present
+          expect(faq.errors[:answer]).to be_present
+     end
 
-    it 'is not valid without a question' do
-      faq = Faq.new(year: 2025, answer: 'This.')
-      expect(faq).not_to be_valid
-    end
+     it "maps year to ideathon association" do
+          faq = described_class.new(question: "Q", answer: "A")
+          faq.year = 2026
+          expect(faq.ideathon).to eq(ideathon)
+     end
 
-    it 'is not valid without an answer' do
-      faq = Faq.new(year: 2025, question: 'What?')
-      expect(faq).not_to be_valid
-    end
-
-    it 'is not valid without a year' do
-      faq = Faq.new(question: 'What?', answer: 'This.')
-      expect(faq).not_to be_valid
-    end
-  end
-
-  describe 'associations' do
-    it 'belongs to ideathon' do
-      faq = Faq.create!(year: 2025, question: 'Why?', answer: 'Because.')
-      expect(faq.ideathon).to eq(ideathon)
-    end
-  end
+     it "clears ideathon when year is blank" do
+          faq = described_class.new(question: "Q", answer: "A", ideathon: ideathon)
+          faq.year = ""
+          expect(faq.ideathon).to be_nil
+     end
 end

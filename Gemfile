@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.0.3"
+gem "rails", "~> 8.1.2"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use postgresql as the database for Active Record
@@ -17,8 +17,17 @@ gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
+gem "tailwindcss-rails"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
+gem "dotenv-rails", groups: [ :development, :test ]
+
+# Authentication with Devise and Google OAuth
+gem "devise", "~> 4.9"
+gem "omniauth", "~> 2.1"
+gem "omniauth-rails_csrf_protection", "~> 1.0"
+gem "omniauth-google-oauth2", "~> 1.1"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -28,11 +37,10 @@ gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
 
+gem "csv"
+
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
-gem 'rubocop'
-
-gem "letter_opener_web"
 
 # Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
 gem "kamal", require: false
@@ -43,40 +51,33 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
 
-gem "omniauth"
-gem "omniauth-google-oauth2"
-gem "omniauth-rails_csrf_protection"
-gem "csv"
-
-gem "tailwindcss-rails"
-
 group :development, :test do
-  gem "dotenv-rails"
+     # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
+     gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 
-  # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
-  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+     # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
+     gem "brakeman", "~> 8.0.4", require: false
 
-  # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
-  gem "brakeman", require: false
-
-  # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
-  gem "rubocop-rails-omakase", require: false
-
-  # RSpec testing framework
-  gem "rspec-rails"
-
+     # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
+     gem "rubocop-rails-omakase", require: false
 end
 
 group :development do
-  # Use console on exceptions pages [https://github.com/rails/web-console]
-  gem "web-console"
+     # Use console on exceptions pages [https://github.com/rails/web-console]
+     gem "web-console"
 end
 
 group :test do
-  # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
-  gem "capybara"
-  gem "selenium-webdriver"
+     # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
+     gem "capybara"
+     gem "selenium-webdriver"
+     # Pin minitest to 5.x for Rails 8.0 compatibility
+     gem "minitest", "~> 5.0"
 
-  # Code coverage analysis
-  gem "simplecov", require: false
+     # RSpec
+     gem "rspec-rails", "~> 6.1"
+     gem "shoulda-matchers", "~> 6.0"
+     gem "simplecov", "~> 0.22", require: false
 end
+
+gem "rubocop", "~> 1.84", group: :development

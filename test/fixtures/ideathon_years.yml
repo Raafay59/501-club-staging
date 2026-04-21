@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: Ideathon 2026
+  year: 2026
+  description: Main ideathon event
+  location: College Station
+  start_date: 2026-02-13
+  end_date: 2026-02-14
+  is_active: true
+
+two:
+  name: Ideathon 2025
+  year: 2025
+  description: Previous ideathon event
+  location: College Station
+  start_date: 2025-02-13
+  end_date: 2025-02-14
+  is_active: false

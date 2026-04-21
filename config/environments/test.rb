@@ -4,52 +4,53 @@
 # and recreated between test runs. Don't rely on the data there!
 
 Rails.application.configure do
-  # Settings specified here will take precedence over those in config/application.rb.
+     # Configure OmniAuth for test mode
+     OmniAuth.config.test_mode = true
 
-  # While tests run files are not watched, reloading is not necessary.
-  config.enable_reloading = false
+     # Settings specified here will take precedence over those in config/application.rb.
 
-  # Eager loading loads your entire application. When running a single test locally,
-  # this is usually not necessary, and can slow down your test suite. However, it's
-  # recommended that you enable it in continuous integration systems to ensure eager
-  # loading is working properly before deploying your code.
-  config.eager_load = ENV["CI"].present?
+     # While tests run files are not watched, reloading is not necessary.
+     config.enable_reloading = false
 
-  # Configure public file server for tests with cache-control for performance.
-  config.public_file_server.headers = { "cache-control" => "public, max-age=3600" }
+     # Eager loading loads your entire application. When running a single test locally,
+     # this is usually not necessary, and can slow down your test suite. However, it's
+     # recommended that you enable it in continuous integration systems to ensure eager
+     # loading is working properly before deploying your code.
+     config.eager_load = ENV["CI"].present?
 
-  # Show full error reports.
-  config.consider_all_requests_local = true
-  config.cache_store = :null_store
+     # Configure public file server for tests with cache-control for performance.
+     config.public_file_server.headers = { "cache-control" => "public, max-age=3600" }
 
-  # Render exception templates for rescuable exceptions and raise for other exceptions.
-  config.action_dispatch.show_exceptions = :rescuable
+     # Show full error reports.
+     config.consider_all_requests_local = true
+     config.cache_store = :null_store
 
-  # Disable request forgery protection in test environment.
-  config.action_controller.allow_forgery_protection = false
+     # Render exception templates for rescuable exceptions and raise for other exceptions.
+     config.action_dispatch.show_exceptions = :rescuable
 
-  # Store uploaded files on the local file system in a temporary directory.
-  config.active_storage.service = :test
+     # Disable request forgery protection in test environment.
+     config.action_controller.allow_forgery_protection = false
 
-  # Tell Action Mailer not to deliver emails to the real world.
-  # The :test delivery method accumulates sent emails in the
-  # ActionMailer::Base.deliveries array.
-  config.action_mailer.delivery_method = :test
+     # Store uploaded files on the local file system in a temporary directory.
+     config.active_storage.service = :test
 
-  # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+     # Tell Action Mailer not to deliver emails to the real world.
+     # The :test delivery method accumulates sent emails in the
+     # ActionMailer::Base.deliveries array.
+     config.action_mailer.delivery_method = :test
 
-  # Print deprecation notices to the stderr.
-  config.active_support.deprecation = :stderr
+     # Set host to be used by links generated in mailer templates.
+     config.action_mailer.default_url_options = { host: "example.com" }
 
-  # Raises error for missing translations.
-  # config.i18n.raise_on_missing_translations = true
+     # Print deprecation notices to the stderr.
+     config.active_support.deprecation = :stderr
 
-  # Annotate rendered view with file names.
-  # config.action_view.annotate_rendered_view_with_filenames = true
+     # Raises error for missing translations.
+     # config.i18n.raise_on_missing_translations = true
 
-  # Raise error when a before_action's only/except options reference missing actions.
-  config.action_controller.raise_on_missing_callback_actions = true
+     # Annotate rendered view with file names.
+     # config.action_view.annotate_rendered_view_with_filenames = true
 
-  config.active_job.queue_adapter = :test
+     # Raise error when a before_action's only/except options reference missing actions.
+     config.action_controller.raise_on_missing_callback_actions = true
 end

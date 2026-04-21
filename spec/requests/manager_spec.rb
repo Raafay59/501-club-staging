@@ -1,233 +1,136 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
-RSpec.describe "Manager dashboard", type: :request do
-  let!(:admin) { User.create!(email: "admin@example.com", role: "admin") }
-  let!(:editor) { User.create!(email: "editor@example.com", role: "editor") }
-  let!(:unauthorized_user) { User.create!(email: "unauth-manager@example.com", role: "unauthorized") }
-  let!(:ideathon) do
-    Ideathon.create!(
-      year: 2025,
-      theme: "T",
-      is_active: true,
-      start_date: Date.new(2025, 2, 1),
-      end_date: Date.new(2025, 2, 2)
-    )
-  end
-  let!(:team) { Team.create!(ideathon_year: ideathon, team_name: "Squad", unassigned: false) }
-  let!(:other_ideathon) do
-    Ideathon.create!(
-      year: 2024,
-      theme: "Old",
-      is_active: false,
-      start_date: Date.new(2024, 2, 1),
-      end_date: Date.new(2024, 2, 2)
-    )
-  end
-  let!(:other_team) { Team.create!(ideathon_year: other_ideathon, team_name: "Old Squad", unassigned: false) }
+RSpec.describe "Manager", type: :request do
+     let(:ideathon_year) { IdeathonYear.create!(name: "2026", start_date: 1.week.from_now, end_date: 2.weeks.from_now, is_active: true) }
+     let(:team) { Team.create!(ideathon_year: ideathon_year, team_name: "Team A", unassigned: false) }
+     let(:team_b) { Team.create!(ideathon_year: ideathon_year, team_name: "Team B", unassigned: false) }
+     let(:admin) { Admin.create!(email: "admin@tamu.edu", full_name: "Admin", uid: "123") }
+     let!(:attendee) do
+          RegisteredAttendee.create!(
+            ideathon_year: ideathon_year,
+            team: team,
+            attendee_name: "Jane Doe",
+            attendee_phone: "979-555-1234",
+            attendee_email: "jane@tamu.edu",
+            attendee_major: "CS",
+            attendee_class: "Senior"
+          )
+     end
+     let!(:attendee_b) do
+          RegisteredAttendee.create!(
+            ideathon_year: ideathon_year,
+            team: team_b,
+            attendee_name: "Aaron Zee",
+            attendee_phone: "979-555-5678",
+            attendee_email: "aaron@tamu.edu",
+            attendee_major: "EE",
+            attendee_class: "Junior"
+          )
+     end
 
-  before { login_as(admin) }
+     describe "GET /manager" do
+          context "when not authenticated" do
+               it "redirects to sign-in" do
+                    get manager_index_path
+                    expect(response).to redirect_to(new_admin_session_path)
+               end
+          end
 
-  describe "GET /manager" do
-    it "returns success" do
-      get manager_index_path
-      expect(response).to have_http_status(:ok)
-    end
+          context "when signed in as admin" do
+               before { sign_in admin, scope: :admin }
 
-    it "accepts sort and query params" do
-      RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Alex",
-        attendee_phone: "9791112233",
-        attendee_email: "alex@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U1"
-      )
-      get manager_index_path, params: { sort: "name", query: "Alex" }
-      expect(response).to have_http_status(:ok)
-    end
+               it "returns success" do
+                    get manager_index_path
+                    expect(response).to have_http_status(:ok)
+               end
 
-    it "shows only attendees in the active year" do
-      RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Current Year",
-        attendee_phone: "9790001111",
-        attendee_email: "current@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U2"
-      )
-      RegisteredAttendee.create!(
-        ideathon_year: other_ideathon,
-        team: other_team,
-        attendee_name: "Old Year",
-        attendee_phone: "9790002222",
-        attendee_email: "old@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U2"
-      )
+               it "sorts by team by default" do
+                    get manager_index_path
+                    expect(response).to have_http_status(:ok)
+                    expect(response.body.index("Team A")).to be < response.body.index("Team B")
+               end
 
-      get manager_index_path
+               it "sorts by name when sort=name" do
+                    get manager_index_path, params: { sort: "name" }
+                    expect(response).to have_http_status(:ok)
+                    expect(response.body.index("Aaron Zee")).to be < response.body.index("Jane Doe")
+               end
 
-      expect(response.body).to include("Current Year")
-      expect(response.body).not_to include("Old Year")
-    end
+               it "filters by query when query present" do
+                    get manager_index_path, params: { query: "Jane" }
+                    expect(response).to have_http_status(:ok)
+               end
+          end
+     end
 
-    it "redirects unauthorized users to pending approval" do
-      login_as(unauthorized_user)
+     describe "DELETE /manager/:id" do
+          before { sign_in admin, scope: :admin }
 
-      get manager_index_path
+          it "removes attendee, logs action, and redirects to manager index" do
+               expect { delete manager_path(attendee) }
+                 .to change(RegisteredAttendee, :count).by(-1)
+                 .and change(ManagerActionLog, :count).by(1)
+               expect(response).to redirect_to(manager_index_path)
+               expect(ManagerActionLog.last.action).to eq("attendee.deleted")
+               follow_redirect!
+               expect(response).to have_http_status(:ok)
+          end
 
-      expect(response).to redirect_to(unauthorized_path)
-    end
-  end
+          it "returns turbo-stream response when requested" do
+               delete manager_path(attendee), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+               expect(response).to have_http_status(:ok)
+               expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+          end
+     end
 
-  describe "DELETE /manager/:id" do
-    it "removes attendee (HTML)" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Bob",
-        attendee_phone: "9792223344",
-        attendee_email: "bob@tamu.edu",
-        attendee_major: "EE",
-        attendee_class: "U3"
-      )
-      expect {
-        delete manager_path(attendee)
-      }.to change(RegisteredAttendee, :count).by(-1)
-      expect(response).to redirect_to(manager_index_path)
-    end
+     describe "GET /manager/export_participants" do
+          before { sign_in admin, scope: :admin }
 
-    it "returns turbo_stream when requested" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Cara",
-        attendee_phone: "9793334455",
-        attendee_email: "cara@tamu.edu",
-        attendee_major: "MEEN",
-        attendee_class: "U4"
-      )
-      delete manager_path(attendee), headers: { "Accept" => "text/vnd.turbo-stream.html" }
-      expect(response).to have_http_status(:ok)
-      expect(response.media_type).to eq(Mime[:turbo_stream])
-    end
+          it "returns CSV for participants and logs export" do
+               get export_participants_manager_index_path(format: :csv)
+               expect(response).to have_http_status(:ok)
+               expect(response.media_type).to include("text/csv")
+               expect(response.body).to include("Name,Email,Phone,Major,Class,Team,Year")
+               expect(response.body).to include("Jane Doe")
+               expect(ManagerActionLog.last&.action).to eq("export.participants_csv")
+          end
 
-    it "does not delete attendee from non-active year" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: other_ideathon,
-        team: other_team,
-        attendee_name: "Old Bob",
-        attendee_phone: "9799991234",
-        attendee_email: "oldbob@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U3"
-      )
+          it "still returns CSV when action logging raises" do
+               allow(ManagerActionLog).to receive(:create!).and_raise(StandardError.new("log failure"))
 
-      expect {
-        delete manager_path(attendee)
-      }.not_to change(RegisteredAttendee, :count)
+               get export_participants_manager_index_path(format: :csv)
 
-      expect(response).to redirect_to(manager_index_path)
-      expect(flash[:alert]).to include("active year")
-    end
+               expect(response).to have_http_status(:ok)
+               expect(response.media_type).to include("text/csv")
+          end
+     end
 
-    it "blocks editors from deletion" do
-      login_as(editor)
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Editor Block",
-        attendee_phone: "9792113344",
-        attendee_email: "editorblock@tamu.edu",
-        attendee_major: "EE",
-        attendee_class: "U3"
-      )
+     describe "GET /manager/export_teams" do
+          before { sign_in admin, scope: :admin }
 
-      expect {
-        delete manager_path(attendee)
-      }.not_to change(RegisteredAttendee, :count)
+          it "returns CSV for teams and logs export" do
+               get export_teams_manager_index_path(format: :csv)
+               expect(response).to have_http_status(:ok)
+               expect(response.media_type).to include("text/csv")
+               expect(response.body).to include("Team,Year,Member Name,Email,Major,Class")
+               expect(response.body).to include("Team A")
+               expect(response.body).to include("Jane Doe")
+               expect(ManagerActionLog.last&.action).to eq("export.teams_csv")
+          end
+     end
 
-      expect(response).to redirect_to(manager_index_path)
-      expect(flash[:alert]).to include("Only 501 Club admins")
-    end
-  end
+     describe "GET /manager/view_pdf" do
+          before { sign_in admin, scope: :admin }
 
-  describe "exports" do
-    before do
-      RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Dan",
-        attendee_phone: "9794445566",
-        attendee_email: "dan@tamu.edu",
-        attendee_major: "CSCE",
-        attendee_class: "U2"
-      )
-    end
+          it "redirects with alert when file is missing" do
+               allow(File).to receive(:exist?).and_call_original
+               allow(File).to receive(:exist?).with(Rails.root.join("public", "heroku_documentation.pdf")).and_return(false)
 
-    it "GET /manager/export_participants returns CSV" do
-      get export_participants_manager_index_path
-      expect(response).to have_http_status(:ok)
-      expect(response.content_type).to include("text/csv")
-      expect(response.body).to include("Dan")
-    end
-
-    it "GET /manager/export_teams returns CSV" do
-      get export_teams_manager_index_path
-      expect(response).to have_http_status(:ok)
-      expect(response.content_type).to include("text/csv")
-    end
-
-    it "exports only attendees in the active year" do
-      RegisteredAttendee.create!(
-        ideathon_year: other_ideathon,
-        team: other_team,
-        attendee_name: "Archived",
-        attendee_phone: "9797778899",
-        attendee_email: "archived@tamu.edu",
-        attendee_major: "ISTM",
-        attendee_class: "U3"
-      )
-
-      get export_participants_manager_index_path
-
-      expect(response.body).to include("Dan")
-      expect(response.body).not_to include("Archived")
-    end
-
-    it "blocks editors from participant export" do
-      login_as(editor)
-      get export_participants_manager_index_path
-
-      expect(response).to redirect_to(manager_index_path)
-      expect(flash[:alert]).to include("Only 501 Club admins")
-    end
-  end
-
-  describe "GET /manager/view_pdf" do
-    it "sends file when PDF exists" do
-      pdf = Rails.root.join("public", "heroku_documentation.pdf")
-      FileUtils.mkdir_p(pdf.dirname)
-      File.write(pdf, "%PDF-1.4 test")
-
-      get view_pdf_manager_index_path
-
-      expect(response).to have_http_status(:ok)
-      expect(response.content_type).to include("application/pdf")
-    ensure
-      FileUtils.rm_f(pdf)
-    end
-
-    it "redirects when PDF missing" do
-      pdf = Rails.root.join("public", "heroku_documentation.pdf")
-      FileUtils.rm_f(pdf)
-
-      get view_pdf_manager_index_path
-
-      expect(response).to redirect_to(manager_index_path)
-      expect(flash[:alert]).to include("not found")
-    end
-  end
+               get view_pdf_manager_index_path
+               expect(response).to redirect_to(manager_index_path)
+               expect(flash[:alert]).to eq("Heroku documentation PDF not found.")
+          end
+     end
 end

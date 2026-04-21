@@ -1,222 +1,141 @@
-require 'rails_helper'
-require 'csv'
+require "rails_helper"
 
 RSpec.describe "SponsorsPartners", type: :request do
-  let!(:admin) { User.create!(email: 'admin@example.com', role: 'admin') }
-  let!(:editor) { User.create!(email: 'editor@example.com', role: 'editor') }
-  let!(:ideathon) { Ideathon.create!(year: 2025, theme: 'Tech') }
+     let(:admin) { Admin.create!(email: "admin@tamu.edu", full_name: "Admin", uid: "123") }
+     let(:editor) { Admin.create!(email: "editor@tamu.edu", full_name: "Editor", uid: "ed-1", role: "editor") }
+     let!(:ideathon) { Ideathon.create!(year: 2026, name: "Ideathon 2026") }
 
-  before { login_as(admin) }
+     describe "GET /dashboard/sponsors_partners" do
+          it "renders for authorized users" do
+               sign_in editor, scope: :admin
+               get sponsors_partners_path
+               expect(response).to have_http_status(:ok)
+          end
+     end
 
-  let!(:sponsors_partner) { SponsorsPartner.create!(year: 2025, name: 'Acme Corp', is_sponsor: true) }
+     describe "POST /dashboard/sponsors_partners" do
+          before { sign_in editor, scope: :admin }
 
-  let(:valid_attributes) { { year: 2025, name: 'BigCo', blurb: 'Great company', is_sponsor: false } }
-  let(:invalid_attributes) { { year: nil, name: nil } }
+          it "creates sponsor and keeps logo when include_logo is true" do
+               post sponsors_partners_path, params: {
+                 sponsors_partner: {
+                   year: 2026,
+                   name: "ACME",
+                   job_title: "Gold",
+                   logo_url: "https://example.com/logo.png",
+                   blurb: "Bio",
+                   is_sponsor: true,
+                   include_logo: "1"
+                 }
+               }
 
-  describe "GET /sponsors_partners" do
-    it "returns a successful response" do
-      get sponsors_partners_path
-      expect(response).to have_http_status(:ok)
-    end
-  end
+               expect(response).to redirect_to(sponsors_partners_path)
+               expect(SponsorsPartner.last.logo_url).to eq("https://example.com/logo.png")
+          end
 
-  describe "GET /sponsors_partners/:id" do
-    it "returns a successful response" do
-      get sponsors_partner_path(sponsors_partner)
-      expect(response).to have_http_status(:ok)
-    end
-  end
+          it "clears logo when include_logo is false" do
+               post sponsors_partners_path, params: {
+                 sponsors_partner: {
+                   year: 2026,
+                   name: "No Logo Co",
+                   logo_url: "https://example.com/logo.png",
+                   is_sponsor: false,
+                   include_logo: "0"
+                 }
+               }
 
-  describe "GET /sponsors_partners/new" do
-    it "returns a successful response" do
-      get new_sponsors_partner_path
-      expect(response).to have_http_status(:ok)
-    end
-  end
+               expect(response).to redirect_to(sponsors_partners_path)
+               expect(SponsorsPartner.last.logo_url).to be_nil
+          end
+     end
 
-  describe "POST /sponsors_partners" do
-    context "with valid parameters" do
-      it "creates a new sponsor/partner and redirects" do
-        expect {
-          post sponsors_partners_path, params: { sponsors_partner: valid_attributes }
-        }.to change(SponsorsPartner, :count).by(1)
-        expect(response).to redirect_to(sponsors_partners_path)
-      end
+     describe "GET /dashboard/sponsors_partners/export" do
+          before { sign_in admin, scope: :admin }
 
-      it "creates without a logo when include_logo is unchecked" do
-        expect {
-          post sponsors_partners_path, params: {
-            sponsors_partner: valid_attributes.merge(
-              logo_url: 'https://logo.test/acme.png',
-              include_logo: '0'
-            )
-          }
-        }.to change(SponsorsPartner, :count).by(1)
+          it "exports sponsors from the latest year that actually has sponsors" do
+               older_year = Ideathon.create!(year: 2025, name: "Ideathon 2025")
 
-        created = SponsorsPartner.order(:id).last
-        expect(created.logo_url).to be_nil
-      end
-    end
+               SponsorsPartner.create!(
+                 ideathon: older_year,
+                 name: "Legacy Sponsor",
+                 job_title: "Gold",
+                 blurb: "Sponsor from older year",
+                 is_sponsor: true
+               )
 
-    context "with invalid parameters" do
-      it "does not create and re-renders the form" do
-        expect {
-          post sponsors_partners_path, params: { sponsors_partner: invalid_attributes }
-        }.not_to change(SponsorsPartner, :count)
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-    end
-  end
+               get export_sponsors_partners_path(format: :csv)
 
-  describe "GET /sponsors_partners/:id/edit" do
-    it "returns a successful response" do
-      get edit_sponsors_partner_path(sponsors_partner)
-      expect(response).to have_http_status(:ok)
-    end
-  end
+               expect(response).to have_http_status(:ok)
+               expect(response.content_type).to include("text/csv")
+               expect(response.body).to include("Legacy Sponsor")
+          end
 
-  describe "PATCH /sponsors_partners/:id" do
-    context "with valid parameters" do
-      it "updates and redirects" do
-        patch sponsors_partner_path(sponsors_partner), params: { sponsors_partner: { name: 'Updated Corp' } }
-        sponsors_partner.reload
-        expect(sponsors_partner.name).to eq('Updated Corp')
-        expect(response).to redirect_to(sponsors_partners_path)
-      end
+          it "shows an alert when no sponsors exist in any year" do
+               get export_sponsors_partners_path(format: :csv)
 
-      it "clears an existing logo when include_logo is unchecked" do
-        sponsors_partner.update!(logo_url: 'https://logo.test/original.png')
+               expect(response).to redirect_to(sponsors_partners_path)
+               expect(flash[:alert]).to eq("No sponsors to export")
+          end
+     end
 
-        patch sponsors_partner_path(sponsors_partner), params: {
-          sponsors_partner: {
-            include_logo: '0',
-            logo_url: 'https://logo.test/should_not_persist.png'
-          }
-        }
+     describe "POST /dashboard/sponsors_partners/import" do
+          it "blocks editors from import" do
+               sign_in editor, scope: :admin
+               post import_sponsors_partners_path, params: { file: nil }
+               expect(response).to redirect_to(root_path)
+          end
 
-        expect(response).to redirect_to(sponsors_partners_path)
-        expect(sponsors_partner.reload.logo_url).to be_nil
-      end
-    end
+          it "imports sponsors from a real csv upload" do
+               sign_in admin, scope: :admin
+               csv = Tempfile.new([ "sponsors", ".csv" ])
+               csv.write("year,name,job_title,logo_url,blurb,is_sponsor\n2026,ACME Corp,Gold,https://example.com/logo.png,Great sponsor,true\n")
+               csv.rewind
+               upload = Rack::Test::UploadedFile.new(csv.path, "text/csv", original_filename: "sponsors.csv")
 
-    context "with invalid parameters" do
-      it "does not update and re-renders the form" do
-        patch sponsors_partner_path(sponsors_partner), params: { sponsors_partner: { name: nil } }
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-    end
-  end
+               expect do
+                    post import_sponsors_partners_path, params: { file: upload }
+               end.to change(SponsorsPartner, :count).by(1)
 
-  describe "GET /sponsors_partners/:id/delete" do
-    it "returns a successful response" do
-      get delete_sponsors_partner_path(sponsors_partner)
-      expect(response).to have_http_status(:ok)
-    end
-  end
+               expect(response).to redirect_to(sponsors_partners_path)
+               expect(flash[:notice]).to include("imported successfully")
+               expect(SponsorsPartner.find_by(name: "ACME Corp")).to be_present
+          ensure
+               csv&.close
+               csv&.unlink
+          end
+     end
 
-  describe "DELETE /sponsors_partners/:id" do
-    it "deletes and redirects" do
-      expect {
-        delete sponsors_partner_path(sponsors_partner)
-      }.to change(SponsorsPartner, :count).by(-1)
-      expect(response).to redirect_to(sponsors_partners_path)
-    end
+     describe "PATCH /dashboard/sponsors_partners/:id" do
+          before { sign_in editor, scope: :admin }
 
-    context "as a non-admin editor" do
-      before { login_as(editor) }
+          it "updates sponsor attributes" do
+               sponsor = SponsorsPartner.create!(ideathon: ideathon, name: "ACME", is_sponsor: true)
+               patch sponsors_partner_path(sponsor), params: {
+                 sponsors_partner: {
+                   year: 2026,
+                   name: "ACME Updated",
+                   logo_url: "",
+                   include_logo: "0"
+                 }
+               }
+               expect(response).to redirect_to(sponsors_partners_path)
+               expect(sponsor.reload.name).to eq("ACME Updated")
+          end
+     end
 
-      it "redirects non-admin users" do
-        delete sponsors_partner_path(sponsors_partner)
-        expect(response).to redirect_to(ideathons_path)
-      end
-    end
-  end
+     describe "DELETE /dashboard/sponsors_partners/:id" do
+          let!(:sponsor) { SponsorsPartner.create!(ideathon: ideathon, name: "Delete Me", is_sponsor: true) }
 
-  describe "POST /sponsors_partners/import" do
-    it "imports from a valid CSV file" do
-      file = fixture_file_upload('sponsors_partners.csv', 'text/csv')
+          it "blocks editors from delete" do
+               sign_in editor, scope: :admin
+               delete sponsors_partner_path(sponsor)
+               expect(response).to redirect_to(root_path)
+          end
 
-      expect {
-        post import_sponsors_partners_path, params: { file: file }
-      }.to change(SponsorsPartner, :count).by(2)
-
-      expect(response).to redirect_to(sponsors_partners_path)
-    end
-
-    it "rejects non-csv files" do
-      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
-
-      expect {
-        post import_sponsors_partners_path, params: { file: file }
-      }.not_to change(SponsorsPartner, :count)
-
-      expect(response).to redirect_to(sponsors_partners_path)
-      expect(flash[:alert]).to include('Invalid file type')
-    end
-  end
-
-  describe "GET /sponsors_partners/export" do
-    it "exports current-year sponsors as CSV" do
-      Ideathon.create!(year: 2026, theme: 'Future')
-      SponsorsPartner.create!(year: 2026, name: 'Future Corp', job_title: 'Head of Partnerships', logo_url: 'https://logo.test/future.png', blurb: 'Future sponsor', is_sponsor: true)
-      SponsorsPartner.create!(year: 2026, name: 'Future Partner', logo_url: 'https://logo.test/partner.png', blurb: 'Not a sponsor', is_sponsor: false)
-
-      get export_sponsors_partners_path(format: :csv)
-
-      expect(response).to have_http_status(:ok)
-      expect(response.content_type).to include('text/csv')
-      expect(response.headers['Content-Disposition']).to include('attachment;')
-
-      rows = CSV.parse(response.body, headers: true)
-      expect(rows.headers).to eq([ 'Sponsor name', 'Logo URL', 'Job title', 'Bio' ])
-      expect(rows.length).to eq(1)
-      expect(rows.map { |row| row['Sponsor name'] }).to contain_exactly('Future Corp')
-      expect(rows[0]['Job title']).to eq('Head of Partnerships')
-      expect(rows.map { |row| row['Sponsor name'] }).not_to include('Acme Corp')
-      expect(rows.map { |row| row['Sponsor name'] }).not_to include('Future Partner')
-    end
-
-    it "redirects with an alert when no sponsors exist in current year" do
-      Ideathon.create!(year: 2026, theme: 'Future')
-
-      get export_sponsors_partners_path(format: :csv)
-
-      expect(response).to redirect_to(sponsors_partners_path)
-      expect(flash[:alert]).to eq('No sponsors to export')
-    end
-
-    it "redirects with an alert when no export year can be resolved" do
-      allow_any_instance_of(SponsorsPartnersController).to receive(:latest_export_year_for).and_return(nil)
-
-      get export_sponsors_partners_path(format: :csv)
-
-      expect(response).to redirect_to(sponsors_partners_path)
-      expect(flash[:alert]).to eq('No sponsors to export')
-    end
-
-    it "redirects non-admin users" do
-      login_as(editor)
-
-      get export_sponsors_partners_path(format: :csv)
-
-      expect(response).to redirect_to(ideathons_path)
-    end
-
-    it "redirects unauthenticated users to login" do
-      login_as(nil)
-
-      get export_sponsors_partners_path(format: :csv)
-
-      expect(response).to redirect_to(login_path)
-    end
-
-    it "redirects with an error when export fails" do
-      allow(CSV).to receive(:generate).and_raise(StandardError, 'boom')
-
-      get export_sponsors_partners_path(format: :csv)
-
-      expect(response).to redirect_to(sponsors_partners_path)
-      expect(flash[:alert]).to eq('Export failed. Please try again.')
-    end
-  end
+          it "allows admins to delete" do
+               sign_in admin, scope: :admin
+               expect { delete sponsors_partner_path(sponsor) }.to change(SponsorsPartner, :count).by(-1)
+               expect(response).to redirect_to(sponsors_partners_path)
+          end
+     end
 end

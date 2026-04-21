@@ -1,5 +1,5 @@
 /*
- * 501 Club — Ideathon Manager
+ * 501 Club - Ideathon Manager
  * Shared layout, typography, tables, forms, and feedback styles.
  */
 
@@ -85,7 +85,7 @@ code {
   border-radius: 4px;
 }
 
-/* ——— App chrome ——— */
+/* App chrome */
 
 .app-nav {
   display: flex;
@@ -144,7 +144,7 @@ code {
   padding: var(--space-page);
 }
 
-/* ——— Flash & alerts ——— */
+/* Flash and alerts */
 
 .flash {
   padding: 0.65rem 0.85rem;
@@ -165,7 +165,7 @@ code {
   border-color: var(--color-danger-border);
 }
 
-/* ——— Forms ——— */
+/* Forms */
 
 .form-errors {
   color: var(--color-danger);
@@ -265,7 +265,7 @@ input[type="file"]::file-selector-button {
   background: var(--color-surface);
 }
 
-/* ——— Data tables ——— */
+/* Data tables */
 
 .data-table {
   width: 100%;
@@ -303,7 +303,7 @@ input[type="file"]::file-selector-button {
   background: #f8fafc;
 }
 
-/* ——— Media ——— */
+/* Media */
 
 .thumb-logo {
   max-width: 120px;
@@ -350,7 +350,7 @@ input[type="file"]::file-selector-button {
   color: var(--color-text-muted);
 }
 
-/* ——— Context-sensitive help (admin / import fields) ——— */
+/* Context-sensitive help (admin / import fields) */
 
 .context-field-tip {
   position: relative;
