@@ -66,6 +66,12 @@ RSpec.describe ActivityLogMessage do
 
       expect(described_class.for_rule(rule, :edited)).to eq("Rule 'No plagiarism' was edited")
     end
+
+    it "falls back for unexpected action values" do
+      rule = Rule.new(year: 2025, rule_text: "No plagiarism")
+
+      expect(described_class.for_rule(rule, :imported)).to eq("Rule 'No plagiarism' was imported")
+    end
   end
 
   describe ".for_mentors_judge" do

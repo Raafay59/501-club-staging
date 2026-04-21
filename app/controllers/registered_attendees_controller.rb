@@ -33,7 +33,7 @@ class RegisteredAttendeesController < ApplicationController
      end
 
 
-     # Edit an existing attendee (admin only)
+     # Edit an existing attendee (organizer tools: admin or editor)
      def edit; end
 
 
@@ -92,7 +92,7 @@ class RegisteredAttendeesController < ApplicationController
      end
 
 
-     # Update an existing registered attendee (admin only)
+     # Update an existing registered attendee (organizer tools: admin or editor)
      # Handles team reassignment and validation
      def update
           @registered_attendee.assign_attributes(registered_attendee_params)

@@ -191,6 +191,8 @@ module ActivityLogMessage
       "Rule '#{preview}' was removed"
     when "edited"
       "Rule '#{preview}' was edited"
+    else
+      "Rule '#{preview}' was #{action}"
     end
 
     {
