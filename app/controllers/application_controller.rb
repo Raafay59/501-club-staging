@@ -21,7 +21,7 @@ class ApplicationController < ActionController::Base
   def public_site_request?
     return true if controller_name == "ideathon" && action_name == "index"
     return true if controller_name == "registered_attendees" &&
-      %w[new create show success teams_for_year].include?(action_name)
+      %w[new create success teams_for_year].include?(action_name)
 
     false
   end

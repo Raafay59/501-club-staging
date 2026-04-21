@@ -60,6 +60,7 @@ Important distinctions:
 - Admins can do everything editors can do, plus user management and some destructive/import/export actions.
 - Unauthorized users are redirected away from dashboard pages.
 - Public registration pages are deliberately exempted so visitors can register without logging in.
+- Public attendee record display by direct ID is not exposed; attendee show/edit/update/destroy are organizer-only.
 
 ## 3. Public Site Entry Points Into Admin Tools
 
@@ -150,6 +151,7 @@ What it does:
 - Supports sorting by team or by name.
 - Lets authorized users add a new attendee.
 - Lets admins delete attendees.
+- Lets admins run participant/team CSV exports.
 - Shows the attendee count and the number of teams for the active year.
 
 Implementation details:
@@ -174,7 +176,7 @@ This shows `IdeathonEvent` records for the active year.
 What it does:
 
 - Lists events sorted by date and time.
-- Lets organizers create, edit, and delete events.
+- Lets admins create, edit, and delete events.
 - Records event actions into the manager action log.
 
 Implementation details:
@@ -265,6 +267,7 @@ Model: [app/models/sponsors_partner.rb](../app/models/sponsors_partner.rb)
 What it provides:
 
 - Create, view, edit, and delete sponsor/partner entries.
+- Choose whether each sponsor/partner should include a logo URL or use no-logo fallback mode.
 - Import sponsor/partner records from CSV.
 - Export sponsor records to CSV.
 - Filter by `is_sponsor` and use `job_title` as a display/tiering hint.
@@ -274,6 +277,7 @@ Public-site connection:
 - These records populate the sponsors area on the public homepage.
 - The homepage groups them into presenting, gold, and other sponsor tiers based on `job_title` text.
 - Community partners are also shown when sponsor records are explicitly marked as non-sponsors.
+- When a sponsor/partner has no logo URL, the public site falls back to text branding instead of a broken image.
 
 ### 6.3 Mentors & Judges
 
@@ -284,6 +288,7 @@ Model: [app/models/mentors_judge.rb](../app/models/mentors_judge.rb)
 What it provides:
 
 - Create, view, edit, and delete mentor/judge entries.
+- Choose whether each mentor/judge should include a photo URL or be published without a photo.
 - Import mentor/judge records from CSV.
 - Export judge records to CSV.
 - Select year and role through the same model form.
@@ -293,6 +298,7 @@ Public-site connection:
 - Judges render in the public judges section.
 - Mentors render in the public mentors section.
 - Photo-bearing mentors/judges also populate the homepage photo area.
+- Missing or broken photo URLs fall back to the default avatar icon on the public cards.
 
 ### 6.4 FAQs
 
@@ -389,6 +395,7 @@ That means:
 - updating an ideathon year affects what year the homepage treats as current,
 - editing sponsors changes the sponsor blocks on the public site,
 - editing judges/mentors changes the public people sections,
+- omitting a logo/photo keeps the person or sponsor visible through fallback UI,
 - editing FAQs and rules changes the homepage content immediately,
 - and managing events changes the schedule shown to visitors.
 
@@ -408,15 +415,15 @@ Features:
 
 - Public registration form.
 - Public success page.
-- Public attendee show page.
+- Organizer-only attendee show page.
 - Organizer-side attendee edits and deletes.
-- Dynamic team lookup for registration forms.
+- Dynamic team lookup for registration forms (restricted to the active year).
 
 Important behavior:
 
 - A current active year is assigned automatically when creating a new attendee.
 - Team choice is not trusted directly from the form; it is resolved by controller logic.
-- A team has a maximum size enforced by the selection logic.
+- A team has a maximum size enforced by selection logic under transaction/locking safeguards to reduce race conditions.
 - The registration flow can redirect back to the manager dashboard when the attendee is created from there.
 
 ### Teams
@@ -628,7 +635,7 @@ Here is the practical mental map for where functionality lives.
 
 ### Flow B: public content changes appear on the homepage
 
-1. Organizer edits a sponsor, judge, FAQ, rule, event, or ideathon year.
+1. An authorized organizer edits content (and admins handle event and other admin-only actions).
 2. The controller saves the record in the admin area.
 3. The public homepage controller reloads data from the same tables.
 4. The public Ideathon page immediately reflects the updated content the next time it is rendered.

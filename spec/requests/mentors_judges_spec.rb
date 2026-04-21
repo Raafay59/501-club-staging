@@ -42,6 +42,20 @@ RSpec.describe "MentorsJudges", type: :request do
         }.to change(MentorsJudge, :count).by(1)
         expect(response).to redirect_to(mentors_judges_path)
       end
+
+      it "creates without a photo when include_photo is unchecked" do
+        expect {
+          post mentors_judges_path, params: {
+            mentors_judge: valid_attributes.merge(
+              photo_url: 'https://img.test/should_not_persist.jpg',
+              include_photo: '0'
+            )
+          }
+        }.to change(MentorsJudge, :count).by(1)
+
+        created = MentorsJudge.order(:id).last
+        expect(created.photo_url).to be_nil
+      end
     end
 
     context "with invalid parameters" do
@@ -68,6 +82,20 @@ RSpec.describe "MentorsJudges", type: :request do
         mentors_judge.reload
         expect(mentors_judge.name).to eq('Updated Name')
         expect(response).to redirect_to(mentors_judges_path)
+      end
+
+      it "clears an existing photo when include_photo is unchecked" do
+        mentors_judge.update!(photo_url: 'https://img.test/original.jpg')
+
+        patch mentors_judge_path(mentors_judge), params: {
+          mentors_judge: {
+            include_photo: '0',
+            photo_url: 'https://img.test/should_not_persist.jpg'
+          }
+        }
+
+        expect(response).to redirect_to(mentors_judges_path)
+        expect(mentors_judge.reload.photo_url).to be_nil
       end
     end
 
@@ -153,6 +181,15 @@ RSpec.describe "MentorsJudges", type: :request do
 
     it "redirects with an alert when no judges exist in current year" do
       Ideathon.create!(year: 2026, theme: 'Future')
+
+      get export_mentors_judges_path(format: :csv)
+
+      expect(response).to redirect_to(mentors_judges_path)
+      expect(flash[:alert]).to eq('No judges to export')
+    end
+
+    it "redirects with an alert when no export year can be resolved" do
+      allow_any_instance_of(MentorsJudgesController).to receive(:latest_export_year_for).and_return(nil)
 
       get export_mentors_judges_path(format: :csv)
 

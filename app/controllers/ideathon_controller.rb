@@ -25,20 +25,20 @@ class IdeathonController < ApplicationController
     active = Ideathon.find_by(is_active: true)
     return active if active
 
-    ordered = Ideathon.includes(
-      :sponsors_partners,
-      :mentors_judges,
-      :ideathon_events,
-      :faqs,
-      :rules
-    ).order(year: :desc)
-    ordered.find do |y|
-      y.sponsors_partners.any? ||
-        y.mentors_judges.any? ||
-        y.ideathon_events.any? ||
-        y.faqs.any? ||
-        y.rules.any?
-    end || ordered.first
+    with_content = Ideathon
+      .where(
+        <<~SQL.squish
+          EXISTS (SELECT 1 FROM sponsors_partners sp WHERE sp.ideathon_year_id = ideathon_years.id)
+          OR EXISTS (SELECT 1 FROM mentors_judges mj WHERE mj.ideathon_year_id = ideathon_years.id)
+          OR EXISTS (SELECT 1 FROM ideathon_events ie WHERE ie.ideathon_year_id = ideathon_years.id)
+          OR EXISTS (SELECT 1 FROM faqs f WHERE f.ideathon_year_id = ideathon_years.id)
+          OR EXISTS (SELECT 1 FROM rules r WHERE r.ideathon_year_id = ideathon_years.id)
+        SQL
+      )
+      .order(year: :desc)
+      .first
+
+    with_content || Ideathon.order(year: :desc).first
   end
 
   def load_public_sponsors_and_judges

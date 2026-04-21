@@ -2,6 +2,8 @@ require "rails_helper"
 
 RSpec.describe "Manager dashboard", type: :request do
   let!(:admin) { User.create!(email: "admin@example.com", role: "admin") }
+  let!(:editor) { User.create!(email: "editor@example.com", role: "editor") }
+  let!(:unauthorized_user) { User.create!(email: "unauth-manager@example.com", role: "unauthorized") }
   let!(:ideathon) do
     Ideathon.create!(
       year: 2025,
@@ -70,6 +72,14 @@ RSpec.describe "Manager dashboard", type: :request do
       expect(response.body).to include("Current Year")
       expect(response.body).not_to include("Old Year")
     end
+
+    it "redirects unauthorized users to pending approval" do
+      login_as(unauthorized_user)
+
+      get manager_index_path
+
+      expect(response).to redirect_to(unauthorized_path)
+    end
   end
 
   describe "DELETE /manager/:id" do
@@ -102,6 +112,45 @@ RSpec.describe "Manager dashboard", type: :request do
       delete manager_path(attendee), headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq(Mime[:turbo_stream])
+    end
+
+    it "does not delete attendee from non-active year" do
+      attendee = RegisteredAttendee.create!(
+        ideathon_year: other_ideathon,
+        team: other_team,
+        attendee_name: "Old Bob",
+        attendee_phone: "9799991234",
+        attendee_email: "oldbob@tamu.edu",
+        attendee_major: "CS",
+        attendee_class: "U3"
+      )
+
+      expect {
+        delete manager_path(attendee)
+      }.not_to change(RegisteredAttendee, :count)
+
+      expect(response).to redirect_to(manager_index_path)
+      expect(flash[:alert]).to include("active year")
+    end
+
+    it "blocks editors from deletion" do
+      login_as(editor)
+      attendee = RegisteredAttendee.create!(
+        ideathon_year: ideathon,
+        team: team,
+        attendee_name: "Editor Block",
+        attendee_phone: "9792113344",
+        attendee_email: "editorblock@tamu.edu",
+        attendee_major: "EE",
+        attendee_class: "U3"
+      )
+
+      expect {
+        delete manager_path(attendee)
+      }.not_to change(RegisteredAttendee, :count)
+
+      expect(response).to redirect_to(manager_index_path)
+      expect(flash[:alert]).to include("Only 501 Club admins")
     end
   end
 
@@ -146,6 +195,14 @@ RSpec.describe "Manager dashboard", type: :request do
 
       expect(response.body).to include("Dan")
       expect(response.body).not_to include("Archived")
+    end
+
+    it "blocks editors from participant export" do
+      login_as(editor)
+      get export_participants_manager_index_path
+
+      expect(response).to redirect_to(manager_index_path)
+      expect(flash[:alert]).to include("Only 501 Club admins")
     end
   end
 

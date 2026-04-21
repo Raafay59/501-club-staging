@@ -1,4 +1,6 @@
 class Rule < ApplicationRecord
+  include ActivityTrackable
+
   belongs_to :ideathon, foreign_key: :ideathon_year_id, class_name: "Ideathon", inverse_of: :rules
 
   validates :rule_text, presence: true

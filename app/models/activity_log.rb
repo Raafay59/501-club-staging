@@ -29,6 +29,10 @@ class ActivityLog < ApplicationRecord
       label: "Photos",
       patterns: [ "Logo for %", "Photo for %" ]
     },
+    "rules" => {
+      label: "Rules",
+      patterns: [ "Rule %", "Imported % rule%", "Exported % rule%" ]
+    },
     "sponsors" => {
       label: "Sponsors",
       patterns: [ "Sponsor %" ]
@@ -48,6 +52,7 @@ class ActivityLog < ApplicationRecord
     mentors_judges
     partners
     photos
+    rules
     sponsors
     sponsors_partners
   ].freeze

@@ -73,4 +73,25 @@ RSpec.describe User, type: :model do
       }.to change(User, :count).by(-1).and change(ActivityLog, :count).by(-1)
     end
   end
+
+  describe 'mailer resilience' do
+    it 'logs and continues when welcome email enqueue fails' do
+      user = User.new(email: 'welcomefail@example.com', role: 'editor')
+      allow(MemberMailer).to receive(:with).and_raise(StandardError, 'queue down')
+
+      expect(Rails.logger).to receive(:error).with(include('Welcome email failed for user'))
+
+      user.send_welcome_email
+    end
+
+    it 'logs and continues when request email enqueue fails for an admin recipient' do
+      admin = User.create!(email: 'request-admin@example.com', role: 'admin')
+      requester = User.create!(email: 'requester@example.com', role: 'unauthorized')
+      allow(MemberMailer).to receive(:with).and_raise(StandardError, 'queue down')
+
+      expect(Rails.logger).to receive(:error).with(include("Request email failed for admin #{admin.id}"))
+
+      requester.send_request_email
+    end
+  end
 end

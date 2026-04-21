@@ -6,6 +6,7 @@ require "csv"
 class ManagerController < ApplicationController
      # Use the ideathon layout for all actions
      layout "ideathon"
+     before_action :require_admin_for_manager_tools!, only: %i[destroy export_participants export_teams]
 
      # GET /manager
      # Dashboard: list attendees, teams, and events for the active year
@@ -21,7 +22,7 @@ class ManagerController < ApplicationController
      # DELETE /manager/:id
      # Remove a registered attendee (admin only)
      def destroy
-          @registered_attendee = RegisteredAttendee.find(params[:id])
+          @registered_attendee = RegisteredAttendee.where(ideathon_year: active_year).find(params[:id])
           @registered_attendee.destroy
 
           log_manager_action(
@@ -40,6 +41,8 @@ class ManagerController < ApplicationController
                end
                format.html { redirect_to manager_index_path, notice: "Attendee removed." }
           end
+     rescue ActiveRecord::RecordNotFound
+          redirect_to manager_index_path, alert: "Attendee not found for the active year."
      end
 
      # GET /manager/export_participants
@@ -112,6 +115,12 @@ class ManagerController < ApplicationController
      end
 
   private
+
+     def require_admin_for_manager_tools!
+          return if admin?
+
+          redirect_to manager_index_path, alert: "Only 501 Club admins can perform this action."
+     end
 
      def active_year
           return @active_year if instance_variable_defined?(:@active_year)

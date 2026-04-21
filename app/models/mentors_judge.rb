@@ -5,6 +5,7 @@ class MentorsJudge < ApplicationRecord
 
   validates :name, presence: true
   validates :ideathon, presence: true
+  validate :photo_url_must_be_http_or_https
 
   def year
     ideathon&.year
@@ -17,5 +18,18 @@ class MentorsJudge < ApplicationRecord
     end
 
     self.ideathon = Ideathon.find_by!(year: value.to_i)
+  end
+
+  private
+
+  def photo_url_must_be_http_or_https
+    return if photo_url.blank?
+
+    uri = URI.parse(photo_url)
+    unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+      errors.add(:photo_url, "must be a valid HTTP or HTTPS URL")
+    end
+  rescue URI::InvalidURIError
+    errors.add(:photo_url, "must be a valid URL")
   end
 end

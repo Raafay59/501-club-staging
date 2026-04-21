@@ -109,6 +109,16 @@ RSpec.describe "Ideathons", type: :request do
         expect(response).to redirect_to(ideathons_path)
       end
     end
+
+    context "when update fails" do
+      it "re-renders edit with unprocessable status" do
+        allow_any_instance_of(Ideathon).to receive(:update).and_return(false)
+
+        patch ideathon_path(ideathon), params: { ideathon: { theme: 'Will Not Save' } }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
   end
 
   describe "GET /ideathons/:year/delete" do

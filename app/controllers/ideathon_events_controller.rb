@@ -4,6 +4,7 @@
 class IdeathonEventsController < ApplicationController
      # Use the ideathon layout for all actions
      layout "ideathon"
+     before_action :require_admin_for_events!
      # Load the event for actions that require an existing record
      before_action :set_ideathon_event, only: %i[ edit update destroy ]
 
@@ -99,7 +100,15 @@ class IdeathonEventsController < ApplicationController
 
      # Finds the event for actions that require an existing record
      def set_ideathon_event
-          @ideathon_event = IdeathonEvent.find(params[:id])
+          @ideathon_event = IdeathonEvent.where(ideathon_year: active_year).find(params[:id])
+     rescue ActiveRecord::RecordNotFound
+          redirect_to manager_index_path(tab: "events"), alert: "Event not found for the active year."
+     end
+
+     def require_admin_for_events!
+          return if admin?
+
+          redirect_to manager_index_path(tab: "events"), alert: "Only 501 Club admins can perform this action."
      end
 
      # Strong parameters: only allow trusted fields from the form

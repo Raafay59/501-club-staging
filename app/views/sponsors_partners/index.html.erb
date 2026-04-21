@@ -35,7 +35,7 @@
 <% if admin? %>
   <hr>
   <h2>Import Sponsors/Partners from CSV</h2>
-  <p>CSV columns: <code>year, name, job_title, logo_url, blurb, is_sponsor</code></p>
+  <p>CSV columns: <code>year, name, job_title, logo_url, blurb, is_sponsor</code> (logo_url is optional)</p>
   <%= form_with url: import_sponsors_partners_path, local: true, multipart: true do |form| %>
     <%= context_field_tip("import.sponsors_partners") do %>
       <div>

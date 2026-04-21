@@ -52,6 +52,28 @@ RSpec.describe ActivityLogMessage do
     end
   end
 
+  describe ".for_faq" do
+    it "describes FAQ edits" do
+      faq = Faq.new(year: 2025, question: "How long is the event?", answer: "Two days")
+
+      expect(described_class.for_faq(faq, :edited)).to eq("FAQ 'How long is the event?' was edited")
+    end
+  end
+
+  describe ".for_rule" do
+    it "describes rule edits" do
+      rule = Rule.new(year: 2025, rule_text: "No plagiarism")
+
+      expect(described_class.for_rule(rule, :edited)).to eq("Rule 'No plagiarism' was edited")
+    end
+
+    it "falls back for unexpected action values" do
+      rule = Rule.new(year: 2025, rule_text: "No plagiarism")
+
+      expect(described_class.for_rule(rule, :imported)).to eq("Rule 'No plagiarism' was imported")
+    end
+  end
+
   describe ".for_mentors_judge" do
     let(:judge) { MentorsJudge.new(year: 2025, name: "Jane", is_judge: true) }
 

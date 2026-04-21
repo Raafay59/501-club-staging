@@ -18,6 +18,7 @@ class MentorsJudgesController < ClubDashboardController
 
   def create
     @mentors_judge = MentorsJudge.new(mentors_judge_params)
+    normalize_photo_url_choice!(@mentors_judge)
     if @mentors_judge.save
       redirect_to mentors_judges_path, notice: "Mentor/Judge was successfully created."
     else
@@ -31,7 +32,10 @@ class MentorsJudgesController < ClubDashboardController
   end
 
   def update
-    if @mentors_judge.update(mentors_judge_params)
+    @mentors_judge.assign_attributes(mentors_judge_params)
+    normalize_photo_url_choice!(@mentors_judge)
+
+    if @mentors_judge.save
       redirect_to mentors_judges_path, notice: "Mentor/Judge was successfully updated."
     else
       @ideathon_years = Ideathon.pluck(:year).sort.reverse
@@ -110,6 +114,18 @@ class MentorsJudgesController < ClubDashboardController
 
   def mentors_judge_params
     params.require(:mentors_judge).permit(:year, :name, :job_title, :photo_url, :bio, :is_judge)
+  end
+
+  def include_photo?
+    params.dig(:mentors_judge, :include_photo) != "0"
+  end
+
+  def normalize_photo_url_choice!(record)
+    if include_photo?
+      record.photo_url = record.photo_url.to_s.strip.presence
+    else
+      record.photo_url = nil
+    end
   end
 
   def latest_export_year_for(model)

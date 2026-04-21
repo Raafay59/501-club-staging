@@ -42,6 +42,20 @@ RSpec.describe "SponsorsPartners", type: :request do
         }.to change(SponsorsPartner, :count).by(1)
         expect(response).to redirect_to(sponsors_partners_path)
       end
+
+      it "creates without a logo when include_logo is unchecked" do
+        expect {
+          post sponsors_partners_path, params: {
+            sponsors_partner: valid_attributes.merge(
+              logo_url: 'https://logo.test/acme.png',
+              include_logo: '0'
+            )
+          }
+        }.to change(SponsorsPartner, :count).by(1)
+
+        created = SponsorsPartner.order(:id).last
+        expect(created.logo_url).to be_nil
+      end
     end
 
     context "with invalid parameters" do
@@ -68,6 +82,20 @@ RSpec.describe "SponsorsPartners", type: :request do
         sponsors_partner.reload
         expect(sponsors_partner.name).to eq('Updated Corp')
         expect(response).to redirect_to(sponsors_partners_path)
+      end
+
+      it "clears an existing logo when include_logo is unchecked" do
+        sponsors_partner.update!(logo_url: 'https://logo.test/original.png')
+
+        patch sponsors_partner_path(sponsors_partner), params: {
+          sponsors_partner: {
+            include_logo: '0',
+            logo_url: 'https://logo.test/should_not_persist.png'
+          }
+        }
+
+        expect(response).to redirect_to(sponsors_partners_path)
+        expect(sponsors_partner.reload.logo_url).to be_nil
       end
     end
 
@@ -150,6 +178,15 @@ RSpec.describe "SponsorsPartners", type: :request do
 
     it "redirects with an alert when no sponsors exist in current year" do
       Ideathon.create!(year: 2026, theme: 'Future')
+
+      get export_sponsors_partners_path(format: :csv)
+
+      expect(response).to redirect_to(sponsors_partners_path)
+      expect(flash[:alert]).to eq('No sponsors to export')
+    end
+
+    it "redirects with an alert when no export year can be resolved" do
+      allow_any_instance_of(SponsorsPartnersController).to receive(:latest_export_year_for).and_return(nil)
 
       get export_sponsors_partners_path(format: :csv)
 
