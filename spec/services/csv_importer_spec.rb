@@ -1,149 +1,47 @@
-require 'rails_helper'
+require "rails_helper"
+require "tempfile"
 
-RSpec.describe CsvImporter, type: :service do
-  let!(:ideathon) { Ideathon.create!(year: 2025, theme: 'Tech') }
-  let(:default_attribute_map) do
-    {
-      "year" => :year,
-      "name" => :name,
-      "photo_url" => :photo_url,
-      "bio" => :bio,
-      "is_judge" => :is_judge
-    }
-  end
+RSpec.describe CsvImporter do
+     def build_upload(filename:, content:, content_type: "text/csv")
+          file = Tempfile.new([ File.basename(filename, ".*"), File.extname(filename) ])
+          file.write(content)
+          file.rewind
+          Rack::Test::UploadedFile.new(file.path, content_type, original_filename: filename)
+     end
 
-  after do
-    Array(@uploaded_csv_tempfiles).each(&:close!)
-  end
+     describe "#import" do
+          let(:model) { Ideathon }
+          let(:attribute_map) { { "year" => :year, "name" => :name } }
 
-  def uploaded_csv(filename:, body:, content_type: 'text/csv')
-    tempfile = Tempfile.new([ File.basename(filename, '.csv'), '.csv' ])
-    tempfile.write(body)
-    tempfile.rewind
-    @uploaded_csv_tempfiles ||= []
-    @uploaded_csv_tempfiles << tempfile
-    ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: filename, type: content_type)
-  end
+          it "returns fatal error when file is missing" do
+               result = described_class.new(file: nil, model: model, attribute_map: attribute_map).import
+               expect(result[:errors]).to include("No file provided")
+          end
 
-  describe 'importing mentors_judges CSV' do
-    let(:file) { fixture_file_upload('mentors_judges.csv', 'text/csv') }
-    let(:importer) do
-      CsvImporter.new(
-        file: file,
-        model: MentorsJudge,
-        attribute_map: default_attribute_map
-      )
-    end
+          it "rejects non-csv extension" do
+               upload = build_upload(filename: "bad.txt", content: "year,name\n2026,Ideathon 2026\n")
+               result = described_class.new(file: upload, model: model, attribute_map: attribute_map).import
+               expect(result[:errors]).to include("Invalid file type")
+          end
 
-    it 'imports valid CSV data successfully' do
-      expect { importer.import }.to change(MentorsJudge, :count).by(2)
-    end
+          it "rejects missing required headers" do
+               upload = build_upload(filename: "missing.csv", content: "year,theme\n2026,Build\n")
+               result = described_class.new(file: upload, model: model, attribute_map: attribute_map).import
+               expect(result[:errors]).to include("Invalid CSV headers")
+          end
 
-    it 'returns correct results hash' do
-      results = importer.import
-      expect(results[:success]).to eq(2)
-      expect(results[:failed]).to eq(0)
-      expect(results[:errors]).to be_empty
-    end
-  end
+          it "imports valid rows and reports row-level failures" do
+               Ideathon.create!(year: 2026, name: "Existing")
+               upload = build_upload(
+                 filename: "ideathons.csv",
+                 content: "year,name\n2027,Ideathon 2027\n2026,Duplicate year\n"
+               )
 
-  describe 'importing faqs CSV' do
-    let(:file) { fixture_file_upload('faqs.csv', 'text/csv') }
-    let(:importer) do
-      CsvImporter.new(
-        file: file,
-        model: Faq,
-        attribute_map: {
-          "year" => :year,
-          "question" => :question,
-          "answer" => :answer
-        }
-      )
-    end
-
-    it 'imports valid CSV data successfully' do
-      expect { importer.import }.to change(Faq, :count).by(2)
-    end
-  end
-
-  describe 'error handling' do
-    it 'returns error when no file provided' do
-      importer = CsvImporter.new(file: nil, model: MentorsJudge, attribute_map: {})
-      result = importer.import
-      expect(result[:failed]).to eq(1)
-      expect(result[:errors]).to include('No file provided')
-    end
-
-    it 'returns error for invalid file type' do
-      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
-      result = importer.import
-      expect(result[:errors]).to include('Invalid file type')
-      expect(result[:failed]).to eq(1)
-      expect(result[:success]).to eq(0)
-    end
-
-    it 'returns error for csv files with incorrect headers' do
-      file = fixture_file_upload('mentors_judges.csv', 'text/csv')
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: { "full_name" => :name })
-      result = importer.import
-
-      expect(result[:errors]).to include('Invalid CSV headers')
-      expect(result[:failed]).to eq(1)
-      expect(result[:success]).to eq(0)
-    end
-
-    it 'tracks failed rows when a row cannot be persisted' do
-      file = uploaded_csv(
-        filename: 'mentors_bad_row.csv',
-        body: "year,name,photo_url,bio,is_judge\n9999,Broken Row,https://img.test/a.jpg,Bio,true\n"
-      )
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
-
-      result = importer.import
-
-      expect(result[:success]).to eq(0)
-      expect(result[:failed]).to eq(1)
-      expect(result[:errors].first).to include('Couldn\'t find Ideathon')
-    end
-
-    it 'returns invalid CSV format for malformed bodies discovered during iteration' do
-      file = uploaded_csv(
-        filename: 'mentors_malformed.csv',
-        body: "year,name,photo_url,bio,is_judge\n2025,Good,https://img.test/a.jpg,Bio,true\n\"unterminated"
-      )
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
-
-      result = importer.import
-
-      expect(result).to eq(success: 0, failed: 1, errors: [ 'Invalid CSV format' ])
-    end
-  end
-
-  describe '#valid_file?' do
-    it 'returns true for CSV content type' do
-      file = fixture_file_upload('mentors_judges.csv', 'text/csv')
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
-      expect(importer.valid_file?).to be true
-    end
-
-    it 'returns false for non-csv extension' do
-      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
-      expect(importer.valid_file?).to be false
-    end
-
-    it 'returns false when expected headers are missing' do
-      file = fixture_file_upload('mentors_judges.csv', 'text/csv')
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: { "full_name" => :name })
-      expect(importer.valid_file?).to be false
-    end
-
-    it 'returns false for malformed CSV headers' do
-      file = uploaded_csv(filename: 'broken_headers.csv', body: '"unterminated header')
-      importer = CsvImporter.new(file: file, model: MentorsJudge, attribute_map: default_attribute_map)
-
-      expect(importer.valid_file?).to be false
-    end
-  end
+               result = described_class.new(file: upload, model: model, attribute_map: attribute_map).import
+               expect(result[:success]).to eq(1)
+               expect(result[:failed]).to eq(1)
+               expect(result[:errors].first).to match(/\ARow 3:/)
+               expect(Ideathon.find_by(year: 2027)).to be_present
+          end
+     end
 end

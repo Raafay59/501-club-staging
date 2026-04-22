@@ -1,116 +1,81 @@
 require "rails_helper"
 
 RSpec.describe ApplicationHelper, type: :helper do
-  describe "#rule_title_and_body" do
-    it "splits on a blank line into title and body" do
-      rule = double("Rule", rule_text: "Title Here\n\nBody text")
-      expect(helper.rule_title_and_body(rule)).to eq(
-        title: "Title Here",
-        body: "Body text"
-      )
-    end
+     SponsorStub = Struct.new(:name, :logo_url)
 
-    it "returns a single body when there is no paragraph split" do
-      rule = double("Rule", rule_text: "Only one block")
-      expect(helper.rule_title_and_body(rule)).to eq(
-        title: nil,
-        body: "Only one block"
-      )
-    end
-  end
+     describe "#rule_title_and_body" do
+          it "splits title/body when separated by blank line" do
+               rule = Rule.new(rule_text: "Title\n\nBody text")
+               result = helper.rule_title_and_body(rule)
+               expect(result[:title]).to eq("Title")
+               expect(result[:body]).to eq("Body text")
+          end
 
-  describe "#faq_answer_html" do
-    it "allows safe tags and strips the rest" do
-      html = helper.faq_answer_html('<p>Hi</p><script>x</script><strong>bold</strong>')
-      expect(html).to include("<p>")
-      expect(html).to include("<strong>")
-      expect(html).not_to include("script")
-    end
-  end
+          it "returns full body when no title split exists" do
+               rule = Rule.new(rule_text: "Single line rule")
+               result = helper.rule_title_and_body(rule)
+               expect(result[:title]).to be_nil
+               expect(result[:body]).to eq("Single line rule")
+          end
+     end
 
-  describe "#context_field_tip" do
-    it "wraps content in a div with data-tip from i18n" do
-      html = helper.context_field_tip("users.email") { "inner" }
-      expect(html).to include('class="context-field-tip"')
-      expect(html).to include("data-tip")
-      expect(html).to include(I18n.t("context_help.users.email"))
-      expect(html).to include("inner")
-    end
-  end
+     describe "#faq_answer_html" do
+          it "sanitizes disallowed html tags" do
+               html = helper.faq_answer_html("<strong>ok</strong><script>alert(1)</script>")
+               expect(html).to include("<strong>ok</strong>")
+               expect(html).not_to include("<script>")
+          end
+     end
 
-  describe "#sponsor_logo_or_name" do
-    let(:sponsor_with_logo) { double("SponsorsPartner", name: "Acme", logo_url: "https://example.com/logo.png") }
-    let(:sponsor_without_logo) { double("SponsorsPartner", name: "Acme", logo_url: nil) }
+     describe "#sponsor_logo_or_name" do
+          it "renders image and fallback wrapper when logo exists and fallback-on-error enabled" do
+               sponsor = SponsorStub.new("ACME", "https://example.com/logo.png")
+               html = helper.sponsor_logo_or_name(
+                 sponsor,
+                 image_class: "img",
+                 fallback_class: "fallback",
+                 fallback_tag: :div,
+                 show_fallback_on_logo_error: true
+               )
+               expect(html).to include("sponsor-logo#handleError")
+               expect(html).to include("ACME")
+          end
 
-    it "renders image with hidden fallback when logo exists" do
-      html = helper.sponsor_logo_or_name(
-        sponsor_with_logo,
-        image_class: "logo-class",
-        fallback_class: "fallback-class",
-        fallback_tag: :div
-      )
+          it "renders plain image when fallback-on-error disabled" do
+               sponsor = SponsorStub.new("ACME", "https://example.com/logo.png")
+               html = helper.sponsor_logo_or_name(
+                 sponsor,
+                 image_class: "img",
+                 fallback_class: "fallback",
+                 fallback_tag: :div,
+                 show_fallback_on_logo_error: false
+               )
+               expect(html).to include("img")
+               expect(html).not_to include("sponsor-logo#handleError")
+          end
 
-      expect(html).to include("img")
-      expect(html).to include("logo-class")
-      expect(html).to include('<div data-controller="sponsor-logo">')
-      expect(html).to include('data-controller="sponsor-logo"')
-      expect(html).to include('data-action="error-&gt;sponsor-logo#handleError"')
-      expect(html).to include('data-sponsor-logo-target="image"')
-      expect(html).to include('data-sponsor-logo-target="fallback"')
-      expect(html).to include("hidden fallback-class")
-      expect(html).to include("Acme")
-    end
+          it "renders fallback name when logo missing and fallback enabled" do
+               sponsor = SponsorStub.new("NoLogo", nil)
+               html = helper.sponsor_logo_or_name(
+                 sponsor,
+                 image_class: "img",
+                 fallback_class: "fallback",
+                 fallback_tag: :span,
+                 show_fallback_when_logo_missing: true
+               )
+               expect(html).to include("NoLogo")
+          end
 
-    it "uses span wrapper when fallback tag is inline" do
-      html = helper.sponsor_logo_or_name(
-        sponsor_with_logo,
-        image_class: "logo-class",
-        fallback_class: "fallback-class",
-        fallback_tag: :span
-      )
-
-      expect(html).to include('<span data-controller="sponsor-logo">')
-    end
-
-    it "renders image without hidden fallback when error fallback is disabled" do
-      html = helper.sponsor_logo_or_name(
-        sponsor_with_logo,
-        image_class: "logo-class",
-        fallback_class: "fallback-class",
-        fallback_tag: :span,
-        show_fallback_on_logo_error: false
-      )
-
-      expect(html).to include("<img")
-      expect(html).to include("logo-class")
-      expect(html).not_to include("data-controller=\"sponsor-logo\"")
-      expect(html).not_to include("sponsor-logo#handleError")
-      expect(html).not_to include("hidden fallback-class")
-    end
-
-    it "renders visible fallback when logo is missing" do
-      html = helper.sponsor_logo_or_name(
-        sponsor_without_logo,
-        image_class: "logo-class",
-        fallback_class: "fallback-class",
-        fallback_tag: :div
-      )
-
-      expect(html).not_to include("<img")
-      expect(html).to include("fallback-class")
-      expect(html).to include("Acme")
-    end
-
-    it "renders nothing when missing logo and fallback disabled" do
-      html = helper.sponsor_logo_or_name(
-        sponsor_without_logo,
-        image_class: "logo-class",
-        fallback_class: "fallback-class",
-        fallback_tag: :span,
-        show_fallback_when_logo_missing: false
-      )
-
-      expect(html).to eq("")
-    end
-  end
+          it "returns empty string when logo missing and fallback disabled" do
+               sponsor = SponsorStub.new("NoLogo", nil)
+               html = helper.sponsor_logo_or_name(
+                 sponsor,
+                 image_class: "img",
+                 fallback_class: "fallback",
+                 fallback_tag: :span,
+                 show_fallback_when_logo_missing: false
+               )
+               expect(html).to eq("")
+          end
+     end
 end

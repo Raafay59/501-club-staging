@@ -1,8 +1,8 @@
-<% content_for :title, "Ideathon #{@ideathon.year} — Overview" %>
+<% content_for :title, "Ideathon #{@ideathon.year} - Overview" %>
 
-<h1>Ideathon <%= @ideathon.year %> — Overview</h1>
+<h1>Ideathon <%= @ideathon.year %> - Overview</h1>
 
-<p><strong>Theme:</strong> <%= @ideathon.theme.presence || "—" %></p>
+<p><strong>Theme:</strong> <%= @ideathon.theme.presence || "-" %></p>
 
 <p>
   <%= link_to "Edit ideathon details", edit_ideathon_path(@ideathon) %> |
@@ -32,7 +32,7 @@
             <% if sp.logo_url.present? %>
               <%= image_tag sp.logo_url, alt: sp.name, class: "thumb-logo" %>
             <% else %>
-              —
+              -
             <% end %>
           </td>
         </tr>

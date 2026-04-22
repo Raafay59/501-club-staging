@@ -1,134 +1,48 @@
 require "rails_helper"
 
-RSpec.describe "ActivityLogs", type: :request do
-  include ActiveSupport::Testing::TimeHelpers
+RSpec.describe "ActivityLogs dashboard", type: :request do
+     let(:admin_user) { Admin.create!(email: "logs-admin@tamu.edu", full_name: "Admin", uid: "logs-a", role: "admin") }
+     let(:unauthorized_user) { Admin.create!(email: "logs-unauth@tamu.edu", full_name: "No Access", uid: "logs-u", role: "unauthorized") }
 
-  let!(:admin) { User.create!(email: "admin@example.com", name: "Admin User", role: "admin") }
-  let!(:editor) { User.create!(email: "editor@example.com", name: "Editor User", role: "editor") }
-  let!(:unauthorized) { User.create!(email: "bad@example.com", role: "unauthorized") }
+     before do
+          ActivityLog.create!(
+            admin: admin_user,
+            actor_name: "Admin",
+            actor_email: admin_user.email,
+            action: "added",
+            content_type: "faqs",
+            item_name: "Q1",
+            message: "FAQ 'Q1' was added"
+          )
+     end
 
-  describe "GET /activity_logs" do
-    context "when logged in as an organizer (admin)" do
-      before { login_as(admin) }
+     it "redirects guests to sign in" do
+          get activity_logs_path
+          expect(response).to redirect_to(new_admin_session_path)
+     end
 
-      it "returns a successful response" do
-        get activity_logs_path
-        expect(response).to have_http_status(:ok)
-      end
+     it "blocks unauthorized dashboard accounts" do
+          sign_in unauthorized_user, scope: :admin
+          get activity_logs_path
+          expect(response).to redirect_to(root_path)
+          expect(flash[:alert]).to match(/not authorized/i)
+     end
 
-      it "lists entries newest first" do
-        ActivityLog.record!(user: admin, action: "added", message: "First")
-        ActivityLog.record!(user: admin, action: "added", message: "Second")
-        get activity_logs_path
-        expect(response.body).to match(/Second.*First/m)
-      end
+     it "renders index for authorized admins" do
+          sign_in admin_user, scope: :admin
+          get activity_logs_path
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("Q1")
+     end
 
-      it "filters by content type" do
-        ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Acme' was added")
-        ActivityLog.record!(user: admin, action: "added", message: "FAQ 'How do I join?' was added")
-
-        get activity_logs_path, params: { content_type: "sponsors" }
-
-        expect(response.body).to include("Acme")
-        expect(response.body).not_to include("How do I join?")
-      end
-
-      it "includes imported and exported rules when filtering by rules" do
-        ActivityLog.record_import(model: Rule, count: 3, user: admin)
-        ActivityLog.record_export(model: Rule, count: 2, user: admin)
-        ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Acme' was added")
-
-        get activity_logs_path, params: { content_type: "rules" }
-
-        expect(response.body).to include("Imported 3 rules")
-        expect(response.body).to include("Exported 2 rules")
-        expect(response.body).not_to include("Acme")
-      end
-
-      it "filters by last 7 days" do
-        recent_log = ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Recent' was added")
-        older_log = ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Older' was added")
-        recent_log.update_column(:created_at, 2.days.ago)
-        older_log.update_column(:created_at, 10.days.ago)
-
-        get activity_logs_path, params: { date_range: "last_7_days" }
-
-        expect(response.body).to include("Recent")
-        expect(response.body).not_to include("Older")
-      end
-
-      it "combines the content type and date filters" do
-        matching_log = ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Fresh' was added")
-        old_sponsor_log = ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Stale' was added")
-        faq_log = ActivityLog.record!(user: admin, action: "added", message: "FAQ 'Still fresh' was added")
-
-        matching_log.update_column(:created_at, 1.day.ago)
-        old_sponsor_log.update_column(:created_at, 9.days.ago)
-        faq_log.update_column(:created_at, 1.day.ago)
-
-        get activity_logs_path, params: { content_type: "sponsors", date_range: "last_7_days" }
-
-        expect(response.body).to include("Fresh")
-        expect(response.body).not_to include("Stale")
-        expect(response.body).not_to include("Still fresh")
-      end
-
-      it "filters by a custom date range" do
-        march_log = ActivityLog.record!(user: admin, action: "added", message: "Judge 'March Match' was added")
-        april_log = ActivityLog.record!(user: admin, action: "added", message: "Judge 'April Miss' was added")
-        march_log.update_column(:created_at, Time.zone.parse("2026-03-15 12:00:00"))
-        april_log.update_column(:created_at, Time.zone.parse("2026-04-01 12:00:00"))
-
-        get activity_logs_path, params: {
-          content_type: "judges",
-          date_range: "custom",
-          start_date: "2026-03-10",
-          end_date: "2026-03-20"
-        }
-
-        expect(response.body).to include("March Match")
-        expect(response.body).not_to include("April Miss")
-      end
-
-      it "shows a no-results message for unmatched filters" do
-        ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Acme' was added")
-
-        get activity_logs_path, params: { content_type: "photos" }
-
-        expect(response.body).to include("No changes found for this filter")
-      end
-
-      it "shows a friendly empty state for invalid custom date ranges" do
-        ActivityLog.record!(user: admin, action: "added", message: "Sponsor 'Acme' was added")
-
-        get activity_logs_path, params: {
-          date_range: "custom",
-          start_date: "2026-04-10",
-          end_date: "2026-04-01"
-        }
-
-        expect(response.body).to include("End date must be on or after start date.")
-        expect(response.body).to include("No changes found for this filter")
-        expect(response.body).not_to include("Acme")
-      end
-    end
-
-    context "when logged in as an organizer (editor)" do
-      before { login_as(editor) }
-
-      it "returns a successful response" do
-        get activity_logs_path
-        expect(response).to have_http_status(:ok)
-      end
-    end
-
-    context "when logged in as unauthorized" do
-      before { login_as(unauthorized) }
-
-      it "redirects away from the activity log" do
-        get activity_logs_path
-        expect(response).to redirect_to(unauthorized_path)
-      end
-    end
-  end
+     it "handles invalid custom date ranges with alert" do
+          sign_in admin_user, scope: :admin
+          get activity_logs_path, params: {
+            date_range: "custom",
+            start_date: "2026-12-10",
+            end_date: "2026-12-01"
+          }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("End date must be on or after start date.")
+     end
 end

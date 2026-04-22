@@ -1,29 +1,22 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Rule, type: :model do
-  let!(:ideathon) { Ideathon.create!(year: 2025, theme: 'Tech') }
+     let!(:ideathon) { Ideathon.create!(year: 2026, name: "Ideathon 2026") }
 
-  describe 'validations' do
-    it 'is valid with rule_text and year' do
-      rule = Rule.new(year: 2025, rule_text: 'Be respectful')
-      expect(rule).to be_valid
-    end
+     it "requires rule text and ideathon" do
+          rule = described_class.new
+          expect(rule).not_to be_valid
+          expect(rule.errors[:rule_text]).to be_present
+     end
 
-    it 'is not valid without rule_text' do
-      rule = Rule.new(year: 2025)
-      expect(rule).not_to be_valid
-    end
+     it "maps year to ideathon" do
+          rule = described_class.new(rule_text: "No cheating")
+          rule.year = 2026
+          expect(rule.ideathon).to eq(ideathon)
+     end
 
-    it 'is not valid without a year' do
-      rule = Rule.new(rule_text: 'Be respectful')
-      expect(rule).not_to be_valid
-    end
-  end
-
-  describe 'associations' do
-    it 'belongs to ideathon' do
-      rule = Rule.create!(year: 2025, rule_text: 'No plagiarism')
-      expect(rule.ideathon).to eq(ideathon)
-    end
-  end
+     it "raises when assigning unknown year" do
+          rule = described_class.new(rule_text: "No cheating")
+          expect { rule.year = 2035 }.to raise_error(ActiveRecord::RecordNotFound)
+     end
 end

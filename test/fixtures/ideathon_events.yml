@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  ideathon_year: one
+  event_name: MyString
+  event_description: MyText
+  event_date: 2026-02-13
+  event_time: 2026-02-13 20:01:25
+
+two:
+  ideathon_year: two
+  event_name: MyString
+  event_description: MyText
+  event_date: 2026-02-13
+  event_time: 2026-02-13 20:01:25

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= I18n.locale %>">
   <head>
     <title><%= content_for(:title) || "501 Club - Ideathon Manager" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -19,7 +19,7 @@
   </head>
 
   <body>
-    <% if logged_in? && current_user.authorized? %>
+    <% if logged_in? && current_user&.authorized? %>
       <nav class="app-nav" aria-label="Main">
         <div class="app-nav__links">
           <%= link_to "Public Ideathon site", root_path %>
@@ -36,8 +36,10 @@
           <span class="app-nav__sep" aria-hidden="true">|</span>
           <%= link_to "Rules", rules_path %>
           <span class="app-nav__sep" aria-hidden="true">|</span>
-          <%= link_to "Activity Log", activity_logs_path %>|</span>
-          <%= link_to "User Guide", "/UserDocumentation.pdf", target: "_blank" %>|</span>
+          <%= link_to "Activity Log", activity_logs_path %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
+          <%= link_to "User Guide", "/UserDocumentation.pdf", target: "_blank" %>
+          <span class="app-nav__sep" aria-hidden="true">|</span>
           <%= link_to "Technical Documentation", "/TechnicalDocumentation.pdf", target: "_blank" %>
           <% if admin? %>
             <span class="app-nav__sep" aria-hidden="true">|</span>
@@ -45,8 +47,12 @@
           <% end %>
         </div>
         <div class="app-nav__user">
-          <span>Signed in as <strong><%= current_user.name %></strong> (<%= current_user.role %>)</span>
-          <%= button_to "Sign Out", logout_path, method: :delete %>
+          <span>
+            Signed in as
+            <strong><%= current_user.full_name.presence || current_user.email %></strong>
+            (<%= current_user.role %>)
+          </span>
+          <%= button_to "Sign Out", destroy_admin_session_path, method: :delete %>
         </div>
       </nav>
     <% end %>

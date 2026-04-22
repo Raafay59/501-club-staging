@@ -22,6 +22,36 @@
   </div>
 
   <div>
+    <%= form.label :name %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :description %>
+    <%= form.text_area :description, rows: 4 %>
+  </div>
+
+  <div>
+    <%= form.label :location %>
+    <%= form.text_field :location %>
+  </div>
+
+  <div>
+    <%= form.label :start_date %>
+    <%= form.date_field :start_date %>
+  </div>
+
+  <div>
+    <%= form.label :end_date %>
+    <%= form.date_field :end_date %>
+  </div>
+
+  <div>
+    <%= form.label :is_active, "Show this year on public site" %>
+    <%= form.check_box :is_active %>
+  </div>
+
+  <div>
     <%= form.submit "Update Ideathon" %>
   </div>
 <% end %>

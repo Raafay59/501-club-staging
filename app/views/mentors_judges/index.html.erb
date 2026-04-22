@@ -15,7 +15,7 @@
       <tr>
         <td><%= mj.year %></td>
         <td><%= mj.name %></td>
-        <td><%= mj.job_title.presence || "—" %></td>
+        <td><%= mj.job_title.presence || "-" %></td>
         <td><%= mj.is_judge? ? "Judge" : "Mentor" %></td>
         <td>
           <%= link_to "View", mentors_judge_path(mj) %> |

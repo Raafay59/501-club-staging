@@ -1,537 +1,372 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
-RSpec.describe "Registered attendees", type: :request do
-  let!(:admin) { User.create!(email: "mgr@example.com", role: "admin") }
-  let!(:editor) { User.create!(email: "editor@example.com", role: "editor") }
-
-  let!(:ideathon) do
-    Ideathon.create!(
-      year: 2025,
-      theme: "Tech",
-      is_active: true,
-      start_date: Date.new(2025, 2, 1),
-      end_date: Date.new(2025, 2, 2)
-    )
-  end
-
-  let!(:team) { Team.create!(ideathon_year: ideathon, team_name: "Team A", unassigned: false) }
-
-  let(:valid_fields) do
-    {
-      attendee_name: "Pat Example",
-      attendee_phone: "9795551234",
-      attendee_email: "pat@tamu.edu",
-      attendee_major: "CS",
-      attendee_class: "U2"
-    }
-  end
-
-  describe "public registration flow" do
-    it "GET /registered_attendees/new renders" do
-      get new_registered_attendee_path
-      expect(response).to have_http_status(:ok)
-    end
-
-    it "POST /registered_attendees creates via unassigned team path" do
-      expect {
-        post registered_attendees_path, params: {
-          registered_attendee: valid_fields,
-          team_choice: ""
-        }
-      }.to change(RegisteredAttendee, :count).by(1)
-
-      expect(response).to redirect_to(success_registered_attendees_path)
-    end
-
-    it "POST /registered_attendees with JSON returns created" do
-      post registered_attendees_path,
-        params: { registered_attendee: valid_fields, team_choice: "" },
-        headers: { "Accept" => "application/json" }
-
-      expect(response).to have_http_status(:created)
-      payload = JSON.parse(response.body)
-      expect(payload["success"]).to eq(true)
-      expect(payload["message"]).to eq("Registration created successfully.")
-      expect(payload).not_to have_key("id")
-      expect(payload).not_to have_key("url")
-    end
-
-    it "POST /registered_attendees with invalid data renders 422" do
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "bad@gmail.com"),
-        team_choice: ""
-      }
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "POST /registered_attendees renders new when save fails without validation errors" do
-      allow_any_instance_of(RegisteredAttendee).to receive(:save).and_return(false)
-
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "savefalse@tamu.edu"),
-        team_choice: ""
-      }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "POST /registered_attendees returns JSON errors when save fails without validation errors" do
-      allow_any_instance_of(RegisteredAttendee).to receive(:save).and_return(false)
-
-      post registered_attendees_path,
-        params: { registered_attendee: valid_fields.merge(attendee_email: "savefalsejson@tamu.edu"), team_choice: "" },
-        headers: { "Accept" => "application/json" }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)).to eq({})
-    end
-
-    it "GET /registered_attendees/:id requires organizer sign-in" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-      get registered_attendee_path(attendee)
-      expect(response).to redirect_to(login_path)
-    end
-
-    it "GET /registered_attendees/success renders" do
-      get success_registered_attendees_path
-      expect(response).to have_http_status(:ok)
-    end
-
-    it "GET /registered_attendees/teams_for_year returns [] when year_id blank" do
-      get teams_for_year_registered_attendees_path, params: { year_id: "" }
-      expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)).to eq([])
-    end
-
-    it "GET /registered_attendees/teams_for_year returns [] when there is no active year" do
-      allow(ActiveIdeathonYear).to receive(:call).and_return(nil)
-
-      get teams_for_year_registered_attendees_path, params: { year_id: ideathon.id }
-
-      expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)).to eq([])
-    end
-
-    it "GET /registered_attendees/teams_for_year returns teams as JSON" do
-      get teams_for_year_registered_attendees_path, params: { year_id: ideathon.id }
-      expect(response).to have_http_status(:ok)
-      data = JSON.parse(response.body)
-      expect(data).to be_an(Array)
-      expect(data.first).to include("id" => team.id, "name" => "Team A")
-    end
-
-    it "GET /registered_attendees/teams_for_year returns [] for non-active year" do
-      other = Ideathon.create!(
-        year: 2024,
-        theme: "Old",
-        is_active: false,
-        start_date: Date.new(2024, 2, 1),
-        end_date: Date.new(2024, 2, 2)
-      )
-
-      get teams_for_year_registered_attendees_path, params: { year_id: other.id }
-      expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)).to eq([])
-    end
-
-    it "POST with team_choice existing but no team id shows an error" do
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "noexist@tamu.edu"),
-        team_choice: "existing",
-        existing_team_id: ""
-      }
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "POST with new team name creates the team and attendee" do
-      expect {
-        post registered_attendees_path, params: {
-          registered_attendee: valid_fields.merge(attendee_email: "newteam@tamu.edu"),
-          team_choice: "new",
-          new_team_name: "Brand New Squad"
-        }
-      }.to change(Team, :count).by(1).and change(RegisteredAttendee, :count).by(1)
-      expect(response).to redirect_to(success_registered_attendees_path)
-    end
-
-    it "POST errors when new team name is blank" do
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "blanknew@tamu.edu"),
-        team_choice: "new",
-        new_team_name: "   "
-      }
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "POST shows a friendly error when the new team name is taken" do
-      Team.create!(ideathon_year: ideathon, team_name: "Taken", unassigned: false)
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "dupteam@tamu.edu"),
-        team_choice: "new",
-        new_team_name: "Taken"
-      }
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("already exists")
-    end
-
-    it "POST shows a friendly error when concurrent insert hits DB uniqueness" do
-      allow_any_instance_of(Team).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
-
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "race@tamu.edu"),
-        team_choice: "new",
-        new_team_name: "Concurrent Team"
-      }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("already exists")
-    end
-
-    it "POST rejects joining a team that already has four members" do
-      full = Team.create!(ideathon_year: ideathon, team_name: "Full", unassigned: false)
-      4.times do |i|
-        RegisteredAttendee.create!(
-          ideathon_year: ideathon,
-          team: full,
-          attendee_name: "Member#{i}",
-          attendee_phone: format("9795551%03d", i),
-          attendee_email: "m#{i}@tamu.edu",
-          attendee_major: "CS",
-          attendee_class: "U2"
-        )
-      end
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "fifth@tamu.edu"),
-        team_choice: "existing",
-        existing_team_id: full.id.to_s
-      }
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "POST rejects a team id from a different year" do
-      other = Ideathon.create!(
-        year: 2024,
-        theme: "Old",
-        is_active: false,
-        start_date: Date.new(2024, 2, 1),
-        end_date: Date.new(2024, 2, 2)
-      )
-      other_team = Team.create!(ideathon_year: other, team_name: "Other", unassigned: false)
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "wrongyr@tamu.edu"),
-        team_choice: "existing",
-        existing_team_id: other_team.id.to_s
-      }
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "POST errors when no active year can be resolved" do
-      allow(ActiveIdeathonYear).to receive(:call).with(create_if_missing: true).and_return(nil)
-
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "noyear@tamu.edu"),
-        team_choice: ""
-      }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("must be selected")
-    end
-
-    it "POST shows support error when unassigned team lookup fails" do
-      allow(Team).to receive(:find_or_create_by!).and_raise(StandardError, "db unavailable")
-
-      post registered_attendees_path, params: {
-        registered_attendee: valid_fields.merge(attendee_email: "rescuecase@tamu.edu"),
-        team_choice: ""
-      }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Unable to create or find unassigned team")
-    end
-  end
-
-  describe "organizer tools" do
-    before { login_as(admin) }
-
-    it "GET /registered_attendees lists attendees" do
-      RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-      old_year = Ideathon.create!(
-        year: 2024,
-        theme: "Old",
-        is_active: false,
-        start_date: Date.new(2024, 2, 1),
-        end_date: Date.new(2024, 2, 2)
-      )
-      old_team = Team.create!(ideathon_year: old_year, team_name: "Old Team", unassigned: false)
-      RegisteredAttendee.create!(
-        ideathon_year: old_year,
-        team: old_team,
-        attendee_name: "Old Person",
-        attendee_phone: "9795557777",
-        attendee_email: "oldperson@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U2"
-      )
-
-      get registered_attendees_path
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Pat Example")
-      expect(response.body).not_to include("Old Person")
-    end
-
-    it "GET /registered_attendees/:id/edit renders" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-      get edit_registered_attendee_path(attendee)
-      expect(response).to have_http_status(:ok)
-    end
-
-    it "redirects edit when attendee is outside the active year" do
-      old_year = Ideathon.create!(
-        year: 2024,
-        theme: "Old",
-        is_active: false,
-        start_date: Date.new(2024, 2, 1),
-        end_date: Date.new(2024, 2, 2)
-      )
-      old_team = Team.create!(ideathon_year: old_year, team_name: "Old Team", unassigned: false)
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: old_year,
-        team: old_team,
-        attendee_name: "Old Edit",
-        attendee_phone: "9795557788",
-        attendee_email: "oldedit@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U3"
-      )
-
-      get edit_registered_attendee_path(attendee)
-
-      expect(response).to redirect_to(manager_index_path)
-      expect(flash[:alert]).to include("active year")
-    end
-
-    it "PATCH /registered_attendees/:id as JSON returns 404 when attendee is outside the active year" do
-      old_year = Ideathon.create!(
-        year: 2024,
-        theme: "Old",
-        is_active: false,
-        start_date: Date.new(2024, 2, 1),
-        end_date: Date.new(2024, 2, 2)
-      )
-      old_team = Team.create!(ideathon_year: old_year, team_name: "Old Team", unassigned: false)
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: old_year,
-        team: old_team,
-        attendee_name: "Old Json",
-        attendee_phone: "9795557799",
-        attendee_email: "oldjson@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U3"
-      )
-
-      patch registered_attendee_path(attendee, format: :json), params: {
-        registered_attendee: { attendee_name: "Should Not Update" },
-        team_choice: "existing",
-        existing_team_id: old_team.id.to_s
-      }
-
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "PATCH /registered_attendees/:id updates and redirects to manager" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-      patch registered_attendee_path(attendee), params: {
-        registered_attendee: { attendee_name: "New Name" },
-        team_choice: "existing",
-        existing_team_id: team.id.to_s
-      }
-      expect(response).to redirect_to(manager_index_path)
-      expect(attendee.reload.attendee_name).to eq("New Name")
-    end
-
-    it "PATCH /registered_attendees/:id as JSON returns 200" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-      patch registered_attendee_path(attendee, format: :json), params: {
-        registered_attendee: { attendee_name: "Json Name" },
-        team_choice: "existing",
-        existing_team_id: team.id.to_s
-      }
-      expect(response).to have_http_status(:ok)
-      expect(attendee.reload.attendee_name).to eq("Json Name")
-    end
-
-    it "PATCH /registered_attendees/:id with invalid data returns 422" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-      patch registered_attendee_path(attendee), params: {
-        registered_attendee: { attendee_email: "bad@gmail.com" },
-        team_choice: "existing",
-        existing_team_id: team.id.to_s
-      }
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "PATCH /registered_attendees/:id with invalid data returns JSON 422" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-
-      patch registered_attendee_path(attendee, format: :json), params: {
-        registered_attendee: { attendee_email: "bad@gmail.com" },
-        team_choice: "existing",
-        existing_team_id: team.id.to_s
-      }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "PATCH /registered_attendees/:id renders edit when team selection is invalid" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-
-      patch registered_attendee_path(attendee), params: {
-        registered_attendee: { attendee_name: "Still Pat" },
-        team_choice: "existing",
-        existing_team_id: ""
-      }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it "PATCH /registered_attendees/:id returns JSON errors when team selection is invalid" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-
-      patch registered_attendee_path(attendee, format: :json), params: {
-        registered_attendee: { attendee_name: "Still Pat" },
-        team_choice: "existing",
-        existing_team_id: ""
-      }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)).to include("base")
-    end
-
-    it "DELETE /registered_attendees/:id removes the record" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        **valid_fields
-      )
-      expect {
-        delete registered_attendee_path(attendee)
-      }.to change(RegisteredAttendee, :count).by(-1)
-      expect(response).to redirect_to(registered_attendees_path)
-    end
-
-    it "DELETE /registered_attendees/:id as JSON returns no content" do
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Del Json",
-        attendee_phone: "9796667788",
-        attendee_email: "deljson@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U1"
-      )
-      delete registered_attendee_path(attendee, format: :json)
-      expect(response).to have_http_status(:no_content)
-    end
-
-    it "DELETE /registered_attendees/:id blocks editor users" do
-      login_as(editor)
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Editor Block",
-        attendee_phone: "9796667789",
-        attendee_email: "editorblock@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U1"
-      )
-
-      expect {
-        delete registered_attendee_path(attendee)
-      }.not_to change(RegisteredAttendee, :count)
-
-      expect(response).to redirect_to(manager_index_path)
-      expect(flash[:alert]).to eq("Only 501 Club admins can delete attendees.")
-    end
-
-    it "DELETE /registered_attendees/:id as JSON blocks editor users" do
-      login_as(editor)
-      attendee = RegisteredAttendee.create!(
-        ideathon_year: ideathon,
-        team: team,
-        attendee_name: "Editor Block Json",
-        attendee_phone: "9796667790",
-        attendee_email: "editorblockjson@tamu.edu",
-        attendee_major: "CS",
-        attendee_class: "U1"
-      )
-
-      expect {
-        delete registered_attendee_path(attendee, format: :json)
-      }.not_to change(RegisteredAttendee, :count)
-
-      expect(response).to have_http_status(:forbidden)
-    end
-
-    it "POST from manager logs and returns to manager" do
-      expect {
-        post registered_attendees_path, params: {
-          registered_attendee: valid_fields,
-          team_choice: "existing",
-          existing_team_id: team.id.to_s,
-          return_to: "manager"
-        }
-      }.to change(RegisteredAttendee, :count).by(1)
-      expect(response).to redirect_to(manager_index_path)
-    end
-
-    it "POST /registered_attendees as JSON includes location for organizer" do
-      expect {
-        post registered_attendees_path(format: :json), params: {
-          registered_attendee: valid_fields.merge(attendee_email: "organizerjson@tamu.edu"),
-          team_choice: "existing",
-          existing_team_id: team.id.to_s,
-          return_to: "manager"
-        }
-      }.to change(RegisteredAttendee, :count).by(1)
-
-      expect(response).to have_http_status(:created)
-      expect(response.headers["Location"]).to match(%r{/registered_attendees/\d+\z})
-    end
-  end
+RSpec.describe "RegisteredAttendees", type: :request do
+     let(:ideathon_year) { IdeathonYear.create!(name: "2026", start_date: 1.week.from_now, end_date: 2.weeks.from_now, is_active: true) }
+     let(:unassigned_team) { Team.create!(ideathon_year: ideathon_year, team_name: "Unassigned", unassigned: true) }
+     let(:admin) { Admin.create!(email: "admin@tamu.edu", full_name: "Admin", uid: "123") }
+
+     before { unassigned_team }
+
+     describe "GET /registered_attendees/new" do
+          it "returns success (public page)" do
+               get new_registered_attendee_path
+               expect(response).to have_http_status(:ok)
+          end
+     end
+
+     describe "GET /registered_attendees/success" do
+          it "returns success (public page)" do
+               get success_registered_attendees_path
+               expect(response).to have_http_status(:ok)
+               expect(response.body).to include("YOU'RE IN")
+          end
+     end
+
+     describe "GET /registered_attendees/teams_for_year" do
+          it "returns empty array when year_id is blank" do
+               get teams_for_year_registered_attendees_path, params: { year_id: "" }
+               expect(response).to have_http_status(:ok)
+               expect(JSON.parse(response.body)).to eq([])
+          end
+
+          it "returns teams for the given year" do
+               get teams_for_year_registered_attendees_path, params: { year_id: ideathon_year.id }
+               expect(response).to have_http_status(:ok)
+               data = JSON.parse(response.body)
+               expect(data).to be_an(Array)
+               expect(data.size).to eq(1)
+               expect(data.first["name"]).to eq("Unassigned")
+               expect(data.first["id"]).to eq(unassigned_team.id)
+          end
+
+          it "returns empty list for non-active year ids" do
+               other_year = IdeathonYear.create!(name: "2027", start_date: 3.weeks.from_now, end_date: 4.weeks.from_now, is_active: false)
+               Team.create!(ideathon_year: other_year, team_name: "Other Team", unassigned: false)
+
+               get teams_for_year_registered_attendees_path, params: { year_id: other_year.id }
+               expect(response).to have_http_status(:ok)
+               expect(JSON.parse(response.body)).to eq([])
+          end
+     end
+
+     describe "POST /registered_attendees" do
+          let(:valid_params) do
+               {
+                 registered_attendee: {
+                   ideathon_year_id: ideathon_year.id,
+                   attendee_name: "Jane Doe",
+                   attendee_phone: "979-555-1234",
+                   attendee_email: "jane@tamu.edu",
+                   attendee_major: "CS",
+                   attendee_class: "Senior"
+                 },
+                 team_choice: "unassigned"
+               }
+          end
+
+          it "creates an attendee and redirects to success page" do
+               post registered_attendees_path, params: valid_params
+               expect(RegisteredAttendee.count).to eq(1)
+               expect(response).to redirect_to(success_registered_attendees_path)
+               expect(RegisteredAttendee.last.attendee_email).to eq("jane@tamu.edu")
+          end
+
+          context "with invalid params (missing required name)" do
+               let(:invalid_params) do
+                    {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "",
+                        attendee_phone: "979-555-1234",
+                        attendee_email: "jane@tamu.edu",
+                        attendee_major: "CS",
+                        attendee_class: "Senior"
+                      },
+                      team_choice: "unassigned"
+                    }
+               end
+
+               it "re-renders new and does not create" do
+                    expect { post registered_attendees_path, params: invalid_params }.not_to change(RegisteredAttendee, :count)
+                    expect(response).to have_http_status(422)
+               end
+          end
+
+          context "with team_choice existing" do
+               it "creates attendee with existing team" do
+                    params = {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "New Member",
+                        attendee_phone: "979-555-0000",
+                        attendee_email: "new@tamu.edu",
+                        attendee_major: "CS",
+                        attendee_class: "Freshman"
+                      },
+                      team_choice: "existing",
+                      existing_team_id: unassigned_team.id
+                    }
+                    expect { post registered_attendees_path, params: params }.to change(RegisteredAttendee, :count).by(1)
+                    expect(RegisteredAttendee.last.team_id).to eq(unassigned_team.id)
+               end
+          end
+
+          context "with team_choice existing but invalid" do
+               it "re-renders new when existing_team_id is blank" do
+                    params = {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "X",
+                        attendee_phone: "979-555-0000",
+                        attendee_email: "x@tamu.edu",
+                        attendee_major: "CS",
+                        attendee_class: "Sr"
+                      },
+                      team_choice: "existing",
+                      existing_team_id: ""
+                    }
+                    expect { post registered_attendees_path, params: params }.not_to change(RegisteredAttendee, :count)
+                    expect(response).to have_http_status(422)
+               end
+
+               it "re-renders new when existing_team_id is for another year" do
+                    other_year = IdeathonYear.create!(name: "2027", start_date: 3.weeks.from_now, end_date: 4.weeks.from_now, is_active: false)
+                    other_team = Team.create!(ideathon_year: other_year, team_name: "Other", unassigned: false)
+                    params = {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "X",
+                        attendee_phone: "979-555-0000",
+                        attendee_email: "x@tamu.edu",
+                        attendee_major: "CS",
+                        attendee_class: "Sr"
+                      },
+                      team_choice: "existing",
+                      existing_team_id: other_team.id
+                    }
+
+                    post registered_attendees_path, params: params
+                    expect(response).to have_http_status(422)
+               end
+          end
+
+          context "with team_choice new" do
+               it "creates attendee with new team" do
+                    params = {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "Captain",
+                        attendee_phone: "979-555-9999",
+                        attendee_email: "cap@tamu.edu",
+                        attendee_major: "CS",
+                        attendee_class: "Senior"
+                      },
+                      team_choice: "new",
+                      new_team_name: "New Team Name"
+                    }
+                    expect { post registered_attendees_path, params: params }.to change(RegisteredAttendee, :count).by(1)
+                    expect(RegisteredAttendee.last.team.team_name).to eq("New Team Name")
+               end
+
+               it "re-renders new when new team name is blank" do
+                    params = {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "Captain",
+                        attendee_phone: "979-555-9999",
+                        attendee_email: "cap@tamu.edu",
+                        attendee_major: "CS",
+                        attendee_class: "Senior"
+                      },
+                      team_choice: "new",
+                      new_team_name: "   "
+                    }
+                    expect { post registered_attendees_path, params: params }.not_to change(RegisteredAttendee, :count)
+                    expect(response).to have_http_status(422)
+               end
+          end
+
+          context "when team is full" do
+               it "re-renders new and does not create attendee" do
+                    full_team = Team.create!(ideathon_year: ideathon_year, team_name: "Full Team", unassigned: false)
+                    4.times do |idx|
+                         RegisteredAttendee.create!(
+                           ideathon_year: ideathon_year,
+                           team: full_team,
+                           attendee_name: "Member #{idx}",
+                           attendee_phone: "979-555-12#{format('%02d', idx)}",
+                           attendee_email: "member#{idx}@tamu.edu",
+                           attendee_major: "CS",
+                           attendee_class: "Senior"
+                         )
+                    end
+
+                    params = {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "Overflow",
+                        attendee_phone: "979-555-8888",
+                        attendee_email: "overflow@tamu.edu",
+                        attendee_major: "CS",
+                        attendee_class: "Senior"
+                      },
+                      team_choice: "existing",
+                      existing_team_id: full_team.id
+                    }
+
+                    expect { post registered_attendees_path, params: params }.not_to change(RegisteredAttendee, :count)
+                    expect(response).to have_http_status(422)
+               end
+          end
+     end
+
+     describe "GET /registered_attendees (index)" do
+          it "redirects to sign-in when not authenticated" do
+               get registered_attendees_path
+               expect(response).to redirect_to(new_admin_session_path)
+          end
+
+          context "when signed in as admin" do
+               before { sign_in admin, scope: :admin }
+
+               it "returns success" do
+                    get registered_attendees_path
+                    expect(response).to have_http_status(:ok)
+               end
+          end
+     end
+
+     describe "GET /registered_attendees/:id (show)" do
+          let(:attendee) do
+               RegisteredAttendee.create!(
+                 ideathon_year: ideathon_year,
+                 team: unassigned_team,
+                 attendee_name: "Jane",
+                 attendee_phone: "979-555-1234",
+                 attendee_email: "jane@tamu.edu",
+                 attendee_major: "CS",
+                 attendee_class: "Senior"
+               )
+          end
+
+          it "redirects guests to sign-in" do
+               get registered_attendee_path(attendee)
+               expect(response).to redirect_to(new_admin_session_path)
+          end
+
+          it "returns success for signed-in admins" do
+               sign_in admin, scope: :admin
+               get registered_attendee_path(attendee)
+               expect(response).to have_http_status(:ok)
+          end
+     end
+
+     describe "when no ideathon year exists" do
+          before do
+               Team.delete_all
+               RegisteredAttendee.delete_all
+               IdeathonYear.delete_all
+          end
+
+          it "shows registration unavailable on new" do
+               get new_registered_attendee_path
+               expect(response).to redirect_to(root_path)
+               expect(flash[:alert]).to match(/registration is currently unavailable/i)
+          end
+
+          it "blocks create and does not persist attendee" do
+               expect do
+                    post registered_attendees_path, params: {
+                      registered_attendee: {
+                        attendee_name: "Jane Doe",
+                        attendee_phone: "979-555-1234",
+                        attendee_email: "jane@tamu.edu",
+                        attendee_major: "CS",
+                        attendee_class: "Senior"
+                      }
+                    }
+               end.not_to change(RegisteredAttendee, :count)
+
+               expect(response).to redirect_to(root_path)
+          end
+     end
+
+     describe "edit, update, destroy (admin only)" do
+          let(:attendee) do
+               RegisteredAttendee.create!(
+                 ideathon_year: ideathon_year,
+                 team: unassigned_team,
+                 attendee_name: "Jane",
+                 attendee_phone: "979-555-1234",
+                 attendee_email: "jane@tamu.edu",
+                 attendee_major: "CS",
+                 attendee_class: "Senior"
+               )
+          end
+
+          it "edit redirects to sign-in when not authenticated" do
+               get edit_registered_attendee_path(attendee)
+               expect(response).to redirect_to(new_admin_session_path)
+          end
+
+          it "update redirects to sign-in when not authenticated" do
+               patch registered_attendee_path(attendee), params: { registered_attendee: { attendee_name: "Updated" } }
+               expect(response).to redirect_to(new_admin_session_path)
+          end
+
+          it "destroy redirects to sign-in when not authenticated" do
+               delete registered_attendee_path(attendee)
+               expect(response).to redirect_to(new_admin_session_path)
+          end
+
+          context "when signed in as admin" do
+               before { sign_in admin, scope: :admin }
+
+               it "edit returns success" do
+                    get edit_registered_attendee_path(attendee)
+                    expect(response).to have_http_status(:ok)
+               end
+
+               it "update succeeds and logs attendee update" do
+                    patch registered_attendee_path(attendee), params: {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "Jane Updated",
+                        attendee_phone: attendee.attendee_phone,
+                        attendee_email: attendee.attendee_email,
+                        attendee_major: attendee.attendee_major,
+                        attendee_class: attendee.attendee_class
+                      },
+                      team_choice: "unassigned"
+                    }
+                    expect(response).to redirect_to(manager_index_path)
+                    expect(attendee.reload.attendee_name).to eq("Jane Updated")
+                    expect(ManagerActionLog.last&.action).to eq("attendee.updated")
+               end
+
+               it "destroy deletes, logs action, and redirects to index" do
+                    delete registered_attendee_path(attendee)
+                    expect(response).to redirect_to(registered_attendees_path)
+                    expect(RegisteredAttendee.find_by(id: attendee.id)).to be_nil
+                    expect(ManagerActionLog.last&.action).to eq("attendee.deleted")
+               end
+
+               it "update with invalid params re-renders edit" do
+                    patch registered_attendee_path(attendee), params: {
+                      registered_attendee: {
+                        ideathon_year_id: ideathon_year.id,
+                        attendee_name: "",
+                        attendee_phone: attendee.attendee_phone,
+                        attendee_email: attendee.attendee_email,
+                        attendee_major: attendee.attendee_major,
+                        attendee_class: attendee.attendee_class
+                      },
+                      team_choice: "unassigned"
+                    }
+                    expect(response).to have_http_status(422)
+               end
+          end
+     end
 end

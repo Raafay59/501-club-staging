@@ -1,171 +1,116 @@
-require 'rails_helper'
+require "rails_helper"
 
-RSpec.describe "Ideathons", type: :request do
-  let!(:admin) { User.create!(email: 'admin@example.com', role: 'admin') }
-  let!(:editor) { User.create!(email: 'editor@example.com', role: 'editor') }
+RSpec.describe "Ideathons dashboard", type: :request do
+     let(:admin_user) { Admin.create!(email: "ideathon-admin@tamu.edu", full_name: "Admin", uid: "ia-1", role: "admin") }
+     let(:editor_user) { Admin.create!(email: "ideathon-editor@tamu.edu", full_name: "Editor", uid: "ie-1", role: "editor") }
 
-  before { login_as(admin) }
+     let!(:active_year) { Ideathon.create!(year: 2025, name: "Ideathon 2025", is_active: true) }
+     let!(:target_year) { Ideathon.create!(year: 2026, name: "Ideathon 2026", is_active: false) }
 
-  let!(:ideathon) { Ideathon.create!(year: 2025, theme: 'Innovation') }
+     describe "GET /dashboard/ideathons" do
+          it "requires login" do
+               get ideathons_path
+               expect(response).to redirect_to(new_admin_session_path)
+          end
 
-  describe "GET /ideathons" do
-    it "returns a successful response" do
-      get ideathons_path
-      expect(response).to have_http_status(:ok)
-    end
-  end
+          it "allows authorized users" do
+               sign_in editor_user, scope: :admin
+               get ideathons_path
+               expect(response).to have_http_status(:ok)
+          end
+     end
 
-  describe "GET /ideathons/:year" do
-    it "returns a successful response" do
-      get ideathon_path(ideathon)
-      expect(response).to have_http_status(:ok)
-    end
-  end
+     describe "POST /dashboard/ideathons" do
+          before { sign_in editor_user, scope: :admin }
 
-  describe "GET /ideathons/:year/overview" do
-    it "returns a successful response" do
-      get overview_ideathon_path(ideathon)
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Ideathon 2025 — Overview")
-    end
+          it "creates and activates new year exclusively" do
+               post ideathons_path, params: {
+                 ideathon: {
+                   year: 2027,
+                   name: "Ideathon 2027",
+                   theme: "Build",
+                   is_active: true
+                 }
+               }
 
-    it "redirects with an alert when year is invalid" do
-      get overview_ideathon_path(9999)
+               expect(response).to redirect_to(ideathons_path)
+               expect(Ideathon.find_by(year: 2027)&.is_active).to eq(true)
+               expect(active_year.reload.is_active).to eq(false)
+          end
 
-      expect(response).to redirect_to(ideathons_path)
-      expect(flash[:alert]).to eq("Ideathon year 9999 was not found.")
-    end
+          it "renders new on invalid create" do
+               post ideathons_path, params: { ideathon: { year: 20, name: "Bad Year" } }
+               expect(response).to have_http_status(:unprocessable_content)
+          end
+     end
 
-    context "as an editor" do
-      before { login_as(editor) }
+     describe "PATCH /dashboard/ideathons/:year" do
+          before { sign_in editor_user, scope: :admin }
 
-      it "allows organizers (editors) to view the overview" do
-        get overview_ideathon_path(ideathon)
-        expect(response).to have_http_status(:ok)
-      end
-    end
+          it "updates ideathon and toggles active flag exclusively" do
+               patch ideathon_path(year: target_year.year), params: {
+                 ideathon: { name: "Updated 2026", is_active: true }
+               }
 
-    context "as an unauthorized user" do
-      let(:unauthorized_user) { User.create!(email: "pending@example.com", role: "unauthorized") }
+               expect(response).to redirect_to(ideathons_path)
+               expect(target_year.reload.name).to eq("Updated 2026")
+               expect(target_year.is_active).to eq(true)
+               expect(active_year.reload.is_active).to eq(false)
+          end
+     end
 
-      before { login_as(unauthorized_user) }
+     describe "GET /dashboard/ideathons/:year/overview" do
+          before { sign_in editor_user, scope: :admin }
 
-      it "redirects away from the app" do
-        get overview_ideathon_path(ideathon)
-        expect(response).to redirect_to(unauthorized_path)
-      end
-    end
-  end
+          it "redirects with alert when year is missing" do
+               get overview_ideathon_path(year: 2099)
+               expect(response).to redirect_to(ideathons_path)
+               expect(flash[:alert]).to match(/not found/i)
+          end
+     end
 
-  describe "GET /ideathons/new" do
-    it "returns a successful response" do
-      get new_ideathon_path
-      expect(response).to have_http_status(:ok)
-    end
-  end
+     describe "POST /dashboard/ideathons/import" do
+          it "blocks editors from import" do
+               sign_in editor_user, scope: :admin
+               post import_ideathons_path, params: { file: nil }
+               expect(response).to redirect_to(root_path)
+          end
 
-  describe "POST /ideathons" do
-    context "with valid parameters" do
-      it "creates a new ideathon and redirects" do
-        expect {
-          post ideathons_path, params: { ideathon: { year: 2026, theme: 'AI' } }
-        }.to change(Ideathon, :count).by(1)
-        expect(response).to redirect_to(ideathons_path)
-      end
-    end
+          it "imports ideathons from a real csv upload" do
+               sign_in admin_user, scope: :admin
+               csv = Tempfile.new([ "ideathons", ".csv" ])
+               csv.write("year,theme\n2029,Build The Future\n")
+               csv.rewind
+               upload = Rack::Test::UploadedFile.new(csv.path, "text/csv", original_filename: "ideathons.csv")
 
-    context "with invalid parameters" do
-      it "does not create and re-renders the form" do
-        expect {
-          post ideathons_path, params: { ideathon: { year: nil, theme: '' } }
-        }.not_to change(Ideathon, :count)
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-    end
-  end
+               expect do
+                    post import_ideathons_path, params: { file: upload }
+               end.to change(Ideathon, :count).by(1)
 
-  describe "GET /ideathons/:year/edit" do
-    it "returns a successful response" do
-      get edit_ideathon_path(ideathon)
-      expect(response).to have_http_status(:ok)
-    end
-  end
+               expect(response).to redirect_to(ideathons_path)
+               expect(flash[:notice]).to match(/imported successfully/i)
+               expect(Ideathon.find_by(year: 2029)&.theme).to eq("Build The Future")
+          ensure
+               csv&.close
+               csv&.unlink
+          end
+     end
 
-  describe "PATCH /ideathons/:year" do
-    context "with valid parameters" do
-      it "updates the ideathon and redirects" do
-        patch ideathon_path(ideathon), params: { ideathon: { theme: 'Updated Theme' } }
-        ideathon.reload
-        expect(ideathon.theme).to eq('Updated Theme')
-        expect(response).to redirect_to(ideathons_path)
-      end
-    end
+     describe "DELETE /dashboard/ideathons/:year" do
+          it "blocks editors from deletion" do
+               sign_in editor_user, scope: :admin
+               delete ideathon_path(year: target_year.year)
+               expect(response).to redirect_to(root_path)
+          end
 
-    context "with empty theme" do
-      it "still updates successfully since theme is optional" do
-        patch ideathon_path(ideathon), params: { ideathon: { theme: '' } }
-        ideathon.reload
-        expect(ideathon.theme).to eq('')
-        expect(response).to redirect_to(ideathons_path)
-      end
-    end
+          it "handles invalid foreign key failures gracefully" do
+               sign_in admin_user, scope: :admin
+               allow_any_instance_of(Ideathon).to receive(:destroy).and_raise(ActiveRecord::InvalidForeignKey.new("fk"))
 
-    context "when update fails" do
-      it "re-renders edit with unprocessable status" do
-        allow_any_instance_of(Ideathon).to receive(:update).and_return(false)
+               delete ideathon_path(year: target_year.year)
 
-        patch ideathon_path(ideathon), params: { ideathon: { theme: 'Will Not Save' } }
-
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-    end
-  end
-
-  describe "GET /ideathons/:year/delete" do
-    it "returns a successful response" do
-      get delete_ideathon_path(ideathon)
-      expect(response).to have_http_status(:ok)
-    end
-  end
-
-  describe "DELETE /ideathons/:year" do
-    it "deletes the ideathon and redirects" do
-      expect {
-        delete ideathon_path(ideathon)
-      }.to change(Ideathon, :count).by(-1)
-      expect(response).to redirect_to(ideathons_path)
-    end
-
-    context "as a non-admin editor" do
-      before { login_as(editor) }
-
-      it "redirects non-admin users" do
-        delete ideathon_path(ideathon)
-        expect(response).to redirect_to(ideathons_path)
-      end
-    end
-  end
-
-  describe "POST /ideathons/import" do
-    it "imports from a valid CSV file" do
-      file = fixture_file_upload('ideathons_import.csv', 'text/csv')
-
-      expect {
-        post import_ideathons_path, params: { file: file }
-      }.to change(Ideathon, :count).by(2)
-
-      expect(response).to redirect_to(ideathons_path)
-    end
-
-    it "rejects non-csv files" do
-      file = fixture_file_upload('not_a_csv.txt', 'text/plain')
-
-      expect {
-        post import_ideathons_path, params: { file: file }
-      }.not_to change(Ideathon, :count)
-
-      expect(response).to redirect_to(ideathons_path)
-      expect(flash[:alert]).to include('Invalid file type')
-    end
-  end
+               expect(response).to redirect_to(ideathons_path)
+               expect(flash[:alert]).to match(/related records still exist/i)
+          end
+     end
 end

@@ -1,6 +1,6 @@
 <h1>Delete Ideathon <%= @ideathon.year %></h1>
 
-<p>Are you sure you want to delete this ideathon? This will also delete all associated sponsors/partners, mentors/judges, FAQs, and rules.</p>
+<p>Are you sure you want to delete this ideathon? This will also delete all associated teams, registered attendees, events, sponsors/partners, mentors/judges, FAQs, and rules.</p>
 
 <%= button_to "Delete", ideathon_path(@ideathon), method: :delete, data: { turbo_confirm: "Are you sure?" } %> |
 <%= link_to "Cancel", ideathons_path %>

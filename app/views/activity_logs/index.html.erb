@@ -2,10 +2,6 @@
 
 <p>Recent changes to ideathons, sponsors, partners, mentors, judges, FAQs, and photos (logos and profile images). Newest first.</p>
 
-<% if flash[:alert] %>
-  <p class="flash flash--alert" role="alert"><%= flash[:alert] %></p>
-<% end %>
-
 <%= form_with url: activity_logs_path, method: :get, local: true do |form| %>
   <div>
     <%= form.label :content_type, "Content type" %>
@@ -51,7 +47,7 @@
         <td><%= log.created_at.in_time_zone.strftime("%Y-%m-%d %H:%M") %> <%= log.created_at.in_time_zone.zone %></td>
         <td><%= log.action.capitalize %></td>
         <td><%= log.message %></td>
-        <td><%= log.user.name.presence || log.user.email %></td>
+        <td><%= log.actor_display_name %></td>
       </tr>
     <% end %>
     <% if @activity_logs.empty? %>

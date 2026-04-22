@@ -16,13 +16,13 @@
     <%= context_field_tip("users.email") do %>
       <div>
         <%= form.label :email, "Email Address" %>
-        <%= form.email_field :email, placeholder: "user@example.com" %>
+        <%= form.email_field :email, placeholder: "user@tamu.edu", pattern: "^[^@\\s]+@tamu\\.edu$", title: "Email must end with @tamu.edu" %>
       </div>
     <% end %>
     <%= context_field_tip("users.role_invite") do %>
       <div>
         <%= form.label :role %>
-        <%= form.select :role, [["Editor", "editor"], ["Admin", "admin"]] %>
+        <%= form.select :role, options_for_select([["Editor", "editor"], ["Admin", "admin"]], "editor") %>
       </div>
     <% end %>
     <div>
@@ -49,10 +49,10 @@
     <% @users.each do |user| %>
       <tr>
         <td><%= user.email %></td>
-        <td><%= user.name || "—" %></td>
+        <td><%= user.full_name.presence || "-" %></td>
         <td>
           <strong><%= user.role.capitalize %></strong>
-          <% if user == current_user %>
+          <% if user == current_admin %>
             (you)
           <% end %>
         </td>
@@ -65,8 +65,8 @@
           <% end %>
         </td>
         <td>
-          <% if user == current_user %>
-            —
+          <% if user == current_admin %>
+            -
           <% else %>
             <%= button_to "Delete", user_path(user), method: :delete, data: { turbo_confirm: "Remove #{user.email}?" } %>
           <% end %>

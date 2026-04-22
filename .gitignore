@@ -9,6 +9,7 @@
 
 # Ignore all environment files.
 /.env*
+!/.env.example
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -30,7 +31,26 @@
 
 /public/assets
 
+/app/assets/builds/*
+!/app/assets/builds/.keep
+
 # Ignore master key for decrypting credentials and more.
 /config/master.key
 
-coverage
+# SimpleCov coverage report
+/coverage/
+
+# RSpec example status (used for --only-failures)
+/spec/examples.txt
+
+# RSpec output / ad-hoc result files
+spec_results.txt
+
+# Node 
+node_modules/
+
+# JS lockfile 
+package-lock.json
+
+# Extra safety for log files in project root
+*.log

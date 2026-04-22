@@ -1,9 +1,0 @@
-<h2> Welcome to the Ideathon Organizer Team, <%= @user.name %>! </h2>
-
-<p> Thank you for joining the Ideathon Organizer Team! We are excited to have you on board. </p>
-<% if @new_role.to_s.in?(["admin", "editor"]) %>
-	<p> Your current access level is <strong><%= @new_role %></strong>. You can now use the features available to this role. </p>
-<% else %>
-	<p> You are currently unassigned to a specific role. An administrator can update your access level at any time. </p>
-<% end %>
-<p> If you have any questions or need assistance, feel free to reach out to the team. We look forward to working with you! </p>

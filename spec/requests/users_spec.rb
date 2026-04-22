@@ -1,150 +1,88 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "Users", type: :request do
-  let!(:admin) { User.create!(email: 'admin@example.com', name: 'Admin User', role: 'admin') }
-  let!(:editor) { User.create!(email: 'editor@example.com', name: 'Editor User', role: 'editor') }
+     let(:admin_user) { Admin.create!(email: "admin1@tamu.edu", full_name: "Admin One", uid: "admin-1", role: "admin") }
+     let(:second_admin) { Admin.create!(email: "admin2@tamu.edu", full_name: "Admin Two", uid: "admin-2", role: "admin") }
+     let(:editor_user) { Admin.create!(email: "editor@tamu.edu", full_name: "Editor", uid: "editor-1", role: "editor") }
 
-  before { login_as(admin) }
+     describe "GET /dashboard/users" do
+          it "redirects guests to sign in" do
+               get users_path
+               expect(response).to redirect_to(new_admin_session_path)
+          end
 
-  describe "GET /users" do
-    it "returns a successful response for admin" do
-      get users_path
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include('class="context-field-tip"')
-      expect(response.body).to include(I18n.t("context_help.users.email"))
-    end
+          it "blocks editors" do
+               sign_in editor_user, scope: :admin
+               get users_path
+               expect(response).to redirect_to(root_path)
+               expect(flash[:alert]).to eq("Only admins can perform this action.")
+          end
 
-    context "as a non-admin" do
-      before { login_as(editor) }
+          it "allows admins" do
+               sign_in admin_user, scope: :admin
+               get users_path
+               expect(response).to have_http_status(:ok)
+          end
+     end
 
-      it "redirects non-admin users" do
-        get users_path
-        expect(response).to redirect_to(ideathons_path)
-      end
-    end
-  end
+     describe "POST /dashboard/users" do
+          before { sign_in admin_user, scope: :admin }
 
-  describe "POST /users" do
-    context "with valid parameters" do
-      it "creates a new user and redirects" do
-        expect {
-          post users_path, params: { user: { email: 'new@example.com', role: 'editor' } }
-        }.to change(User, :count).by(1)
-        expect(response).to redirect_to(users_path)
-      end
-    end
+          it "creates an invited user with selected role" do
+               expect do
+                    post users_path, params: { admin: { email: "new_editor@tamu.edu", role: "editor" } }
+               end.to change(Admin, :count).by(1)
 
-    context "with invalid parameters" do
-      it "does not create with duplicate email" do
-        expect {
-          post users_path, params: { user: { email: 'admin@example.com', role: 'editor' } }
-        }.not_to change(User, :count)
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-    end
-  end
+               expect(response).to redirect_to(users_path)
+               expect(Admin.find_by(email: "new_editor@tamu.edu")&.role).to eq("editor")
+          end
 
-  describe "PATCH /users/:id" do
-    it "updates a user's role" do
-      patch user_path(editor), params: { user: { role: 'admin' } }
-      editor.reload
-      expect(editor.role).to eq('admin')
-      expect(response).to redirect_to(users_path)
-    end
+          it "rejects non tamu email" do
+               expect do
+                    post users_path, params: { admin: { email: "bad@gmail.com", role: "editor" } }
+               end.not_to change(Admin, :count)
 
-    it "keeps role changes when role-change email enqueue fails" do
-      delivery = instance_double(ActionMailer::MessageDelivery)
-      mailer = instance_double(MemberMailer, role_change_email: delivery)
-      allow(MemberMailer).to receive(:with).and_return(mailer)
-      allow(delivery).to receive(:deliver_later).and_raise(StandardError, "queue unavailable")
+               expect(response).to have_http_status(:unprocessable_content)
+          end
+     end
 
-      patch user_path(editor), params: { user: { role: 'admin' } }
+     describe "PATCH /dashboard/users/:id" do
+          before { sign_in admin_user, scope: :admin }
 
-      editor.reload
-      expect(editor.role).to eq('admin')
-      expect(response).to redirect_to(users_path)
-    end
+          it "rejects invalid role values" do
+               patch user_path(editor_user), params: { admin: { role: "superadmin" } }
+               expect(response).to redirect_to(users_path)
+               expect(flash[:alert]).to eq("Invalid role selected.")
+          end
 
-    it "prevents demoting the last admin" do
-      User.where(role: "admin").where.not(id: admin.id).delete_all
+          it "prevents demoting the only admin" do
+               patch user_path(admin_user), params: { admin: { role: "editor" } }
+               expect(response).to redirect_to(users_path)
+               expect(flash[:alert]).to eq("Cannot demote the only admin.")
+               expect(admin_user.reload.role).to eq("admin")
+          end
 
-      patch user_path(admin), params: { user: { role: 'editor' } }
-      admin.reload
-      expect(admin.role).to eq('admin')
-      expect(response).to redirect_to(users_path)
-    end
+          it "allows demotion when another admin exists" do
+               second_admin
+               patch user_path(admin_user), params: { admin: { role: "editor" } }
+               expect(response).to redirect_to(users_path)
+               expect(admin_user.reload.role).to eq("editor")
+          end
+     end
 
-    it "shows an alert when role update fails validation" do
-      patch user_path(editor), params: { user: { role: 'invalid-role' } }
+     describe "DELETE /dashboard/users/:id" do
+          before { sign_in admin_user, scope: :admin }
 
-      expect(response).to redirect_to(users_path)
-      expect(flash[:alert]).to eq('Failed to update role.')
-      expect(editor.reload.role).to eq('editor')
-    end
-  end
+          it "prevents deleting current admin" do
+               delete user_path(admin_user)
+               expect(response).to redirect_to(users_path)
+               expect(flash[:alert]).to match(/cannot delete your own account/i)
+          end
 
-  describe "DELETE /users/:id" do
-    it "deletes another user" do
-      expect {
-        delete user_path(editor)
-      }.to change(User, :count).by(-1)
-      expect(response).to redirect_to(users_path)
-    end
-
-    it "passes primitive values to goodbye email when deleting a user" do
-      delivery = instance_double(ActionMailer::MessageDelivery, deliver_later: true)
-      mailer = instance_double(MemberMailer, goodbye_email: delivery)
-
-      expect(MemberMailer).to receive(:with).with(
-        hash_including(user_email: 'editor@example.com', user_name: 'Editor User', old_role: 'editor')
-      ).and_return(mailer)
-
-      delete user_path(editor)
-
-      expect(response).to redirect_to(users_path)
-    end
-
-    it "still deletes a user when goodbye email enqueue fails" do
-      delivery = instance_double(ActionMailer::MessageDelivery)
-      mailer = instance_double(MemberMailer, goodbye_email: delivery)
-
-      allow(MemberMailer).to receive(:with).and_return(mailer)
-      allow(delivery).to receive(:deliver_later).and_raise(StandardError, 'queue unavailable')
-
-      expect {
-        delete user_path(editor)
-      }.to change(User, :count).by(-1)
-
-      expect(response).to redirect_to(users_path)
-    end
-
-    it "prevents deleting yourself" do
-      expect {
-        delete user_path(admin)
-      }.not_to change(User, :count)
-      expect(response).to redirect_to(users_path)
-    end
-
-    it "deletes a user and their activity logs" do
-      ActivityLog.record!(user: editor, action: :added, message: "Sponsor 'Logged' was added")
-
-      expect {
-        delete user_path(editor)
-      }.to change(User, :count).by(-1).and change(ActivityLog, :count).by(-1)
-
-      expect(response).to redirect_to(users_path)
-    end
-
-    it "shows an alert when destroy fails" do
-      allow_any_instance_of(User).to receive(:destroy) do |user|
-        user.errors.add(:base, 'Cannot delete user')
-        false
-      end
-
-      delete user_path(editor)
-
-      expect(response).to redirect_to(users_path)
-      expect(flash[:alert]).to eq('Cannot delete user')
-    end
-  end
+          it "deletes another account" do
+               delete user_path(editor_user)
+               expect(response).to redirect_to(users_path)
+               expect(Admin.find_by(id: editor_user.id)).to be_nil
+          end
+     end
 end

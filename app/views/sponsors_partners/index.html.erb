@@ -15,7 +15,7 @@
       <tr>
         <td><%= sp.year %></td>
         <td><%= sp.name %></td>
-        <td><%= sp.job_title.presence || "—" %></td>
+        <td><%= sp.job_title.presence || "-" %></td>
         <td><%= sp.is_sponsor? ? "Sponsor" : "Partner" %></td>
         <td>
           <%= link_to "View", sponsors_partner_path(sp) %> |

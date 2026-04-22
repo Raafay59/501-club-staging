@@ -1,0 +1,11 @@
+one:
+  email: admin@example.com
+  full_name: Admin User
+  uid: "123456"
+  avatar_url: https://example.com/avatar.jpg
+
+two:
+  email: admin2@example.com
+  full_name: Admin User Two
+  uid: "789012"
+  avatar_url: https://example.com/avatar2.jpg

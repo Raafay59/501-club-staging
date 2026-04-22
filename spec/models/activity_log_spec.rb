@@ -1,82 +1,84 @@
 require "rails_helper"
 
 RSpec.describe ActivityLog, type: :model do
-  include ActiveJob::TestHelper
+     let(:admin) { Admin.create!(email: "log-admin@tamu.edu", full_name: "Log Admin", uid: "log-1") }
 
-  let(:user) { User.create!(email: "admin@example.com", role: "admin") }
+     describe ".infer_metadata" do
+          it "classifies sponsor, ideathon, and unknown messages" do
+               sponsor = described_class.infer_metadata("Sponsor 'ACME' was added")
+               ideathon = described_class.infer_metadata("Ideathon 2026 was edited")
+               unknown = described_class.infer_metadata("Something else happened")
 
-  before do
-    clear_enqueued_jobs
-    ActionMailer::Base.deliveries.clear
-  end
+               expect(sponsor).to eq(content_type: "sponsors", item_name: "ACME")
+               expect(ideathon).to eq(content_type: "ideathons", item_name: "2026")
+               expect(unknown[:content_type]).to eq("activity")
+          end
+     end
 
-  describe ".record!" do
-    it "infers structured metadata from the message" do
-      log = described_class.record!(user: user, action: :added, message: "Sponsor 'Acme' was added")
+     describe ".record!" do
+          it "creates row with inferred metadata when not provided" do
+               log = described_class.record!(admin: admin, action: :added, message: "FAQ 'Q1' was added")
+               expect(log.content_type).to eq("faqs")
+               expect(log.item_name).to eq("Q1")
+               expect(log.actor_email).to eq(admin.email)
+          end
+     end
 
-      expect(log.content_type).to eq("sponsors")
-      expect(log.item_name).to eq("Acme")
-    end
-  end
+     describe ".filter" do
+          it "filters by content type and custom date range" do
+               old_log = described_class.create!(
+                 admin: admin, actor_name: "A", actor_email: admin.email,
+                 action: "added", content_type: "faqs", item_name: "Old", message: "FAQ 'Old' was added",
+                 created_at: 10.days.ago
+               )
+               new_log = described_class.create!(
+                 admin: admin, actor_name: "A", actor_email: admin.email,
+                 action: "added", content_type: "faqs", item_name: "New", message: "FAQ 'New' was added",
+                 created_at: 1.day.ago
+               )
 
-  describe "organizer notifications" do
-    let!(:admin_recipient) { User.create!(email: "notify-admin@example.com", role: "admin") }
-    let!(:editor_recipient) { User.create!(email: "notify-editor@example.com", role: "editor") }
-    let!(:unauthorized_user) { User.create!(email: "notify-unauthorized@example.com", role: "unauthorized") }
+               results = described_class.filter(content_type: "faqs", date_range: "last_7_days")
+               expect(results).to include(new_log)
+               expect(results).not_to include(old_log)
+          end
 
-    before do
-      clear_enqueued_jobs
-      ActionMailer::Base.deliveries.clear
-    end
+          it "includes import/export log content types in category filters" do
+               sponsor_import = described_class.create!(
+                 admin: admin,
+                 actor_name: "A",
+                 actor_email: admin.email,
+                 action: "imported",
+                 content_type: "sponsors_partners",
+                 item_name: "2 sponsors/partners",
+                 message: "Imported 2 sponsors/partners"
+               )
+               mentor_export = described_class.create!(
+                 admin: admin,
+                 actor_name: "A",
+                 actor_email: admin.email,
+                 action: "exported",
+                 content_type: "mentors_judges",
+                 item_name: "3 mentors/judges",
+                 message: "Exported 3 mentors/judges"
+               )
 
-    it "emails only organizers when a log is committed" do
-      perform_enqueued_jobs do
-        described_class.record!(user: unauthorized_user, action: :added, message: "Sponsor 'Acme' was added")
-      end
+               sponsor_results = described_class.filter(content_type: "sponsors")
+               judge_results = described_class.filter(content_type: "judges")
 
-      recipients = ActionMailer::Base.deliveries.flat_map(&:to)
-      expected = User.where(role: [ "admin", "editor" ]).distinct.pluck(:email)
-      expect(recipients).to match_array(expected)
-    end
+               expect(sponsor_results).to include(sponsor_import)
+               expect(judge_results).to include(mentor_export)
+          end
+     end
 
-    it "does not enqueue notifications when transaction rolls back" do
-      ActiveRecord::Base.transaction do
-        described_class.record!(user: unauthorized_user, action: :added, message: "Sponsor 'Rollback' was added")
-        raise ActiveRecord::Rollback
-      end
+     describe "immutability" do
+          it "prevents updates and deletions" do
+               log = described_class.create!(
+                 admin: admin, actor_name: "A", actor_email: admin.email,
+                 action: "added", content_type: "faqs", item_name: "Q", message: "FAQ 'Q' was added"
+               )
 
-      expect(enqueued_jobs).to be_empty
-    end
-
-    it "keeps activity log creation when enqueueing fails" do
-      allow(CrudMailer).to receive(:with).and_raise(StandardError, "queue failed")
-
-      expect {
-        described_class.record!(user: unauthorized_user, action: :added, message: "Sponsor 'Safe' was added")
-      }.to change(described_class, :count).by(1)
-    end
-  end
-
-  describe "immutability" do
-    let!(:log) { described_class.record!(user: user, action: :added, message: "Sponsor 'Acme' was added") }
-
-    it "cannot be edited" do
-      expect(log.update(message: "Changed")).to be(false)
-      expect(log.errors[:base]).to include("Activity logs are immutable")
-    end
-
-    it "cannot be deleted" do
-      expect {
-        log.destroy
-      }.not_to change(described_class, :count)
-
-      expect(log.errors[:base]).to include("Activity logs are immutable")
-    end
-  end
-
-  describe "date parsing" do
-    it "returns nil for invalid filter dates" do
-      expect(described_class.send(:parse_filter_date, "invalid-date")).to be_nil
-    end
-  end
+               expect(log.update(message: "changed")).to eq(false)
+               expect(log.destroy).to eq(false)
+          end
+     end
 end
