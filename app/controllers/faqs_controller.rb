@@ -10,7 +10,7 @@ class FaqsController < ClubDashboardController
 
      def new
           @faq = Faq.new
-          @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+          assign_ideathon_years_for_form!
      end
 
      def create
@@ -18,20 +18,20 @@ class FaqsController < ClubDashboardController
           if @faq.save
                redirect_to faqs_path, notice: "FAQ was successfully created."
           else
-               @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+               assign_ideathon_years_for_form!
                render :new, status: :unprocessable_entity
           end
      end
 
      def edit
-          @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+          assign_ideathon_years_for_form!
      end
 
      def update
           if @faq.update(faq_params)
                redirect_to faqs_path, notice: "FAQ was successfully updated."
           else
-               @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+               assign_ideathon_years_for_form!
                render :edit, status: :unprocessable_entity
           end
      end
@@ -54,11 +54,12 @@ class FaqsController < ClubDashboardController
             }
           ).import
 
-          if result[:failed] > 0
-               redirect_to faqs_path, alert: "Imported #{result[:success]}. #{result[:failed]} failed: #{result[:errors].first(3).join(', ')}"
-          else
-               redirect_to faqs_path, notice: "All #{result[:success]} FAQs imported successfully."
-          end
+          redirect_after_csv_import!(
+            result: result,
+            redirect_path: faqs_path,
+            failure_alert: ->(r) { "Imported #{r[:success]}. #{r[:failed]} failed: #{r[:errors].first(3).join(', ')}" },
+            success_notice: ->(r) { "All #{r[:success]} FAQs imported successfully." }
+          )
      end
 
   private

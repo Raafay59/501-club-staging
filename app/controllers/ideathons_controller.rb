@@ -59,11 +59,12 @@ class IdeathonsController < ClubDashboardController
             attribute_map: { "year" => :year, "theme" => :theme }
           ).import
 
-          if result[:failed] > 0
-               redirect_to ideathons_path, alert: "Imported #{result[:success]} ideathons. #{result[:failed]} failed: #{result[:errors].first(3).join(', ')}"
-          else
-               redirect_to ideathons_path, notice: "All #{result[:success]} ideathons imported successfully."
-          end
+          redirect_after_csv_import!(
+            result: result,
+            redirect_path: ideathons_path,
+            failure_alert: ->(r) { "Imported #{r[:success]} ideathons. #{r[:failed]} failed: #{r[:errors].first(3).join(', ')}" },
+            success_notice: ->(r) { "All #{r[:success]} ideathons imported successfully." }
+          )
      end
 
   private

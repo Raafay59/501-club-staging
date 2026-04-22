@@ -12,32 +12,32 @@ class MentorsJudgesController < ClubDashboardController
 
      def new
           @mentors_judge = MentorsJudge.new
-          @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+          assign_ideathon_years_for_form!
      end
 
      def create
           @mentors_judge = MentorsJudge.new(mentors_judge_params)
-          normalize_photo_url_choice!(@mentors_judge)
+          normalize_optional_url_from_params!(@mentors_judge, root_key: :mentors_judge, attribute: :photo_url, include_flag: :include_photo)
           if @mentors_judge.save
                redirect_to mentors_judges_path, notice: "Mentor/Judge was successfully created."
           else
-               @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+               assign_ideathon_years_for_form!
                render :new, status: :unprocessable_entity
           end
      end
 
      def edit
-          @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+          assign_ideathon_years_for_form!
      end
 
      def update
           @mentors_judge.assign_attributes(mentors_judge_params)
-          normalize_photo_url_choice!(@mentors_judge)
+          normalize_optional_url_from_params!(@mentors_judge, root_key: :mentors_judge, attribute: :photo_url, include_flag: :include_photo)
 
           if @mentors_judge.save
                redirect_to mentors_judges_path, notice: "Mentor/Judge was successfully updated."
           else
-               @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+               assign_ideathon_years_for_form!
                render :edit, status: :unprocessable_entity
           end
      end
@@ -63,11 +63,12 @@ class MentorsJudgesController < ClubDashboardController
             }
           ).import
 
-          if result[:failed] > 0
-               redirect_to mentors_judges_path, alert: "Imported #{result[:success]}. #{result[:failed]} failed: #{result[:errors].first(3).join(', ')}"
-          else
-               redirect_to mentors_judges_path, notice: "All #{result[:success]} mentors/judges imported successfully."
-          end
+          redirect_after_csv_import!(
+            result: result,
+            redirect_path: mentors_judges_path,
+            failure_alert: ->(r) { "Imported #{r[:success]}. #{r[:failed]} failed: #{r[:errors].first(3).join(', ')}" },
+            success_notice: ->(r) { "All #{r[:success]} mentors/judges imported successfully." }
+          )
      end
 
      def export
@@ -100,14 +101,6 @@ class MentorsJudgesController < ClubDashboardController
 
        def mentors_judge_params
             params.require(:mentors_judge).permit(:year, :name, :job_title, :photo_url, :bio, :is_judge)
-       end
-
-       def include_photo?
-            params.dig(:mentors_judge, :include_photo) != "0"
-       end
-
-       def normalize_photo_url_choice!(record)
-            record.photo_url = include_photo? ? record.photo_url.to_s.strip.presence : nil
        end
 
        def latest_export_year_for(_model)

@@ -10,7 +10,7 @@ class RulesController < ClubDashboardController
 
      def new
           @rule = Rule.new
-          @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+          assign_ideathon_years_for_form!
      end
 
      def create
@@ -18,20 +18,20 @@ class RulesController < ClubDashboardController
           if @rule.save
                redirect_to rules_path, notice: "Rule was successfully created."
           else
-               @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+               assign_ideathon_years_for_form!
                render :new, status: :unprocessable_entity
           end
      end
 
      def edit
-          @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+          assign_ideathon_years_for_form!
      end
 
      def update
           if @rule.update(rule_params)
                redirect_to rules_path, notice: "Rule was successfully updated."
           else
-               @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+               assign_ideathon_years_for_form!
                render :edit, status: :unprocessable_entity
           end
      end
@@ -53,11 +53,12 @@ class RulesController < ClubDashboardController
             }
           ).import
 
-          if result[:failed] > 0
-               redirect_to rules_path, alert: "Imported #{result[:success]}. #{result[:failed]} failed: #{result[:errors].first(3).join(', ')}"
-          else
-               redirect_to rules_path, notice: "All #{result[:success]} rules imported successfully."
-          end
+          redirect_after_csv_import!(
+            result: result,
+            redirect_path: rules_path,
+            failure_alert: ->(r) { "Imported #{r[:success]}. #{r[:failed]} failed: #{r[:errors].first(3).join(', ')}" },
+            success_notice: ->(r) { "All #{r[:success]} rules imported successfully." }
+          )
      end
 
   private

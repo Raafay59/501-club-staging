@@ -12,32 +12,32 @@ class SponsorsPartnersController < ClubDashboardController
 
      def new
           @sponsors_partner = SponsorsPartner.new
-          @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+          assign_ideathon_years_for_form!
      end
 
      def create
           @sponsors_partner = SponsorsPartner.new(sponsors_partner_params)
-          normalize_logo_url_choice!(@sponsors_partner)
+          normalize_optional_url_from_params!(@sponsors_partner, root_key: :sponsors_partner, attribute: :logo_url, include_flag: :include_logo)
           if @sponsors_partner.save
                redirect_to sponsors_partners_path, notice: "Sponsor/Partner was successfully created."
           else
-               @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+               assign_ideathon_years_for_form!
                render :new, status: :unprocessable_entity
           end
      end
 
      def edit
-          @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+          assign_ideathon_years_for_form!
      end
 
      def update
           @sponsors_partner.assign_attributes(sponsors_partner_params)
-          normalize_logo_url_choice!(@sponsors_partner)
+          normalize_optional_url_from_params!(@sponsors_partner, root_key: :sponsors_partner, attribute: :logo_url, include_flag: :include_logo)
 
           if @sponsors_partner.save
                redirect_to sponsors_partners_path, notice: "Sponsor/Partner was successfully updated."
           else
-               @ideathon_years = Ideathon.where.not(year: nil).pluck(:year).sort.reverse
+               assign_ideathon_years_for_form!
                render :edit, status: :unprocessable_entity
           end
      end
@@ -63,11 +63,12 @@ class SponsorsPartnersController < ClubDashboardController
             }
           ).import
 
-          if result[:failed] > 0
-               redirect_to sponsors_partners_path, alert: "Imported #{result[:success]}. #{result[:failed]} failed: #{result[:errors].first(3).join(', ')}"
-          else
-               redirect_to sponsors_partners_path, notice: "All #{result[:success]} sponsors/partners imported successfully."
-          end
+          redirect_after_csv_import!(
+            result: result,
+            redirect_path: sponsors_partners_path,
+            failure_alert: ->(r) { "Imported #{r[:success]}. #{r[:failed]} failed: #{r[:errors].first(3).join(', ')}" },
+            success_notice: ->(r) { "All #{r[:success]} sponsors/partners imported successfully." }
+          )
      end
 
      def export
@@ -100,14 +101,6 @@ class SponsorsPartnersController < ClubDashboardController
 
        def sponsors_partner_params
             params.require(:sponsors_partner).permit(:year, :name, :job_title, :logo_url, :blurb, :is_sponsor)
-       end
-
-       def include_logo?
-            params.dig(:sponsors_partner, :include_logo) != "0"
-       end
-
-       def normalize_logo_url_choice!(record)
-            record.logo_url = include_logo? ? record.logo_url.to_s.strip.presence : nil
        end
 
        def latest_export_year_for(_model)
