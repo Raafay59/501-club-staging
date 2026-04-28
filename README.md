@@ -7,16 +7,16 @@ registrations from students, and allow administrators to manage participants,
 teams, and ideathon events.
 
 Developer Emails:
-samnguyen02@tamu.edu
-joyceluo04@tamu.edu
-oscarbravo@tamu.edu
-lilly_seeley@tamu.edu
+- samnguyen02@tamu.edu
+- joyceluo04@tamu.edu
+- oscarbravo@tamu.edu
+- lilly_seeley@tamu.edu
 
 Admin Dashboard Developers:
-williamt2023@tamu.edu
-raafay.ah@tamu.edu
-Ernestbarren01@yahoo.com
-zzh021015@tamu.edu
+- williamt2023@tamu.edu
+- raafay.ah@tamu.edu
+- Ernestbarren01@yahoo.com
+- zzh021015@tamu.edu
 
 
 ## Table of Contents
