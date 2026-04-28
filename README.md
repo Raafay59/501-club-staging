@@ -1,19 +1,44 @@
 # TAMU Ideathon Web Application
 
-This repository contains the source code for the **TAMU Ideathon 2026** web
+**Project Title:** TAMU Ideathon Web Application
+**Description:** This repository contains the source code for the **TAMU Ideathon 2026** web
 application – a Ruby on Rails service used to advertise the event, collect
 registrations from students, and allow administrators to manage participants,
 teams, and ideathon events.
+
 Developer Emails:
 samnguyen02@tamu.edu
 joyceluo04@tamu.edu
 oscarbravo@tamu.edu
 lilly_seeley@tamu.edu
 
-## Purpose
+Admin Dashboard Developers:
+williamt2023@tamu.edu
+raafay.ah@tamu.edu
+Ernestbarren01@yahoo.com
+zzh021015@tamu.edu
 
-The goal of this project is to provide a full-featured landing site and
-enrollment system for the ideathon. It includes:
+
+## Table of Contents
+- [Project Title & Description](#tamu-ideathon-web-application)
+- [Requirements (Internal & External Components)](#requirements-internal--external-components)
+- [External Dependencies](#external-dependencies)
+- [Environmental Variables/Files](#environmental-variablesfiles)
+- [Installation and Setup](#installation-and-setup)
+- [Usage](#usage)
+- [Features](#features)
+- [Documentation](#documentation)
+- [Local DB Helper Scripts](#local-db-helper-scripts-git-bash--wsl-bash)
+- [Deployment](#deployment)
+- [Useful Commands](#useful-commands)
+- [Continuous Integration](#continuous-integration)
+- [Credits and Acknowledgements](#credits-and-acknowledgements)
+- [Third Party Libraries](#third-party-libraries)
+- [Contact Information](#contact-information)
+- [Contribution](#contribution)
+- [License](#license)
+
+## Features
 
 * Public-facing landing page with event details, schedule, rules, and FAQs.
 * Public registration for attendees (web form; **@tamu.edu** email validation).
@@ -23,19 +48,50 @@ enrollment system for the ideathon. It includes:
 
 The default browser **title** in `app/views/layouts/application.html.erb` may still say **“501 Club - Ideathon Manager”**; the product is the **TAMU Ideathon** site and organizer tools described here.
 
-## Documentation (in this repo and in the app)
+## Requirements (Internal & External Components)
 
-| Audience | Location |
-|----------|-----------|
-| Organizers (how to use dashboards, roles, publishing) | [`docs/user_documentation.md`](docs/user_documentation.md) |
-| Engineers / DevOps (stack, env, CI, deployment) | [`docs/technical_documentation.md`](docs/technical_documentation.md) |
-| Architecture map (public vs dashboard vs shared data) | [`docs/admin_dashboard_system_guide.md`](docs/admin_dashboard_system_guide.md) |
-| Historical merge context | [`MERGE_ADMIN_DASHBOARD_NOTES.md`](MERGE_ADMIN_DASHBOARD_NOTES.md) |
-| Local Postgres helper scripts | [`script/ReadMe.md`](script/ReadMe.md) |
+**Internal Components:**
+*   **Ruby on Rails**: Core web framework.
+*   **ActiveRecord**: ORM mapping.
+*   **Solid Queue / Solid Cache / Solid Cable**: Backend caching, background jobs, and WebSocket handling.
+*   **Tailwind CSS & Importmap**: Asset pipeline styling and JS modules.
 
-**In the browser (signed-in organizer nav):** **User Guide** and **Technical Documentation** open **`public/UserDocumentation.pdf`** and **`public/TechnicalDocumentation.pdf`** at **`/UserDocumentation.pdf`** and **`/TechnicalDocumentation.pdf`** (static files, same as `501-club-staging`). Markdown copies for editing in-repo remain under **`docs/`** but are not what the nav serves.
+**External Components:**
+*   **PostgreSQL**: Relational database managing event data, attendees, etc.
+*   **Google OAuth2**: External authentication provider for staff login.
+*   **Heroku (Optional)**: Assumed platform-as-a-service for deployment.
 
-## Getting Started
+## External Dependencies
+
+*   **Ruby 3.4.6**: The primary programming language.
+*   **PostgreSQL**: External database server.
+*   **Node.js**: Recommended for local Tailwind CSS watching.
+*   **Google APIs**: Required for staff SSO (configured via `.env`).
+*   **Chrome / ChromeDriver**: External dependencies utilized by Capybara for system testing.
+*   *For a complete list of programmatic dependencies, see the [Third Party Libraries](#third-party-libraries) section or the Gemfile.*
+
+## Environmental Variables/Files
+
+The core environment setup resides in `.env`. Copy the example environment file and fill in required values:
+
+```sh
+cp .env.example .env
+# edit .env and set Google OAuth values and ALLOWED_ADMIN_EMAILS as needed
+```
+
+Google OAuth env compatibility:
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (same naming as `501-club-staging`)
+- `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` (also supported)
+
+Database connection values are read from `config/database.yml` and can be
+overridden with:
+- `DATABASE_HOST`
+- `DATABASE_USER`
+- `DATABASE_PASSWORD`
+
+You may also use Rails credentials for sensitive values; see `config/credentials.yml.enc`.
+
+## Installation and Setup
 
 These instructions will help you set up a copy of the project on your local
 development machine for development and testing purposes.
@@ -50,31 +106,6 @@ development machine for development and testing purposes.
 * **Bash shell** for helper scripts under `script/` (Git Bash/WSL on Windows).
 
 > Ruby dependencies are defined in `Gemfile`.
-
-### Configuration
-
-Copy the example environment file and fill in required values:
-
-```sh
-cp .env.example .env
-# edit .env and set Google OAuth values and ALLOWED_ADMIN_EMAILS as needed
-```
-
-Google OAuth env compatibility:
-
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (same naming as `501-club-staging`)
-- `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` (also supported)
-
-`501-plan` will use either pair, so local `.env` and deployed environment variables can use either naming convention.
-
-Database connection values are read from `config/database.yml` and can be
-overridden with:
-- `DATABASE_HOST`
-- `DATABASE_USER`
-- `DATABASE_PASSWORD`
-
-You may also use Rails credentials for sensitive values; see
-`config/credentials.yml.enc`.
 
 ### First-Time Setup (after clone)
 
@@ -145,6 +176,27 @@ bundle exec rails server
 ```
 
 Browse to `http://localhost:3000` to view the landing page.
+
+## Usage
+
+**How to use the local development setup:**
+1. Ensure the PostgreSQL database is running (`bash script/start-db`).
+2. Start the Rails server using `bin/dev` or `bundle exec rails s`.
+3. Open `http://localhost:3000` to access the public Ideathon Web App.
+4. For administration usage, log in at `/admins/sign_in` using the configured Google OAuth provider. Authorized users (those mapped in `.env`) can access the dashboard.
+5. In the dashboard, Admins can view/edit registrations, update application pages, and configure settings. 
+
+## Documentation
+
+| Audience | Location |
+|----------|-----------|
+| Organizers (how to use dashboards, roles, publishing) | [`docs/user_documentation.md`](docs/user_documentation.md) |
+| Engineers / DevOps (stack, env, CI, deployment) | [`docs/technical_documentation.md`](docs/technical_documentation.md) |
+| Architecture map (public vs dashboard vs shared data) | [`docs/admin_dashboard_system_guide.md`](docs/admin_dashboard_system_guide.md) |
+| Historical merge context | [`MERGE_ADMIN_DASHBOARD_NOTES.md`](MERGE_ADMIN_DASHBOARD_NOTES.md) |
+| Local Postgres helper scripts | [`script/ReadMe.md`](script/ReadMe.md) |
+
+**In the browser (signed-in organizer nav):** **User Guide** and **Technical Documentation** open **`public/UserDocumentation.pdf`** and **`public/TechnicalDocumentation.pdf`** at **`/UserDocumentation.pdf`** and **`/TechnicalDocumentation.pdf`** (static files, same as `501-club-staging`). Markdown copies for editing in-repo remain under **`docs/`** but are not what the nav serves.
 
 ### Running Tests
 
@@ -293,6 +345,63 @@ load balancer health checks or uptime monitors.
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on **push** and **pull_request** to **`main`**: Brakeman, importmap audit, RuboCop, `db:test:prepare`, and the full **RSpec** suite. Keep CI green before merging.
+
+## Credits and Acknowledgements
+
+*   **GitHub Copilot**: AI autocomplete was used to assist with code generation and standardizing logic patterns within the product.
+*   **Large Language Models (LLMs)**: AI reasoning assisted in small parts for troubleshooting environment configuration and structural documentation formatting.
+*   **TAMU Contributors**: See Contact Information and commit history for student and organizer collaboration.
+
+## Third Party Libraries
+
+*(Includes AI resources and open-source frameworks)*
+
+- **GitHub Copilot**: Machine-learning auto-complete.
+- rails
+- propshaft
+- pg
+- puma
+- importmap-rails
+- turbo-rails
+- stimulus-rails
+- jbuilder
+- tailwindcss-rails
+- dotenv-rails
+- devise
+- omniauth
+- omniauth-rails_csrf_protection
+- omniauth-google-oauth2
+- tzinfo-data
+- solid_cache
+- solid_queue
+- solid_cable
+- csv
+- bootsnap
+- kamal
+- thruster
+- debug
+- brakeman
+- rubocop-rails-omakase
+- web-console
+- capybara
+- selenium-webdriver
+- minitest
+- rspec-rails
+- shoulda-matchers
+- simplecov
+- rubocop
+
+## Contact Information
+
+Team Members:
+
+Will Tschirhart - williamt2023@tamu.edu
+
+Raafay Hemani   - raafay.ah@tamu.edu
+
+Ernest Barron   - Ernestbarren01@yahoo.com
+
+Zihao Zhu       - zzh021015@tamu.edu
 
 ## Contribution
 
